@@ -8,7 +8,7 @@ tags:
     description: Authentication operation (semplified).
   - name: User
     description: Operations related to users.
-  - name: Chat
+  - name: Conversations
     description: Operations related to chat.
   - name: Message
     description: Operations related to messages (Managing messages).
@@ -22,7 +22,8 @@ paths:
       operationId: doLogin
       summary: Do the login.
       description: If the user exists, logs them in; otherwise, creates a new user and assigns a username.
-      tags: [ "Login" ]
+      tags:
+        - "Login"
       requestBody:
         description: User's information.
         required: true
@@ -33,9 +34,7 @@ paths:
               type: object
               properties:
                 name:
-                  description: Username
-                  minLength: 1
-                  maxLength: 255
+                  $ref: "#/components/schemas/Username"
       responses:
         "201":
           description: Login successful
@@ -46,11 +45,142 @@ paths:
                 type: object
                 properties:
                   ID:
-                    description: Login identifier
-                    type: integer
-                    example: 21145
+                    $ref: "#/components/schemas/userID"
+
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /users/{userID}/username:
+    put:
+      operationId: setMyUserName
+      summary: Set personalized username
+      description: Let the user change his username into another.
+        If the new username is available, set the new username. Otherwise, keep the last username saved and returns error.
+      tags:
+        - "User"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+      requestBody:
+        description: New username proposed
+        required: true
+        content:
+          /applications/json:
+            schema:
+              description: Propose's schema
+              type: object
+              properties:
+                newUsername:
+                  $ref: "#/components/schemas/Username"
+
+      responses:
+        "201":
+          description: Edit successful
+          content:
+            /applications/json:
+              schema:
+                description: Response's schema
+                type: object
+                properties:
+                  userID:
+                    $ref: "#/components/schemas/userID"
+                  Username:
+                    $ref: "#/components/schemas/Username"
+        "409":
+          description: Username already in use
+          content:
+            /applications/json:
+              schema:
+                description: Response's schema
+                type: object
+                properties:
+                  userID:
+                    $ref: "#/components/schemas/userID"
+                  Username:
+                    $ref: "#/components/schemas/Username"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
 
+  /users/{userID}/conversation:
+    get:
+      operationId: getMyConversations
+      summary: Show User's conversations.
+      description: Retrieve all user’s conversations, sorted from newest to oldest.
+      tags:
+        - "Conversations"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            /applications/json:
+              schema:
+                description: List schema
+                type: array
+                minItems: 0
+                items:
+                    $ref: "#/components/schemas/Conversation"
+
+
+
+
+
+
+
+
+
+
+components:
+  schemas:
+    userID:
+      description: Operation User's ID
+      type: integer
+      example: 11300
+      readOnly: true
+    Username:
+      description: User's Username
+      type: string
+      minLength: 1
+      maxLength: 255
+      example: Simone
+
+    Conversation:
+      description: Chat
+      type: object
+      properties:
+        conversationID:
+          description: Chat Identifier
+          type : integer
+          example: 110056
+          readOnly: true
+        name:
+          description: Conversation's name
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Capodanno2026
+        photo:
+          $ref : "#/components/schemas/Photo"
+
+
+    Photo:
+
+
+  parameters:
+    userID:
+      schema:
+        $ref : "#/components/schemas/userID"
+      name: userID
+      in: path
+      required: true
+      description: User Identifier
+
+  responses:
+    UnauthorizedError:
+      description: Unauthorized Action, request invalid or missing
+    InternalError:
+      description: An error occurred, please retry.
 
 
 
