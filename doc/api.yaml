@@ -5,7 +5,7 @@ info:
   version: 1.0.0
 tags:
   - name: Login
-    description: Authentication operation (semplified).
+    description: Authentication operation (simplified).
   - name: User
     description: Operations related to users.
   - name: Conversations
@@ -64,7 +64,7 @@ paths:
         description: New username proposed
         required: true
         content:
-          /applications/json:
+          applications/json:
             schema:
               description: Propose's schema
               type: object
@@ -85,6 +85,9 @@ paths:
                     $ref: "#/components/schemas/userID"
                   Username:
                     $ref: "#/components/schemas/Username"
+
+        "404":
+          description: User not found
         "409":
           description: Username already in use
           content:
@@ -101,7 +104,7 @@ paths:
           $ref: "#/components/responses/InternalError"
 
 
-  /users/{userID}/conversation:
+  /users/{userID}/conversations:
     get:
       operationId: getMyConversations
       summary: Show User's conversations.
@@ -112,7 +115,7 @@ paths:
         - $ref: "#/components/parameters/userID"
       responses:
         "200":
-          description: List of conversations
+          description: OK. List of conversations
           content:
             /applications/json:
               schema:
@@ -120,7 +123,97 @@ paths:
                 type: array
                 minItems: 0
                 items:
-                    $ref: "#/components/schemas/Conversation"
+                  allOf:
+                    - $ref: "#/components/schemas/PreviewConversation"
+                    - type: object
+                      properties:
+                        kind:
+                          description: Single or group
+                          type: string
+                          enum:
+                            - group
+                            - direct
+                          example: direct
+                        lastMessage:
+                          description: Last message sent or received
+                          allOf:
+                            - $ref: "#/components/schemas/Message"
+                            - type: object
+                              properties:
+                                sender:
+                                  description: Sender of the message, you or other.
+                                  $ref: "#/components/schemas/Username"
+
+    #fai put conversation per aggiungerne una
+
+
+
+
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /users/{userID}/conversations/{conversationID}:
+    get:
+      summary: Show the conversation
+      description: Returns the details of a single conversation identified by conversationID from the user's conversations.
+      operationId: getConversation
+      tags:
+        - "Conversations"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/conversationID"
+      responses:
+        "200":
+          description: Returns the chat as a list of messages.
+          content:
+            applications/json:
+              schema:
+                description: List of messages
+                type: array
+                minLength: 0
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/Message"
+                    - type: object
+                      properties:
+                        sender:
+                          description: Sender of the message, you or other.
+                          $ref: "#/components/schemas/Username"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: Chat not found
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    post:
+      summary: Send new message
+      description: Send new message in the conversation
+      operationId: sendMessage
+      tags:
+        - "Message"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/conversationID"
+
+      requestBody:
+        content:
+          applications/json:
+            schema:
+              $ref : "#/components/schemas/Message"
+
+        required: true
+
+      responses:
+        "200":
+
+
+
+
+
+
 
 
 
@@ -145,40 +238,116 @@ components:
       maxLength: 255
       example: Simone
 
-    Conversation:
+    conversationID:
+      description: Chat Identifier
+      type: integer
+      example: 110056
+      readOnly: true
+
+    PreviewConversation:
       description: Chat
       type: object
       properties:
         conversationID:
-          description: Chat Identifier
-          type : integer
-          example: 110056
-          readOnly: true
+          $ref : "#/components/schemas/conversationID"
         name:
           description: Conversation's name
           type: string
           minLength: 1
           maxLength: 255
-          example: Capodanno2026
-        photo:
-          $ref : "#/components/schemas/Photo"
+          example: user63744463
+        avatar:
+          $ref: "#/components/schemas/Photo"
+
+
+
 
 
     Photo:
+      description: Photo metadata
+      type: object
+      properties:
+        photoID:
+          type: integer
+          readOnly: true
+          example: 55367
+        url:
+          type: string
+          format: uri
+          description: photo's URL to access the image
+
+        mime:
+          description: mime represents the type of the photo(image/png...)
+          type: string
+          example: image/png
+        width:
+          type: integer
+          example: 1024
+        height:
+          type: integer
+          example: 720
 
 
+
+    Message:
+      type: object
+      properties:
+        messageID:
+          description: Message identifier
+          type: integer
+          example: 10446
+          readOnly: true
+
+        time:
+          description: Timestamp
+          type: string
+          format: date-time
+          example: 2025-10-31T15:42:00Z
+
+        body:
+          oneOf:
+            - $ref: "#/components/schemas/Text"
+            - $ref : "#/components/schemas/PhotoMessage"
+
+        #sender:
+        #  description: Sender of the message, you or other.
+        #  $ref: "#/components/schemas/Username"
+
+    Text:
+      description: Text of the message
+      type: string
+      minLength: 0
+      maxLength: 2048
+      example: Hello, World!
+
+
+    PhotoMessage:
+      allOf:
+        - $ref: "#/components/schemas/Photo"
+        - type: object
+          properties:
+            caption:
+              $ref: "#/components/schemas/Text"
   parameters:
     userID:
       schema:
-        $ref : "#/components/schemas/userID"
+        $ref: "#/components/schemas/userID"
       name: userID
       in: path
       required: true
       description: User Identifier
 
+    conversationID:
+      schema:
+        $ref: "#/components/schemas/conversationID"
+      name: conversationID
+      in: path
+      required: true
+      description: Chat Identifier
+
   responses:
     UnauthorizedError:
-      description: Unauthorized Action, request invalid or missing
+      description: Unauthorized Action, request invalid or missing.
     InternalError:
       description: An error occurred, please retry.
 
