@@ -14,6 +14,8 @@ tags:
     description: Operations related to messages (Managing messages).
   - name: Group
     description: Operations related to groups.
+  - name : Comment
+    description: Operations relate to comments
 
 
 paths:
@@ -36,7 +38,7 @@ paths:
                 name:
                   $ref: "#/components/schemas/Username"
       responses:
-        "201":
+        201:
           description: Login successful
           content:
             application/json:
@@ -47,7 +49,13 @@ paths:
                   ID:
                     $ref: "#/components/schemas/userID"
 
-        "500":
+        404:
+          $ref: "#/components/responses/NotFoundError"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
           $ref: "#/components/responses/InternalError"
 
   /users/{userID}/username:
@@ -64,7 +72,7 @@ paths:
         description: New username proposed
         required: true
         content:
-          applications/json:
+          application/json:
             schema:
               description: Propose's schema
               type: object
@@ -76,7 +84,7 @@ paths:
         "201":
           description: Edit successful
           content:
-            /applications/json:
+            application/json:
               schema:
                 description: Response's schema
                 type: object
@@ -86,12 +94,12 @@ paths:
                   Username:
                     $ref: "#/components/schemas/Username"
 
-        "404":
-          description: User not found
-        "409":
+        404:
+          $ref: "#/components/responses/NotFoundError"
+        409:
           description: Username already in use
           content:
-            /applications/json:
+            application/json:
               schema:
                 description: Response's schema
                 type: object
@@ -100,7 +108,7 @@ paths:
                     $ref: "#/components/schemas/userID"
                   Username:
                     $ref: "#/components/schemas/Username"
-        "500":
+        500:
           $ref: "#/components/responses/InternalError"
 
 
@@ -117,23 +125,16 @@ paths:
         "200":
           description: OK. List of conversations
           content:
-            /applications/json:
+            application/json:
               schema:
                 description: List schema
                 type: array
                 minItems: 0
                 items:
                   allOf:
-                    - $ref: "#/components/schemas/PreviewConversation"
+                    - $ref: "#/components/schemas/Conversation"
                     - type: object
                       properties:
-                        kind:
-                          description: Single or group
-                          type: string
-                          enum:
-                            - group
-                            - direct
-                          example: direct
                         lastMessage:
                           description: Last message sent or received
                           allOf:
@@ -143,16 +144,52 @@ paths:
                                 sender:
                                   description: Sender of the message, you or other.
                                   $ref: "#/components/schemas/Username"
+        500:
+          $ref: "#/components/responses/InternalError"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+    put:
+      summary: Create new conversation
+      description: Create a new direct or group conversation. If kind = direct, a single participant is required. If kind = group, multiple participants are required.
+      operationId: createConversation
+      tags:
+        - "Conversations"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              description: User schema
+              properties:
+                userID:
+                  description: Operation User's ID
+                  type: integer
+                  example: 11300
+                Username:
+                  description: User's Username
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  example: Simone
 
-    #fai put conversation per aggiungerne una
-
-
-
-
+      responses:
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "500":
           $ref: "#/components/responses/InternalError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+
+
 
   /users/{userID}/conversations/{conversationID}:
     get:
@@ -168,7 +205,7 @@ paths:
         "200":
           description: Returns the chat as a list of messages.
           content:
-            applications/json:
+            application/json:
               schema:
                 description: List of messages
                 type: array
@@ -184,10 +221,13 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
-          description: Chat not found
+          $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/InternalError"
 
+
+
+  /users/{userID}/conversations/{conversationID}/messages:
     post:
       summary: Send new message
       description: Send new message in the conversation
@@ -200,27 +240,304 @@ paths:
 
       requestBody:
         content:
-          applications/json:
+          application/json:
             schema:
-              $ref : "#/components/schemas/Message"
+              $ref: "#/components/schemas/Send"
 
         required: true
 
       responses:
+        "201":
+          description: Message sent. By default, the message has "read" set to sent
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Message"
+                  - type: object
+                    properties:
+                      read:
+                        type: string
+                        enum: [ sent ]
+                        example: sent
+
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+
+  /users/{userID}/conversations/{conversationID}/messages/{messageID}:
+    delete:
+      summary: Delete message
+      description: From the list of sent message, the user can delete one of it.
+      operationId: deleteMessage
+      tags:
+        - "Message"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/conversationID"
+        - $ref: "#/components/parameters/messageID"
+      responses:
+        "204":
+          $ref: "#/components/responses/DeleteComplete"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /users/{userID}/conversations/{conversationID}/messages/{messageID}/forwardMessage:
+    post:
+      summary: Forward Message
+      description: From a message in a conversation, the message can be sent in another conversation.
+      operationId: forwardMessage
+      tags:
+        - "Message"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/conversationID"
+        - $ref: "#/components/parameters/messageID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conversationID:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: integer
+                    description: Chat Identifier
+                    example: 110056
+
+        required: true
+      responses:
+        "201":
+          description: Message forwarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Send"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+
+  /users/{userID}/conversations/{conversationID}/messages/{messageID}/comments:
+    get:
+      summary: Get all comments of a message.
+      description: From a message, the user can see all comments on this.
+      operationId: getComments
+      tags:
+        - "Comment"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/conversationID"
+        - $ref: "#/components/parameters/messageID"
+      responses:
         "200":
+          description: Returns the comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+
+    post:
+      summary: Comment Message
+      description: From a message, the user can react to it by adding an emoji reaction.
+      operationId: commentMessage
+      tags:
+        - "Comment"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/conversationID"
+        - $ref: "#/components/parameters/messageID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                emoji:
+                  type: string
+                  description: Unicode of emoji used in the comment.
+                  example: ☠️
+        required: true
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        500:
+          $ref: "#/components/responses/InternalError"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        404:
+          $ref: "#/components/responses/NotFoundError"
+        400:
+          $ref: "#/components/responses/BadRequest"
 
 
 
 
 
+  /users/{userID}/conversations/{conversationID}/messages/{messageID}/comments/{commentID}:
+      delete:
+        summary: Delete Comment
+        description: From the list of comments, the user can delete one of this.
+        operationId: uncommentMessage
+        tags:
+          - "Comment"
+        parameters:
+          - $ref: "#/components/parameters/userID"
+          - $ref: "#/components/parameters/conversationID"
+          - $ref: "#/components/parameters/messageID"
+          - $ref: "#/components/parameters/commentID"
+        responses:
+          204:
+            $ref : "#/components/responses/DeleteComplete"
+          500:
+            $ref: "#/components/responses/InternalError"
+          401:
+            $ref: "#/components/responses/UnauthorizedError"
+          404:
+            $ref: "#/components/responses/NotFoundError"
+          400:
+            $ref: "#/components/responses/BadRequest"
+
+  /users/{userID}/groups:
+    get:
+      summary: View all groups
+      description: Returns the list of groups
+      operationId: newGroup
+      tags:
+        - "Group"
+      parameters:
+        - $ref : "#/components/parameters/userID"
+      responses:
+        200:
+          description: OK. Return The list
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 0
+                items:
+                  $ref: "#/components/schemas/Group"
+
+
+  /users/{userID}/groups/{groupID}/members:
+    put:
+      summary: Add a user into the group.
+      description: The user can add antoher user into the group from their userID.
+      operationId: addToGroup
+      tags:
+        - "Group"
+      parameters:
+        - $ref : "#/components/parameters/userID"
+        - $ref : "#/components/parameters/groupID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              User:
+                $ref : "#/components/schemas/User"
+        required: true
+      responses:
+        201:
+          description: User added.
+        404:
+          $ref: "#/components/responses/NotFoundError"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalError"
+    get:
+      summary: List of members
+      description: List all members of group
+      operationId: getMembers
+      tags:
+        - "Group"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/groupID"
+      responses:
+        200:
+          description: OK. Return list.
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 2
+                items:
+                  $ref : "#/components/schemas/User"
+                example:
+                  - userID: 11300
+                    Username: Simone
+                  - userID: 11301
+                    Username: Luca
+        404:
+          $ref: "#/components/responses/NotFoundError"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalError"
 
 
 
 
-
-
-
-
+  /users/{userID}/groups/{groupID}/members/me:
+    delete:
+      summary: Leave the group
+      description: Delete the user from the group.
+      operationId: LeaveGroup
+      tags:
+        - "Group"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/groupID"
+      responses:
+        204:
+          description: OK. Group Left
+        404:
+          $ref: "#/components/responses/NotFoundError"
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalError"
 
 
 
@@ -238,10 +555,52 @@ components:
       maxLength: 255
       example: Simone
 
+    User:
+      allOf:
+        - $ref: "#/components/schemas/userID"
+        - $ref : "#/components/schemas/Username"
+
+    Group:
+      allOf:
+        - $ref: "#/components/schemas/Conversation"
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum: [ group ]
+              example: group
+            participants:
+              type: array
+              minLength: 2
+              items:
+                $ref : "#/components/schemas/User"
+              example:
+                - userID: 11300
+                  Username: Simone
+                - userID: 11301
+                  Username: Luca
+
     conversationID:
       description: Chat Identifier
       type: integer
       example: 110056
+      readOnly: true
+
+    commentID:
+      description: Comment Identifier
+      type: integer
+      example: 100446
+      readOnly: true
+    messageID:
+      description: Message Identifier
+      type: integer
+      example: 2635444
+      readOnly: true
+
+    groupID:
+      description: Group Identifier
+      type: integer
+      example: 2773354
       readOnly: true
 
     PreviewConversation:
@@ -260,6 +619,22 @@ components:
           $ref: "#/components/schemas/Photo"
 
 
+    Comment:
+      description: Comment schema
+      type: object
+      properties:
+        commentID:
+          $ref : "#/components/schemas/commentID"
+        emoji:
+          type: string
+          description: Unicode of emoji used in the comment.
+          example: ☠️
+        time:
+          description: Timestamp
+          type: string
+          format: date-time
+          example: 2025-10-31T15:42:00Z
+
 
 
 
@@ -275,7 +650,6 @@ components:
           type: string
           format: uri
           description: photo's URL to access the image
-
         mime:
           description: mime represents the type of the photo(image/png...)
           type: string
@@ -287,27 +661,32 @@ components:
           type: integer
           example: 720
 
-
-
-    Message:
+    Send:
       type: object
       properties:
-        messageID:
-          description: Message identifier
-          type: integer
-          example: 10446
-          readOnly: true
-
-        time:
-          description: Timestamp
-          type: string
-          format: date-time
-          example: 2025-10-31T15:42:00Z
-
         body:
           oneOf:
             - $ref: "#/components/schemas/Text"
-            - $ref : "#/components/schemas/PhotoMessage"
+            - $ref: "#/components/schemas/PhotoMessage"
+
+    Message:
+        allOf:
+          - $ref : "#/components/schemas/Send"
+          - type: object
+            properties:
+              messageID:
+                $ref: "#/components/schemas/messageID"
+              time:
+                description: Timestamp
+                type: string
+                format: date-time
+                example: 2025-10-31T15:42:00Z
+              read:
+                type: string
+                enum: [ sent, read ]
+                example: read
+
+
 
         #sender:
         #  description: Sender of the message, you or other.
@@ -319,6 +698,19 @@ components:
       minLength: 0
       maxLength: 2048
       example: Hello, World!
+
+    Conversation:
+      allOf:
+        - $ref: "#/components/schemas/PreviewConversation"
+        - type: object
+          properties:
+            kind:
+              description: Single or group
+              type: string
+              enum:
+                - group
+                - direct
+              example: direct
 
 
     PhotoMessage:
@@ -345,11 +737,43 @@ components:
       required: true
       description: Chat Identifier
 
+    messageID:
+      schema:
+        $ref: "#/components/schemas/messageID"
+      name: messageID
+      in: path
+      required: true
+      description: Message Identifier
+
+    commentID:
+      schema:
+        $ref: "#/components/schemas/commentID"
+      name: commentID
+      in: path
+      required: true
+      description: Comment Identifier
+
+    groupID:
+      schema:
+        $ref: "#/components/schemas/groupID"
+      name : groupID
+      in: path
+      required: true
+      description: Group Identifier
+
+
+
   responses:
     UnauthorizedError:
       description: Unauthorized Action, request invalid or missing.
     InternalError:
       description: An error occurred, please retry.
+    NotFoundError:
+      description: Resource not found. Check the parameters.
+    BadRequest:
+      description: Bad Request. Invalid parameters.
+    DeleteComplete:
+      description: Delete success.
 
 
 
