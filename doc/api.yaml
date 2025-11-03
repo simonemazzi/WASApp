@@ -15,7 +15,7 @@ tags:
   - name: Group
     description: Operations related to groups.
   - name : Comment
-    description: Operations relate to comments
+    description: Operations related to comments
 
 
 paths:
@@ -65,7 +65,7 @@ paths:
         - in: query
           name: username
           schema:
-            type: string
+            $ref : "#/components/schemas/Username"
           description: Username or part of the username to search for.
           required: true
       responses:
@@ -452,7 +452,8 @@ paths:
           name : nameGroup
           schema:
             type: string
-          description: Search group by name. If this field is empy, returns all groups.
+            example: capodanno2026
+          description: Search group by name. If this field is empty, returns all groups.
           required: false
       responses:
         200:
@@ -929,6 +930,7 @@ components:
       type: string
       minLength: 1
       maxLength: 255
+      pattern: ^[a-zA-Z0-9_-]+$
       example: Simone
 
     User:
@@ -995,6 +997,7 @@ components:
           type: string
           minLength: 1
           maxLength: 255
+          pattern: ^[a-zA-Z0-9_-]+$
         avatar:
           $ref: "#/components/schemas/Photo"
 
@@ -1166,11 +1169,3 @@ components:
       description: Bad Request. Invalid parameters.
     DeleteComplete:
       description: Delete success.
-
-
-
-
-
-
-
-
