@@ -164,7 +164,7 @@ paths:
                               properties:
                                 sender:
                                   description: Sender of the message, you or other.
-                                  $ref: "#/components/schemas/User" #######
+                                  $ref: "#/components/schemas/User"
         500:
           $ref: "#/components/responses/InternalError"
         401:
