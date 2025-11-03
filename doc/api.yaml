@@ -45,9 +45,7 @@ paths:
               schema:
                 description: Login response's schema
                 type: object
-                properties:
-                  ID:
-                    $ref: "#/components/schemas/userID"
+                $ref: "#/components/schemas/Login"
 
         404:
           $ref: "#/components/responses/NotFoundError"
@@ -58,7 +56,7 @@ paths:
         500:
           $ref: "#/components/responses/InternalError"
 
-  /users/{userID}/username:
+  /users/{userID}/info/username:
     put:
       operationId: setMyUserName
       summary: Set personalized username
@@ -148,9 +146,9 @@ paths:
           $ref: "#/components/responses/InternalError"
         401:
           $ref: "#/components/responses/UnauthorizedError"
-    put:
+    post:
       summary: Create new conversation
-      description: Create a new direct or group conversation. If kind = direct, a single participant is required. If kind = group, multiple participants are required.
+      description: Create a new direct conversation.
       operationId: createConversation
       tags:
         - "Conversations"
@@ -162,17 +160,7 @@ paths:
           application/json:
             schema:
               description: User schema
-              properties:
-                userID:
-                  description: Operation User's ID
-                  type: integer
-                  example: 11300
-                Username:
-                  description: User's Username
-                  type: string
-                  minLength: 1
-                  maxLength: 255
-                  example: Simone
+              $ref : "#/components/schemas/Conversation"
 
       responses:
         "201":
@@ -180,7 +168,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Conversation"
+                properties:
+                  conversationID:
+                    $ref: "#/components/schemas/conversationID"
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -229,8 +219,8 @@ paths:
 
   /users/{userID}/conversations/{conversationID}/messages:
     post:
-      summary: Send new message
-      description: Send new message in the conversation
+      summary: Send new direct message
+      description: Send new message in the conversation.
       operationId: sendMessage
       tags:
         - "Message"
@@ -436,7 +426,7 @@ paths:
     get:
       summary: View all groups
       description: Returns the list of groups
-      operationId: newGroup
+      operationId: viewGroups
       tags:
         - "Group"
       parameters:
@@ -467,8 +457,10 @@ paths:
         content:
           application/json:
             schema:
-              User:
-                $ref : "#/components/schemas/User"
+              $ref : "#/components/schemas/User"
+            example:
+              userID: 11300
+              Username: Simone
         required: true
       responses:
         201:
@@ -539,15 +531,108 @@ paths:
         500:
           $ref: "#/components/responses/InternalError"
 
+  /users/{userID}/groups/{groupID}/info/photo:
+    put:
+      summary: Set Group Photo
+      description: The user can set a personalized group photo.
+      operationId: setGroupPhoto
+      tags:
+        - "Group"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/groupID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Photo"
+      responses:
+        201:
+          description: Image updated.
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalError"
+
+  /users/{userID}/groups/{groupID}/info/name:
+    put:
+      summary: Set Group name
+      description: The user can set a personalized group name.
+      operationId: setGroupName
+      tags:
+        - "Group"
+      parameters:
+        - $ref: "#/components/parameters/userID"
+        - $ref: "#/components/parameters/groupID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                Name:
+                  description: Group's name
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  example: capodanno 2027
+      responses:
+        201:
+          description: Name updated.
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalError"
+
+  /users/{userID}/info/photo:
+    put:
+      summary: Change Avatar
+      description: The user can edit their profile photo
+      tags:
+        - "User"
+      operationId: setMyPhoto
+      parameters:
+        - $ref: "#/components/parameters/userID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Photo"
+      responses:
+        201:
+          description: Image updated.
+        401:
+          $ref: "#/components/responses/UnauthorizedError"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalError"
+
 
 
 components:
   schemas:
+    Login:
+      type: object
+      properties:
+        userID:
+          $ref: "#/components/schemas/userID"
+        time:
+          description: Timestamp
+          type: string
+          format: date-time
+          example: 2025-10-31T15:42:00Z
+
     userID:
       description: Operation User's ID
       type: integer
       example: 11300
       readOnly: true
+
+
     Username:
       description: User's Username
       type: string
@@ -559,16 +644,17 @@ components:
       allOf:
         - $ref: "#/components/schemas/userID"
         - $ref : "#/components/schemas/Username"
+      example:
+        userID: 11300
+        Username: Simone
 
     Group:
       allOf:
         - $ref: "#/components/schemas/Conversation"
         - type: object
           properties:
-            kind:
-              type: string
-              enum: [ group ]
-              example: group
+            name:
+              example: capodanno2026
             participants:
               type: array
               minLength: 2
@@ -614,7 +700,6 @@ components:
           type: string
           minLength: 1
           maxLength: 255
-          example: user63744463
         avatar:
           $ref: "#/components/schemas/Photo"
 
@@ -650,10 +735,11 @@ components:
           type: string
           format: uri
           description: photo's URL to access the image
+          example: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
         mime:
           description: mime represents the type of the photo(image/png...)
           type: string
-          example: image/png
+          example: image/jpg
         width:
           type: integer
           example: 1024
@@ -704,13 +790,8 @@ components:
         - $ref: "#/components/schemas/PreviewConversation"
         - type: object
           properties:
-            kind:
-              description: Single or group
-              type: string
-              enum:
-                - group
-                - direct
-              example: direct
+            name:
+              example: user100433
 
 
     PhotoMessage:
@@ -720,6 +801,7 @@ components:
           properties:
             caption:
               $ref: "#/components/schemas/Text"
+
   parameters:
     userID:
       schema:
@@ -760,6 +842,7 @@ components:
       in: path
       required: true
       description: Group Identifier
+
 
 
 
