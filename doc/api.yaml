@@ -55,7 +55,30 @@ paths:
           $ref: "#/components/responses/BadRequest"
         500:
           $ref: "#/components/responses/InternalError"
-
+  /users:
+    get:
+      summary: Search for users by username
+      operationId: searchUsers
+      tags:
+        - "User"
+      parameters:
+        - in: query
+          name: username
+          schema:
+            type: string
+          description: Username or part of the username to search for.
+          required: true
+      responses:
+        200:
+          description: OK. List of Users( if the name is correct, there will be only one element. if the query is a part of a username, there will be a list of usernames that contains this prefix.)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /users/{userID}/info/username:
     put:
       operationId: setMyUserName
@@ -141,7 +164,7 @@ paths:
                               properties:
                                 sender:
                                   description: Sender of the message, you or other.
-                                  $ref: "#/components/schemas/Username"
+                                  $ref: "#/components/schemas/User" #######
         500:
           $ref: "#/components/responses/InternalError"
         401:
@@ -248,8 +271,8 @@ paths:
                     properties:
                       read:
                         type: string
-                        enum: [ sent ]
-                        example: sent
+                        enum: [ received ]
+                        example: received
 
         "500":
           $ref: "#/components/responses/InternalError"
@@ -299,23 +322,10 @@ paths:
         content:
           application/json:
             schema:
-              anyOf:
-                - type: object
-                  properties:
-                    conversationID:
-                      type: array
-                      minItems: 1
-                      items:
-                        type: integer
-                        example: 110056
-                - type: object
-                  properties:
-                    groupID:
-                      type: array
-                      minItems: 1
-                      items:
-                        type: integer
-                        example: 110056
+              type: array
+              items:
+                $ref: "#/components/schemas/ForwardItem"
+              minItems: 1
         required: true
       responses:
         "201":
@@ -438,6 +448,12 @@ paths:
         - "Group"
       parameters:
         - $ref : "#/components/parameters/userID"
+        - in : query
+          name : nameGroup
+          schema:
+            type: string
+          description: Search group by name. If this field is empy, returns all groups.
+          required: false
       responses:
         200:
           description: OK. Return The list
@@ -553,7 +569,7 @@ paths:
     delete:
       summary: Leave the group
       description: Delete the user from the group.
-      operationId: LeaveGroup
+      operationId: leaveGroup
       tags:
         - "Group"
       parameters:
@@ -720,8 +736,8 @@ paths:
                     properties:
                       read:
                         type: string
-                        enum: [ sent ]
-                        example: sent
+                        enum: [ received ]
+                        example: received
 
         "500":
           $ref: "#/components/responses/InternalError"
@@ -771,23 +787,10 @@ paths:
         content:
           application/json:
             schema:
-              anyOf:
-                - type: object
-                  properties:
-                    conversationID:
-                      type: array
-                      minItems: 1
-                      items:
-                        type: integer
-                        example: 110056
-                - type: object
-                  properties:
-                    groupID:
-                      type: array
-                      minItems: 1
-                      items:
-                        type: integer
-                        example: 110056
+              type: array
+              items:
+                $ref: "#/components/schemas/ForwardItem"
+              minItems: 1
         required: true
       responses:
         "201":
@@ -900,6 +903,7 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         400:
           $ref: "#/components/responses/BadRequest"
+
 components:
   schemas:
     Login:
@@ -928,12 +932,16 @@ components:
       example: Simone
 
     User:
-      allOf:
-        - $ref: "#/components/schemas/userID"
-        - $ref : "#/components/schemas/Username"
-      example:
-        userID: 11300
-        Username: Simone
+      description: User schema
+      type: object
+      properties:
+        userID:
+          $ref: "#/components/schemas/userID"
+        Username:
+          $ref: "#/components/schemas/Username"
+      required:
+        - userID
+        - Username
 
     Group:
       allOf:
@@ -1056,8 +1064,8 @@ components:
                 example: 2025-10-31T15:42:00Z
               read:
                 type: string
-                enum: [ sent, read ]
-                example: read
+                enum: [ received, read ]
+                example: received
 
         #sender:
         #  description: Sender of the message, you or other.
@@ -1086,6 +1094,22 @@ components:
           properties:
             caption:
               $ref: "#/components/schemas/Text"
+    ForwardItem:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [ conversation, group ]
+          description: kind of destination (conversations or groups).
+          example: conversation
+        id:
+          description: destination ID (conversationID o groupID).
+          oneOf:
+            - $ref: "#/components/schemas/conversationID"
+            - $ref: "#/components/schemas/groupID"
+      required:
+        - type
+        - id
 
   parameters:
     userID:
