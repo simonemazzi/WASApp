@@ -17,6 +17,9 @@ tags:
   - name : Comment
     description: Operations related to comments
 
+security:
+  - WASATextAuth: []
+
 
 paths:
   /session:
@@ -26,6 +29,7 @@ paths:
       description: If the user exists, logs them in; otherwise, creates a new user and assigns a username.
       tags:
         - "Login"
+      security: [] # Disable the security, applied on other each part of the application.
       requestBody:
         description: User's information.
         required: true
@@ -1155,7 +1159,12 @@ components:
       required: true
       description: Group Identifier
 
-
+  securitySchemes:
+    WASATextAuth:
+      type: http
+      description: Protect operation session token.
+      scheme: bearer
+      bearerFormat: SessionToken
 
 
   responses:
