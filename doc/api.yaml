@@ -40,28 +40,29 @@ paths:
               type: object
               properties:
                 name:
-                  $ref: "#/components/schemas/Username"
+                  allOf:
+                    - $ref: "#/components/schemas/Username"
+                    - description: Username of the user.
       responses:
-        201:
+        "201":
           description: Login successful
           content:
             application/json:
               schema:
-                description: Login response's schema
-                type: object
                 $ref: "#/components/schemas/Login"
 
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
   /users:
     get:
       summary: Search for users by username
+      description: We can find an user from a username or a part of it.
       operationId: searchUsers
       tags:
         - "User"
@@ -73,12 +74,14 @@ paths:
           description: Username or part of the username to search for.
           required: true
       responses:
-        200:
+        "200":
           description: OK. List of Users( if the name is correct, there will be only one element. if the query is a part of a username, there will be a list of usernames that contains this prefix.)
           content:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 99999
                 items:
                   $ref: "#/components/schemas/User"
         "500":
@@ -119,9 +122,9 @@ paths:
                   Username:
                     $ref: "#/components/schemas/Username"
 
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        409:
+        "409":
           description: Username already in use
           content:
             application/json:
@@ -133,19 +136,20 @@ paths:
                     $ref: "#/components/schemas/userID"
                   Username:
                     $ref: "#/components/schemas/Username"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
 
 
   /users/{userID}/conversations:
+    parameters:
+      - $ref: "#/components/parameters/userID"
     get:
       operationId: getMyConversations
       summary: Show User's conversations.
       description: Retrieve all user’s conversations, sorted from newest to oldest.
       tags:
         - "Conversations"
-      parameters:
-        - $ref: "#/components/parameters/userID"
+
       responses:
         "200":
           description: OK. List of conversations
@@ -155,11 +159,11 @@ paths:
                 description: List schema
                 type: array
                 minItems: 0
+                maxItems: 99999
                 items:
                   allOf:
                     - $ref: "#/components/schemas/Conversation"
-                    - type: object
-                      properties:
+                    - properties:
                         lastMessage:
                           description: Last message sent or received
                           allOf:
@@ -167,11 +171,10 @@ paths:
                             - type: object
                               properties:
                                 sender:
-                                  description: Sender of the message, you or other.
                                   $ref: "#/components/schemas/User"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
     post:
       summary: Create new conversation
@@ -179,14 +182,11 @@ paths:
       operationId: createConversation
       tags:
         - "Conversations"
-      parameters:
-        - $ref: "#/components/parameters/userID"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              description: User schema
               $ref : "#/components/schemas/Conversation"
 
       responses:
@@ -226,15 +226,17 @@ paths:
               schema:
                 description: List of messages
                 type: array
-                minLength: 0
+                minItems: 0
+                maxItems: 2048
                 items:
                   allOf:
                     - $ref: "#/components/schemas/Message"
-                    - type: object
-                      properties:
+                    - properties:
                         sender:
-                          description: Sender of the message, you or other.
-                          $ref: "#/components/schemas/Username"
+                          allOf:
+                            - $ref: "#/components/schemas/Username"
+                            - description: Sender of the message, you or other.
+
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -275,6 +277,9 @@ paths:
                     properties:
                       read:
                         type: string
+                        minLength: 0
+                        maxLength: 255
+                        pattern: "^[a-zA-Z0-9_-]+$"
                         enum: [ received ]
                         example: received
 
@@ -327,9 +332,11 @@ paths:
           application/json:
             schema:
               type: array
+              minItems: 1
+              maxItems: 255
               items:
                 $ref: "#/components/schemas/ForwardItem"
-              minItems: 1
+
         required: true
       responses:
         "201":
@@ -366,6 +373,9 @@ paths:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 2048
+
                 items:
                   $ref: "#/components/schemas/Comment"
 
@@ -396,6 +406,7 @@ paths:
               properties:
                 emoji:
                   type: string
+
                   description: Unicode of emoji used in the comment.
                   example: ☠️
         required: true
@@ -406,13 +417,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Comment"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
 
 
@@ -432,15 +443,15 @@ paths:
           - $ref: "#/components/parameters/messageID"
           - $ref: "#/components/parameters/commentID"
         responses:
-          204:
+          "204":
             $ref : "#/components/responses/DeleteComplete"
-          500:
+          "500":
             $ref: "#/components/responses/InternalError"
-          401:
+          "401":
             $ref: "#/components/responses/UnauthorizedError"
-          404:
+          "404":
             $ref: "#/components/responses/NotFoundError"
-          400:
+          "400":
             $ref: "#/components/responses/BadRequest"
 
   /users/{userID}/groups:
@@ -456,17 +467,21 @@ paths:
           name : nameGroup
           schema:
             type: string
+            minLength: 0
+            maxLength: 255
+            pattern: "^[a-zA-Z0-9_-]+$"
             example: capodanno2026
           description: Search group by name. If this field is empty, returns all groups.
           required: false
       responses:
-        200:
+        "200":
           description: OK. Return The list
           content:
             application/json:
               schema:
                 type: array
                 minItems: 0
+                maxItems: 2048
                 items:
                   $ref: "#/components/schemas/Group"
     post:
@@ -482,9 +497,7 @@ paths:
         content:
           application/json:
             schema:
-              description: Users schema
               $ref: "#/components/schemas/Group"
-
       responses:
         "201":
           description: Group created
@@ -505,15 +518,16 @@ paths:
 
 
   /users/{userID}/groups/{groupID}/members:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+      - $ref: "#/components/parameters/groupID"
     put:
       summary: Add a user into the group.
       description: The user can add antoher user into the group from their userID.
       operationId: addToGroup
       tags:
         - "Group"
-      parameters:
-        - $ref : "#/components/parameters/userID"
-        - $ref : "#/components/parameters/groupID"
+
       requestBody:
         content:
           application/json:
@@ -524,15 +538,15 @@ paths:
               Username: Simone
         required: true
       responses:
-        201:
+        "201":
           description: User added.
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
     get:
       summary: List of members
@@ -540,17 +554,16 @@ paths:
       operationId: getMembers
       tags:
         - "Group"
-      parameters:
-        - $ref: "#/components/parameters/userID"
-        - $ref: "#/components/parameters/groupID"
+
       responses:
-        200:
+        "200":
           description: OK. Return list.
           content:
             application/json:
               schema:
                 type: array
                 minItems: 2
+                maxItems: 255
                 items:
                   $ref : "#/components/schemas/User"
                 example:
@@ -558,13 +571,13 @@ paths:
                     Username: Simone
                   - userID: 11301
                     Username: Luca
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
 
 
@@ -581,15 +594,15 @@ paths:
         - $ref: "#/components/parameters/userID"
         - $ref: "#/components/parameters/groupID"
       responses:
-        204:
+        "204":
           description: OK. Group Left
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
 
   /users/{userID}/groups/{groupID}/info/photo:
@@ -608,13 +621,13 @@ paths:
             schema:
               $ref: "#/components/schemas/Photo"
       responses:
-        201:
+        "201":
           description: Image updated.
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
 
   /users/{userID}/groups/{groupID}/info/name:
@@ -637,15 +650,16 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 255
+                  pattern: "^[a-zA-Z0-9_-]+$"
                   example: capodanno 2027
       responses:
-        201:
+        "201":
           description: Name updated.
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
 
   /users/{userID}/info/photo:
@@ -663,13 +677,19 @@ paths:
             schema:
               $ref: "#/components/schemas/Photo"
       responses:
-        201:
+        "201":
           description: Image updated.
-        401:
+          content:
+            application/json:
+              schema:
+                properties:
+                  PhotoID:
+                    $ref: "#/components/schemas/PhotoID"
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
 
 
@@ -692,15 +712,16 @@ paths:
               schema:
                 description: List of messages
                 type: array
-                minLength: 0
+                minItems: 0
+                maxItems: 2048
                 items:
                   allOf:
                     - $ref: "#/components/schemas/Message"
-                    - type: object
-                      properties:
+                    - properties:
                         sender:
-                          description: Sender of the message, you or other.
-                          $ref: "#/components/schemas/Username"
+                          allOf:
+                            - description: Sender of the message, you or other.
+                            - $ref: "#/components/schemas/Username"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -737,10 +758,12 @@ paths:
               schema:
                 allOf:
                   - $ref: "#/components/schemas/Message"
-                  - type: object
-                    properties:
+                  - properties:
                       read:
                         type: string
+                        minLength: 0
+                        maxLength: 255
+                        pattern: "^[a-zA-Z0-9_-]+$"
                         enum: [ received ]
                         example: received
 
@@ -796,6 +819,7 @@ paths:
               items:
                 $ref: "#/components/schemas/ForwardItem"
               minItems: 1
+              maxItems: 255
         required: true
       responses:
         "201":
@@ -815,16 +839,17 @@ paths:
 
 
   /users/{userID}/groups/{groupID}/messages/{messageID}/comments:
+    parameters:
+      - $ref: "#/components/parameters/userID"
+      - $ref: "#/components/parameters/groupID"
+      - $ref: "#/components/parameters/messageID"
     get:
       summary: Get all comments of a message.
       description: From a message, the user can see all comments on this.
       operationId: getGroupComments
       tags:
         - "Comment"
-      parameters:
-        - $ref: "#/components/parameters/userID"
-        - $ref: "#/components/parameters/groupID"
-        - $ref: "#/components/parameters/messageID"
+
       responses:
         "200":
           description: Returns the comments
@@ -832,6 +857,8 @@ paths:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 255
                 items:
                   $ref: "#/components/schemas/Comment"
 
@@ -851,10 +878,7 @@ paths:
       operationId: commentGroupMessage
       tags:
         - "Comment"
-      parameters:
-        - $ref: "#/components/parameters/userID"
-        - $ref: "#/components/parameters/groupID"
-        - $ref: "#/components/parameters/messageID"
+
       requestBody:
         content:
           application/json:
@@ -872,13 +896,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Comment"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
 
 
@@ -898,15 +922,15 @@ paths:
         - $ref: "#/components/parameters/messageID"
         - $ref: "#/components/parameters/commentID"
       responses:
-        204:
+        "204":
           $ref : "#/components/responses/DeleteComplete"
-        500:
+        "500":
           $ref: "#/components/responses/InternalError"
-        401:
+        "401":
           $ref: "#/components/responses/UnauthorizedError"
-        404:
+        "404":
           $ref: "#/components/responses/NotFoundError"
-        400:
+        "400":
           $ref: "#/components/responses/BadRequest"
 
 components:
@@ -921,6 +945,9 @@ components:
           type: string
           format: date-time
           example: 2025-10-31T15:42:00Z
+          minLength: 20
+          maxLength: 20
+          pattern: "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$"
 
     userID:
       description: Operation User's ID
@@ -934,7 +961,7 @@ components:
       type: string
       minLength: 1
       maxLength: 255
-      pattern: ^[a-zA-Z0-9_-]+$
+      pattern: "^[a-zA-Z0-9_-]+$"
       example: Simone
 
     User:
@@ -952,13 +979,18 @@ components:
     Group:
       allOf:
         - $ref: "#/components/schemas/Conversation"
-        - type: object
-          properties:
+        - properties:
             name:
+              description: Group name
+              type: string
+              minLength: 0
+              maxLength: 255
+              pattern: "^[a-zA-Z0-9_-]+$"
               example: capodanno2026
             participants:
               type: array
-              minLength: 2
+              minItems: 2
+              maxItems: 256
               items:
                 $ref : "#/components/schemas/User"
               example:
@@ -1001,7 +1033,7 @@ components:
           type: string
           minLength: 1
           maxLength: 255
-          pattern: ^[a-zA-Z0-9_-]+$
+          pattern: "^[a-zA-Z0-9_-]+$"
         avatar:
           $ref: "#/components/schemas/Photo"
 
@@ -1015,10 +1047,14 @@ components:
         emoji:
           type: string
           description: Unicode of emoji used in the comment.
+          pattern: "^[\u0000-\uFFFF]+$"
           example: ☠️
         time:
           description: Timestamp
           type: string
+          minLength: 20
+          maxLength: 20
+          pattern: "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$"
           format: date-time
           example: 2025-10-31T15:42:00Z
 
@@ -1030,17 +1066,21 @@ components:
       type: object
       properties:
         photoID:
-          type: integer
-          readOnly: true
-          example: 55367
+          $ref: "#/components/schemas/PhotoID"
         url:
           type: string
+          minLength: 1
+          maxLength: 255
+          pattern: "^[a-zA-Z0-9_-]+$"
           format: uri
           description: photo's URL to access the image
           example: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
         mime:
           description: mime represents the type of the photo(image/png...)
           type: string
+          minLength: 0
+          maxLength: 255
+          pattern: '^[a-zA-Z0-9]+/[a-zA-Z0-9.+_-]+$'
           example: image/jpg
         width:
           type: integer
@@ -1051,6 +1091,7 @@ components:
 
     Send:
       type: object
+      description: What to send, Image or text
       properties:
         body:
           oneOf:
@@ -1060,8 +1101,7 @@ components:
     Message:
         allOf:
           - $ref : "#/components/schemas/Send"
-          - type: object
-            properties:
+          - properties:
               messageID:
                 $ref: "#/components/schemas/messageID"
               time:
@@ -1069,14 +1109,18 @@ components:
                 type: string
                 format: date-time
                 example: 2025-10-31T15:42:00Z
+                minLength: 20
+                maxLength: 20
+                pattern: "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$"
+
               read:
                 type: string
+                minLength: 0
+                maxLength: 255
+                description: Read state of the message
+                pattern: "^[a-zA-Z0-9_-]+$"
                 enum: [ received, read ]
                 example: received
-
-        #sender:
-        #  description: Sender of the message, you or other.
-        #  $ref: "#/components/schemas/Username"
 
     Text:
       description: Text of the message
@@ -1084,21 +1128,24 @@ components:
       minLength: 0
       maxLength: 2048
       example: Hello, World!
+      pattern: "^[a-zA-Z0-9_-]+$"
 
     Conversation:
       allOf:
         - $ref: "#/components/schemas/PreviewConversation"
-        - type: object
-          properties:
+        - properties:
             name:
-              example: user100433
+              $ref : "#/components/schemas/Username"
 
-
+    PhotoID:
+      type: integer
+      readOnly: true
+      example: 55367
     PhotoMessage:
+      description: The user can send an image with an optional description.
       allOf:
         - $ref: "#/components/schemas/Photo"
-        - type: object
-          properties:
+        - properties:
             caption:
               $ref: "#/components/schemas/Text"
     ForwardItem:
@@ -1106,6 +1153,9 @@ components:
       properties:
         type:
           type: string
+          minLength: 0
+          maxLength: 255
+          pattern: "^[a-zA-Z0-9_-]+$"
           enum: [ conversation, group ]
           description: kind of destination (conversations or groups).
           example: conversation
@@ -1120,44 +1170,44 @@ components:
 
   parameters:
     userID:
-      schema:
-        $ref: "#/components/schemas/userID"
       name: userID
       in: path
       required: true
       description: User Identifier
+      schema:
+        $ref: "#/components/schemas/userID"
 
     conversationID:
-      schema:
-        $ref: "#/components/schemas/conversationID"
       name: conversationID
       in: path
       required: true
       description: Chat Identifier
+      schema:
+        $ref: "#/components/schemas/conversationID"
 
     messageID:
-      schema:
-        $ref: "#/components/schemas/messageID"
       name: messageID
       in: path
       required: true
       description: Message Identifier
+      schema:
+        $ref: "#/components/schemas/messageID"
 
     commentID:
-      schema:
-        $ref: "#/components/schemas/commentID"
       name: commentID
       in: path
       required: true
       description: Comment Identifier
+      schema:
+        $ref: "#/components/schemas/commentID"
 
     groupID:
-      schema:
-        $ref: "#/components/schemas/groupID"
       name : groupID
       in: path
       required: true
       description: Group Identifier
+      schema:
+        $ref: "#/components/schemas/groupID"
 
   securitySchemes:
     WASATextAuth:
