@@ -41,8 +41,8 @@ paths:
               properties:
                 name:
                   allOf:
-                    - $ref: "#/components/schemas/Username"
-                    - description: Username of the user.
+                    - $ref: "#/components/schemas/username"
+                    - description: username of the user.
       responses:
         "201":
           description: Login successful
@@ -73,8 +73,8 @@ paths:
         - in: query
           name: username
           schema:
-            $ref : "#/components/schemas/Username"
-          description: Username or part of the username to search for. If not specified, returns all users
+            $ref : "#/components/schemas/username"
+          description: username or part of the username to search for. If not specified, returns all users
           required: false
       responses:
         "200":
@@ -92,12 +92,18 @@ paths:
                     items:
                       $ref: "#/components/schemas/User"
               example:
-                users: [simone, user29455]
+                users:
+                  - userId: 1001
+                    username: Simone
+                  - userId: 1002
+                    username: Alessio
+                  - userId: 1003
+                    username: Luca
         "500":
           $ref: "#/components/responses/InternalError"
   /users/{userId}/info/username:
     put:
-      operationId: setMyUserName
+      operationId: setMyusername
       summary: Set personalized username
       description: Let the user change his username into another.
         If the new username is available, set the new username. Otherwise, keep the last username saved and returns error.
@@ -114,8 +120,8 @@ paths:
               description: Propose's schema
               type: object
               properties:
-                newUsername:
-                  $ref: "#/components/schemas/Username"
+                newusername:
+                  $ref: "#/components/schemas/username"
 
       responses:
         "201":
@@ -129,7 +135,7 @@ paths:
                   userId:
                     $ref: "#/components/schemas/userId"
                   username:
-                    $ref: "#/components/schemas/Username"
+                    $ref: "#/components/schemas/username"
               example:
                 userId: 19935
                 username: simone
@@ -137,7 +143,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFoundError"
         "409":
-          description: Username already in use
+          description: username already in use
           content:
             application/json:
               schema:
@@ -147,7 +153,7 @@ paths:
                   userId:
                     $ref: "#/components/schemas/userId"
                   username:
-                    $ref: "#/components/schemas/Username"
+                    $ref: "#/components/schemas/username"
               example:
                 userId: 19935
                 username: simone
@@ -216,10 +222,10 @@ paths:
           content:
             application/json:
               schema:
-                description: Returns the canonical conversation
-                properties:
-                  conversation:
-                    $ref: "#/components/schemas/Conversation"
+                allOf:
+                  - $ref: "#/components/schemas/Conversation"
+                  - description: Returns the canonical conversation
+
         "400":
           $ref: "#/components/responses/BadRequest"
         "500":
@@ -319,7 +325,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/conversations/{conversationId}/messages/{messageId}:
+  /users/{userId}/conversations/{conversationId}/messages/{MessageId}:
     delete:
       summary: Delete message
       description: From the list of sent message, the user can delete one of it.
@@ -329,7 +335,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/userId"
         - $ref: "#/components/parameters/conversationId"
-        - $ref: "#/components/parameters/messageId"
+        - $ref: "#/components/parameters/MessageId"
       responses:
         "204":
           $ref: "#/components/responses/DeleteComplete"
@@ -342,7 +348,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
-  /users/{userId}/conversations/{conversationId}/messages/{messageId}/forward_message:
+  /users/{userId}/conversations/{conversationId}/messages/{MessageId}/forward_message:
     post:
       summary: Forward Message
       description: From a message in a conversation, the message can be sent in another conversation.
@@ -352,7 +358,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/userId"
         - $ref: "#/components/parameters/conversationId"
-        - $ref: "#/components/parameters/messageId"
+        - $ref: "#/components/parameters/MessageId"
       requestBody:
         content:
           application/json:
@@ -360,15 +366,17 @@ paths:
               description: List of message that the application has to forward
               properties:
                 forwardToConversation:
+                  description: Array of conversations that we want to forward the message
                   type: array
                   items:
                     $ref: "#/components/schemas/conversationId"
                   minItems: 1
                   maxItems: 255
                 forwardToGroup:
+                  description: Array of groups that we want to forward the message
                   type: array
                   items:
-                    $ref: "#/components/schemas/groupId"
+                    $ref: "#/components/schemas/GroupId"
                   minItems: 1
                   maxItems: 255
 
@@ -382,7 +390,7 @@ paths:
                 $ref: "#/components/schemas/Message"
               example:
                 body: "Hello, World!"
-                messageId: 2635444
+                MessageId: 2635444
                 time: "2025-10-31T15:42:00Z"
                 read: "received"
         "500":
@@ -395,11 +403,11 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/conversations/{conversationId}/messages/{messageId}/comments:
+  /users/{userId}/conversations/{conversationId}/messages/{MessageId}/comments:
     parameters:
       - $ref: "#/components/parameters/userId"
       - $ref: "#/components/parameters/conversationId"
-      - $ref: "#/components/parameters/messageId"
+      - $ref: "#/components/parameters/MessageId"
     get:
       summary: Get all comments of a message
       description: From a message, the user can see all comments on this.
@@ -475,7 +483,7 @@ paths:
 
 
 
-  /users/{userId}/conversations/{conversationId}/messages/{messageId}/comments/{commentId}:
+  /users/{userId}/conversations/{conversationId}/messages/{MessageId}/comments/{CommentId}:
       delete:
         summary: Delete Comment
         description: From the list of comments, the user can delete one of this.
@@ -485,8 +493,8 @@ paths:
         parameters:
           - $ref: "#/components/parameters/userId"
           - $ref: "#/components/parameters/conversationId"
-          - $ref: "#/components/parameters/messageId"
-          - $ref: "#/components/parameters/commentId"
+          - $ref: "#/components/parameters/MessageId"
+          - $ref: "#/components/parameters/CommentId"
         responses:
           "204":
             $ref : "#/components/responses/DeleteComplete"
@@ -556,10 +564,10 @@ paths:
                  - description: Response schema, returns the group saved
                  - $ref: "#/components/schemas/Group"
               example:
-                  groupId: 288344
+                  GroupId: 288344
                   name: capodanno2026
-                  photo:
-                    photoId: 88332
+                  Photo:
+                    PhotoId: 88332
                     url: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
                     mime: image/jpg
                     width: 1024
@@ -580,10 +588,10 @@ paths:
 
 
 
-  /users/{userId}/groups/{groupId}/members:
+  /users/{userId}/groups/{GroupId}/members:
     parameters:
       - $ref: "#/components/parameters/userId"
-      - $ref: "#/components/parameters/groupId"
+      - $ref: "#/components/parameters/GroupId"
     put:
       summary: Add a user into the group
       description: The user can add antoher user into the group from their userId.
@@ -598,9 +606,20 @@ paths:
               allOf:
                 - $ref : "#/components/schemas/User"
                 - description: User we want to add
+                - properties:
+                    time:
+                      description: Timestamp
+                      type: string
+                      format: date-time
+                      example: 2025-10-31T15:42:00Z
+                      minLength: 20
+                      maxLength: 20
+                      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
             example:
-              userId: 11300
-              Username: Simone
+              user: 11300
+              username: Simone
+              time: 2025-10-31T15:42:00Z
+
         required: true
       responses:
         "201":
@@ -609,17 +628,21 @@ paths:
             application/json:
               schema:
                 description: Response schema
-                properties:
-                  userId:
-                    $ref : "#/components/schemas/User"
-                  time:
-                    description: Timestamp
-                    type: string
-                    format: date-time
-                    example: 2025-10-31T15:42:00Z
-                    minLength: 20
-                    maxLength: 20
-                    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+                allOf:
+                  - $ref: "#/components/schemas/User"
+                  - properties:
+                      time:
+                        description: Timestamp
+                        type: string
+                        format: date-time
+                        example: 2025-10-31T15:42:00Z
+                        minLength: 20
+                        maxLength: 20
+                        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+              example:
+                userId: 11300
+                username: Simone
+                time: 2025-10-31T15:42:00Z
 
         "404":
           $ref: "#/components/responses/NotFoundError"
@@ -642,8 +665,10 @@ paths:
           content:
             application/json:
               schema:
+                description: List of members belonging to the group
                 properties:
-                  Members:
+                  members:
+                    description: array that contains members of a group.
                     type: array
                     minItems: 2
                     maxItems: 255
@@ -651,9 +676,9 @@ paths:
                       $ref : "#/components/schemas/User"
                     example:
                       - userId: 11300
-                        Username: Simone
+                        username: Simone
                       - userId: 11301
-                        Username: Luca
+                        username: Luca
         "404":
           $ref: "#/components/responses/NotFoundError"
         "401":
@@ -666,7 +691,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{groupId}/members/me:
+  /users/{userId}/groups/{GroupId}/members/me:
     delete:
       summary: Leave the group
       description: Delete the user from the group.
@@ -675,7 +700,7 @@ paths:
         - "Group"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
+        - $ref: "#/components/parameters/GroupId"
       responses:
         "204":
           description: OK. Group Left
@@ -688,30 +713,31 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
-  /users/{userId}/groups/{groupId}/info/photo:
+  /users/{userId}/groups/{GroupId}/info/photo:
     put:
       summary: Set Group Photo
-      description: The user can set a personalized group photo.
+      description: The user can set a personalized group Photo.
       operationId: setGroupPhoto
       tags:
         - "Group"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
+        - $ref: "#/components/parameters/GroupId"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/photo"
+              $ref: "#/components/schemas/Photo"
       responses:
         "201":
           description: Image updated.
           content:
             application/json:
               schema:
+                description: Updated group Photo information
                 properties:
-                  photoId:
-                    $ref : "#/components/schemas/photoId"
+                  PhotoId:
+                    $ref : "#/components/schemas/PhotoId"
                   time:
                     description: Timestamp
                     type: string
@@ -727,7 +753,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
-  /users/{userId}/groups/{groupId}/info/name:
+  /users/{userId}/groups/{GroupId}/info/name:
     put:
       summary: Set Group name
       description: The user can set a personalized group name.
@@ -736,11 +762,12 @@ paths:
         - "Group"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
+        - $ref: "#/components/parameters/GroupId"
       requestBody:
         content:
           application/json:
             schema:
+              description: Schema for updating the group's name
               properties:
                 name:
                   description: Group's name
@@ -755,6 +782,7 @@ paths:
           content:
             application/json:
               schema:
+                description: Updated group name response schema
                 properties:
                   name:
                     description: Group's name
@@ -781,7 +809,7 @@ paths:
   /users/{userId}/info/photo:
     put:
       summary: Change Avatar
-      description: The user can edit their profile photo
+      description: The user can edit their profile Photo
       tags:
         - "User"
       operationId: setMyPhoto
@@ -791,16 +819,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/photo"
+              $ref: "#/components/schemas/Photo"
       responses:
         "201":
           description: Image updated.
           content:
             application/json:
               schema:
+                description: Updated user Photo response schema
                 properties:
-                  photoId:
-                    $ref: "#/components/schemas/photoId"
+                  PhotoId:
+                    $ref: "#/components/schemas/PhotoId"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "400":
@@ -810,7 +839,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{groupId}:
+  /users/{userId}/groups/{GroupId}:
     get:
       summary: Show the conversation
       description: Returns the details of a single conversation identified by conversationId from the user's conversations.
@@ -819,7 +848,7 @@ paths:
         - "Conversations"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
+        - $ref: "#/components/parameters/GroupId"
       responses:
         "200":
           description: Returns the chat as a list of messages.
@@ -850,7 +879,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{groupId}/messages:
+  /users/{userId}/groups/{GroupId}/messages:
     post:
       summary: Send new group message
       description: Send new message in the group.
@@ -859,7 +888,7 @@ paths:
         - "Message"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
+        - $ref: "#/components/parameters/GroupId"
 
       requestBody:
         content:
@@ -889,7 +918,7 @@ paths:
                         example: received
               example:
                 body: Hellooooo
-                messageId: 4333744
+                MessageId: 4333744
                 time : 2025-10-31T15:42:00Z
                 read: received
 
@@ -904,7 +933,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/groups/{groupId}/messages/{messageId}:
+  /users/{userId}/groups/{GroupId}/messages/{MessageId}:
     delete:
       summary: Delete message
       description: From the list of sent message, the user can delete one of it.
@@ -913,8 +942,8 @@ paths:
         - "Message"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
-        - $ref: "#/components/parameters/messageId"
+        - $ref: "#/components/parameters/GroupId"
+        - $ref: "#/components/parameters/MessageId"
       responses:
         "204":
           $ref: "#/components/responses/DeleteComplete"
@@ -927,7 +956,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
-  /users/{userId}/groups/{groupId}/messages/{messageId}/forward_message:
+  /users/{userId}/groups/{GroupId}/messages/{MessageId}/forward_message:
     post:
       summary: Forward Message
       description: From a message in a conversation, the message can be sent in another conversation.
@@ -936,8 +965,8 @@ paths:
         - "Message"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
-        - $ref: "#/components/parameters/messageId"
+        - $ref: "#/components/parameters/GroupId"
+        - $ref: "#/components/parameters/MessageId"
       requestBody:
         content:
           application/json:
@@ -955,7 +984,7 @@ paths:
                   description: Part to forward to group
                   type: array
                   items:
-                    $ref: "#/components/schemas/groupId"
+                    $ref: "#/components/schemas/GroupId"
                   minItems: 1
                   maxItems: 255
         required: true
@@ -968,7 +997,7 @@ paths:
                 $ref: "#/components/schemas/Message"
               example:
                 body: "Hello, World!"
-                messageId: 2635444
+                MessageId: 2635444
                 time: "2025-10-31T15:42:00Z"
                 read: "received"
         "500":
@@ -981,11 +1010,11 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/groups/{groupId}/messages/{messageId}/comments:
+  /users/{userId}/groups/{GroupId}/messages/{MessageId}/comments:
     parameters:
       - $ref: "#/components/parameters/userId"
-      - $ref: "#/components/parameters/groupId"
-      - $ref: "#/components/parameters/messageId"
+      - $ref: "#/components/parameters/GroupId"
+      - $ref: "#/components/parameters/MessageId"
     get:
       summary: Get all comments of a message
       description: From a message, the user can see all comments on this.
@@ -999,6 +1028,7 @@ paths:
           content:
             application/json:
               schema:
+                description: List of comments on the group message
                 properties:
                   comments:
                     description: List of comments
@@ -1029,6 +1059,7 @@ paths:
         content:
           application/json:
             schema:
+              description: Schema for creating a new comment on the group message
               properties:
                 emoji:
                   type: string
@@ -1058,7 +1089,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{groupId}/messages/{messageId}/comments/{commentId}:
+  /users/{userId}/groups/{GroupId}/messages/{MessageId}/comments/{CommentId}:
     delete:
       summary: Delete Comment
       description: From the list of comments, the user can delete one of this.
@@ -1067,9 +1098,9 @@ paths:
         - "Comment"
       parameters:
         - $ref: "#/components/parameters/userId"
-        - $ref: "#/components/parameters/groupId"
-        - $ref: "#/components/parameters/messageId"
-        - $ref: "#/components/parameters/commentId"
+        - $ref: "#/components/parameters/GroupId"
+        - $ref: "#/components/parameters/MessageId"
+        - $ref: "#/components/parameters/CommentId"
       responses:
         "204":
           $ref : "#/components/responses/DeleteComplete"
@@ -1085,6 +1116,7 @@ paths:
 components:
   schemas:
     Login:
+      description: Represents the response returned after a user successfully authenticates, including assigned user identifier and login timestamp.
       type: object
       properties:
         userId:
@@ -1105,8 +1137,8 @@ components:
       readOnly: true
 
 
-    Username:
-      description: User's Username
+    username:
+      description: User's username
       type: string
       minLength: 1
       maxLength: 255
@@ -1119,17 +1151,17 @@ components:
       properties:
         userId:
           $ref: "#/components/schemas/userId"
-        Username:
-          $ref: "#/components/schemas/Username"
+        username:
+          $ref: "#/components/schemas/username"
       required:
         - userId
-        - Username
+        - username
 
     Group:
+        description: Group schema
         properties:
-
-          groupId:
-            $ref: "#/components/schemas/groupId"
+          GroupId:
+            $ref: "#/components/schemas/GroupId"
           name:
             description: Group name
             type: string
@@ -1137,9 +1169,10 @@ components:
             maxLength: 255
             pattern: "^[a-zA-Z0-9_-]+$"
             example: capodanno2026
-          photo:
-            $ref: "#/components/schemas/photo"
+          Photo:
+            $ref: "#/components/schemas/Photo"
           participants:
+            description: list of participants of a group
             type: array
             minItems: 2
             maxItems: 256
@@ -1147,29 +1180,29 @@ components:
               $ref : "#/components/schemas/User"
             example:
               - userId: 11300
-                Username: Simone
+                username: Simone
               - userId: 11301
-                Username: Luca
+                username: Luca
 
     conversationId:
-      description: Chat Identifier
+      description: Unique ID assigned to each conversation resource in the system.
       type: integer
       example: 110056
       readOnly: true
 
-    commentId:
-      description: Comment Identifier
+    CommentId:
+      description: Unique ID assigned to each comment resource in the system.
       type: integer
       example: 100446
       readOnly: true
-    messageId:
-      description: Message Identifier
+    MessageId:
+      description: Unique ID assigned to each message resource in the system.
       type: integer
       example: 2635444
       readOnly: true
 
-    groupId:
-      description: Group Identifier
+    GroupId:
+      description: Unique ID assigned to each group resource in the system.
       type: integer
       example: 2773354
       readOnly: true
@@ -1187,15 +1220,15 @@ components:
           maxLength: 255
           pattern: "^[a-zA-Z0-9_-]+$"
         avatar:
-          $ref: "#/components/schemas/photo"
+          $ref: "#/components/schemas/Photo"
 
 
     Comment:
       description: Comment schema
       type: object
       properties:
-        commentId:
-          $ref : "#/components/schemas/commentId"
+        CommentId:
+          $ref : "#/components/schemas/CommentId"
         emoji:
           type: string
           description: Unicode of emoji used in the comment.
@@ -1210,31 +1243,33 @@ components:
           format: date-time
           example: 2025-10-31T15:42:00Z
 
-    photo:
+    Photo:
       description: Photo metadata
       type: object
       properties:
-        photoId:
-          $ref: "#/components/schemas/photoId"
+        PhotoId:
+          $ref: "#/components/schemas/PhotoId"
         url:
           type: string
           minLength: 1
           maxLength: 255
           pattern: "^[a-zA-Z]+://.+$"
           format: url
-          description: photo's URL to access the image
+          description: Photo's URL to access the image
           example: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
         mime:
-          description: mime represents the type of the photo(image/png...)
+          description: mime represents the type of the Photo(image/png...)
           type: string
           minLength: 0
           maxLength: 255
           pattern: '^[a-zA-Z0-9]+/[a-zA-Z0-9.+_-]+$'
           example: image/jpg
         width:
+          description: width of the Photo
           type: integer
           example: 1024
         height:
+          description: height of the Photo
           type: integer
           example: 720
 
@@ -1251,8 +1286,8 @@ components:
         allOf:
           - $ref : "#/components/schemas/Send"
           - properties:
-              messageId:
-                $ref: "#/components/schemas/messageId"
+              MessageId:
+                $ref: "#/components/schemas/MessageId"
               time:
                 description: Timestamp
                 type: string
@@ -1284,27 +1319,31 @@ components:
         - $ref: "#/components/schemas/PreviewConversation"
         - properties:
             name:
-              $ref : "#/components/schemas/Username"
+              $ref : "#/components/schemas/username"
 
-    photoId:
+    PhotoId:
+      description: ID of the Photo
       type: integer
       readOnly: true
       example: 55367
     PhotoMessage:
       description: The user can send an image with an optional description.
       allOf:
-        - $ref: "#/components/schemas/photo"
+        - $ref: "#/components/schemas/Photo"
         - properties:
             caption:
               $ref: "#/components/schemas/Text"
 
     Error:
+      description: Info of an error
       type: object
       properties:
         code:
+          description: code of the error
           type: integer
           example: 401
         message:
+          description: text of the error
           type: string
           minLength : 0
           maxLength: 2048
@@ -1330,29 +1369,29 @@ components:
       schema:
         $ref: "#/components/schemas/conversationId"
 
-    messageId:
-      name: messageId
+    MessageId:
+      name: MessageId
       in: path
       required: true
       description: Message Identifier
       schema:
-        $ref: "#/components/schemas/messageId"
+        $ref: "#/components/schemas/MessageId"
 
-    commentId:
-      name: commentId
+    CommentId:
+      name: CommentId
       in: path
       required: true
       description: Comment Identifier
       schema:
-        $ref: "#/components/schemas/commentId"
+        $ref: "#/components/schemas/CommentId"
 
-    groupId:
-      name : groupId
+    GroupId:
+      name : GroupId
       in: path
       required: true
       description: Group Identifier
       schema:
-        $ref: "#/components/schemas/groupId"
+        $ref: "#/components/schemas/GroupId"
 
   securitySchemes:
     WASATextAuth:
