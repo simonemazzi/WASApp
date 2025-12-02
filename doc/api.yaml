@@ -103,7 +103,7 @@ paths:
           $ref: "#/components/responses/InternalError"
   /users/{userId}/info/username:
     put:
-      operationId: setMyusername
+      operationId: setMyUserName
       summary: Set personalized username
       description: Let the user change his username into another.
         If the new username is available, set the new username. Otherwise, keep the last username saved and returns error.
