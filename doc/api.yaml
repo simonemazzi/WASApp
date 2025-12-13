@@ -21,6 +21,7 @@ security:
   - WASATextAuth: []
 
 
+
 paths:
   /session:
     post:
@@ -193,7 +194,6 @@ paths:
                     conversationId: 110056
                     name: "Simone"
                     avatar:
-                      photoId: 55367
                       url: "https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg"
                       mime: "image/jpg"
                       width: 1024
@@ -229,11 +229,10 @@ paths:
                 conversationId: 110056
                 name: "Alessio"
                 avatar:
-                  photoId: 55367
-                  url: "https://example.com/image.jpg"
+                  url: "https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg"
                   mime: "image/jpg"
-                  width: 640
-                  height: 480
+                  width: 1024
+                  height: 720
 
 
         "400":
@@ -267,11 +266,10 @@ paths:
                 conversationId: 110056
                 name: "Alessio"
                 avatar:
-                  photoId: 55367
-                  url: "https://example.com/image.jpg"
+                  url: "https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg"
                   mime: "image/jpg"
-                  width: 640
-                  height: 480
+                  width: 1024
+                  height: 720
         "401":
           $ref: "#/components/responses/UnauthorizedError"
         "404":
@@ -609,7 +607,7 @@ paths:
                   groups:
                     - groupId: 288344
                       name: "capodanno2026"
-                      photo:
+                      upload:
                         photoId: 88332
                         url: "https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg"
                         mime: "image/jpg"
@@ -640,8 +638,6 @@ paths:
                   maxLength: 255
                   pattern: "^[a-zA-Z0-9_ -]+$"
                   example: capodanno2026
-                photo:
-                  $ref: "#/components/schemas/Photo"
                 participants:
                   description: list of participants of a group
                   type: array
@@ -664,12 +660,7 @@ paths:
               example:
                 groupId: 288344
                 name: "capodanno2026"
-                photo:
-                  photoId: 88332
-                  url: "https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg"
-                  mime: "image/jpg"
-                  width: 1024
-                  height: 720
+
                 participants:
                   - userId: 10012
                     username: "Simone"
@@ -811,10 +802,17 @@ paths:
         - $ref: "#/components/parameters/userId"
         - $ref: "#/components/parameters/GroupId"
       requestBody:
+        required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Photo"
+              type: object
+              description: Upload photo's schema
+              properties:
+                photo:
+                  $ref: "#/components/schemas/Photo"
+              required:
+                - photo
       responses:
         "201":
           description: Image updated.
@@ -823,8 +821,8 @@ paths:
               schema:
                 description: Updated group Photo information
                 properties:
-                  photoId:
-                    $ref : "#/components/schemas/Photo"
+                  upload:
+                    $ref: "#/components/schemas/Upload"
                   time:
                     description: Timestamp
                     type: string
@@ -834,10 +832,11 @@ paths:
                     maxLength: 20
                     pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
               example:
-                url: "https://example.com/group-avatar.jpg"
-                mime: "image/jpg"
-                width: 640
-                height: 480
+                upload:
+                  url: "https://example.com/uploads/groups/123/group_photo.png"
+                  mime: "image/png"
+                  width: 512
+                  height: 512
                 time: "2025-10-31T15:42:00Z"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
@@ -912,17 +911,24 @@ paths:
       parameters:
         - $ref: "#/components/parameters/userId"
       requestBody:
+        required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Photo"
+              type: object
+              description: Upload photo's schema
+              properties:
+                photo:
+                  $ref: "#/components/schemas/Photo"
+              required:
+                - photo
       responses:
         "201":
           description: Image updated.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Photo"
+                $ref: "#/components/schemas/Upload"
               example:
                 url: "https://example.com/avatar.jpg"
                 mime: "image/png"
@@ -957,8 +963,7 @@ paths:
               example:
                 groupId: 288344
                 name: "capodanno2026"
-                photo:
-                  photoId: 88332
+                upload:
                   url: "https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg"
                   mime: "image/jpg"
                   width: 1024
@@ -1329,8 +1334,8 @@ components:
           maxLength: 255
           pattern: "^[a-zA-Z0-9_ -]+$"
           example: capodanno2026
-        photo:
-          $ref: "#/components/schemas/Photo"
+        upload:
+          $ref: "#/components/schemas/Upload"
         participants:
           description: list of participants of a group
           type: array
@@ -1395,32 +1400,40 @@ components:
           example: 2025-10-31T15:42:00Z
 
     Photo:
-      description: Photo metadata
+      description: Binary image file
+      type: string
+      format: binary
+      pattern: "^[A-Za-z0-9+/=]+$"
+      minLength: 1
+      maxLength: 9999999999999999999
+
+    Upload:
+      description: upload's schema for responses or view
       type: object
       properties:
-        url:
-          type: string
-          minLength: 1
-          maxLength: 255
-          pattern: "^[a-zA-Z]+://.+$"
-          format: url
-          description: Photo's URL to access the image
-          example: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
-        mime:
-          description: mime represents the type of the Photo(image/png...)
-          type: string
-          minLength: 0
-          maxLength: 255
-          pattern: '^[a-zA-Z]+/[a-zA-Z.]+$'
-          example: image/jpg
-        width:
-          description: width of the Photo
-          type: integer
-          example: 1024
-        height:
-          description: height of the Photo
-          type: integer
-          example: 720
+          url:
+            type: string
+            minLength: 1
+            maxLength: 255
+            pattern: "^[a-zA-Z]+://.+$"
+            format: url
+            description: Photo's URL to access the image
+            example: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
+          mime:
+            description: mime represents the type of the Photo(image/png...)
+            type: string
+            minLength: 0
+            maxLength: 255
+            pattern: '^[a-zA-Z]+/[a-zA-Z.]+$'
+            example: image/jpg
+          width:
+            description: width of the image
+            type: integer
+            example: 1024
+          height:
+            description: height of the image
+            type: integer
+            example: 720
 
     Send:
       type: object
@@ -1501,7 +1514,7 @@ components:
         name:
           $ref: "#/components/schemas/Username"
         avatar:
-          $ref: "#/components/schemas/Photo"
+          $ref: "#/components/schemas/Upload"
 
 
     ConversationPrototype:

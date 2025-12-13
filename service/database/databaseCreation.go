@@ -1,6 +1,8 @@
 package database
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const SQLschema = `
 
@@ -27,6 +29,12 @@ CREATE TABLE IF NOT EXISTS User(
     userId INTEGER PRIMARY KEY AUTOINCREMENT
 );
 
+CREATE TABLE IF NOT EXISTS Login(
+	loginId VARCHAR(36) PRIMARY KEY,
+	userId INTEGER REFERENCES User(userId) NOT NULL,
+	time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS UserUsername(
     updateId INTEGER PRIMARY KEY AUTOINCREMENT,
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -38,7 +46,7 @@ CREATE TABLE IF NOT EXISTS Photo (
     photoId INTEGER PRIMARY KEY AUTOINCREMENT,
     URL TEXT NOT NULL,
     mime TEXT NOT NULL
-        CHECK (mime REGEXP '^[a-zA-Z]+/[a-zA-Z0-9.+-]+$'),
+        CHECK (mime LIKE '%/%'),
     width INTEGER NOT NULL CHECK (width > 0),
     height INTEGER NOT NULL CHECK ( height > 0 )
 );
@@ -57,8 +65,6 @@ CREATE TABLE IF NOT EXISTS GroupPhoto(
     groupId INTEGER   REFERENCES Group_ (groupId) NOT NULL
 
 );
-
-
 
 
 ---CONVERSATIONS---
@@ -119,7 +125,7 @@ CREATE TABLE IF NOT EXISTS ReadForwardedMessage(
 CREATE TABLE IF NOT EXISTS Comment(
     commentId INTEGER PRIMARY KEY AUTOINCREMENT,
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    emoji TEXT NOT NULL CHECK ( emoji REGEXP '^[\u0000-\uFFFF]+$'),
+    emoji TEXT NOT NULL,
     messageId INTEGER   REFERENCES Message(messageId),
     forwardedId INTEGER   REFERENCES ForwardedMessage(forwardedId),
     CHECK (
@@ -251,7 +257,7 @@ END;
 func (db *appdbimpl) initSchema() error {
 	_, err := db.c.Exec(SQLschema)
 	if err != nil {
-		return fmt.Errorf("failed to create schema: %s", err)
+		return fmt.Errorf("failed to create schema: %w", err)
 	}
 	return nil
 }

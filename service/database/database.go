@@ -33,13 +33,32 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"time"
 )
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 	GetName() (string, error)
 	SetName(name string) error
-
+	CreateSession(string) (string, string, time.Time, error)
+	UserByToken(token string) (int, error)
+	Users() ([]DBUser, error)
+	UsersBySearch(token string) ([]DBUser, error)
+	SetMyUserName(int, string) error
+	SetMyPhoto(url string, width int, height int, mime string, userId int) error
+	IDExists(token int) bool
+	SetGroupPhoto(url string, width int, height int, mime string, groupId int) error
+	GetConversations(userId int) ([]Conversation, error)
+	CreateConversation(userId int, username string, time string) (Conversation, error)
+	SearchUserByUsername(username string, time string) (int, error)
+	GetPhoto(userId int, time string) (Avatar, error)
+	GetConversationById(conversationId int) (Conversation, error)
+	UserConversation(userId int, conversationId int) (bool, error)
+	GetMessages(conversationId int, userId int) ([]Message, error)
+	InsertPhoto(url string, width int, height int, mime string) (int, error)
+	InsertMessage(conversationId int, userId int, text string, photoId *int) error
+	GetUsername(userId int, time string) (string, error)
+	IsRead(messageId int, userId int) (string, error)
 	Ping() error
 }
 
@@ -53,11 +72,14 @@ func New(db *sql.DB) (AppDatabase, error) {
 	if db == nil {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
-	db.initSchema()
 
-	return &appdbimpl{
-		c: db,
-	}, nil
+	impl := &appdbimpl{c: db}
+
+	if err := impl.initSchema(); err != nil {
+		return nil, err
+	}
+
+	return impl, nil
 }
 
 func (db *appdbimpl) Ping() error {
