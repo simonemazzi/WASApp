@@ -20,6 +20,8 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:userId/conversations/:conversationId", rt.wrap(rt.authHandler(rt.getConversation)))
 	rt.router.GET("/users/:userId/conversations/:conversationId/messages", rt.wrap(rt.authHandler(rt.getMessages)))
 	rt.router.POST("/users/:userId/conversations/:conversationId/messages", rt.wrap(rt.authHandler(rt.postMessage)))
+	rt.router.DELETE("/users/:userId/conversations/:conversationId/messages/:messageId", rt.wrap(rt.authHandler(rt.deleteMessage)))
+	rt.router.POST("/users/{userId}/conversations/{conversationId}/messages/{MessageId}/forward_message", rt.wrap(rt.authHandler(rt.forwardMessage)))
 	// FINIRE IL PROBLEMA DELLE CONVERSAZIONI BIDIREZIONALI
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)

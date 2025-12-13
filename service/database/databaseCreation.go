@@ -120,6 +120,17 @@ CREATE TABLE IF NOT EXISTS ReadForwardedMessage(
     PRIMARY KEY (userId,forwardedId)
 );
 
+
+CREATE TABLE IF NOT EXISTS DeletedMessage(
+	userId 	  	INTEGER   REFERENCES User(userId) NOT NULL,
+	messageId 	INTEGER   REFERENCES Message(messageId),
+	forwardedId INTEGER   REFERENCES ForwardedMessage(forwardedId),
+	time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (userId,messageId,forwardedId),
+	CHECK ((messageId IS NOT NULL AND forwardedId IS NULL)
+	OR (messageId IS  NULL AND forwardedId IS NOT NULL) )
+);
+
 ---COMMENT---
 
 CREATE TABLE IF NOT EXISTS Comment(

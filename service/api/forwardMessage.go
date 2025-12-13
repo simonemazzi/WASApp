@@ -9,7 +9,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
+type ForwardMessageRequest struct {
+	ForwardToConversation []int `json:"forwardToConversation"`
+	ForwardToGroup        []int `json:"forwardToGroup"`
+}
+
+func (rt *_router) forwardMessage(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
 	userId, err := strconv.Atoi(params.ByName("userId"))
 	if err != nil {
 		context.Logger.WithError(err).Error("Error converting userId to int")
@@ -38,17 +43,29 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, param
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
-	conversation, err := rt.db.GetConversationById(conversationId)
+
+	messageId, err := strconv.Atoi(params.ByName("messageId"))
 	if err != nil {
-		context.Logger.WithError(err).Error("Error getting conversation")
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		context.Logger.WithError(err).Error("Error converting messageId to int")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(conversation)
+	isThere, err = rt.db.UserMessage(userId, messageId)
 	if err != nil {
-		context.Logger.WithError(err).Error("error encoding conversations")
+		context.Logger.WithError(err).Error("Error getting user conversation")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if !isThere {
+		context.Logger.WithError(err).Error("User message not found")
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+	var request ForwardMessageRequest
+	err = json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error decoding request")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 }

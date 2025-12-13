@@ -59,6 +59,9 @@ type AppDatabase interface {
 	InsertMessage(conversationId int, userId int, text string, photoId *int) error
 	GetUsername(userId int, time string) (string, error)
 	IsRead(messageId int, userId int) (string, error)
+	UserMessage(userId int, messageId int) (bool, error)
+	DeleteMessage(userId int, messageId int) error
+	DeleteForwardedMessage(userId int, forwardedId int) error
 	Ping() error
 }
 

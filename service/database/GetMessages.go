@@ -47,7 +47,11 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 		FROM Message m
 		LEFT JOIN Photo p ON m.photoId = p.photoId
 		JOIN UserUsername uu ON m.sender = uu.userId
-		WHERE m.conversationId = ?
+		WHERE m.conversationId = ? AND NOT EXISTS (
+      SELECT 1
+      FROM DeletedMessage d
+      WHERE d.messageId = m.messageId
+  )
 		ORDER BY m.time DESC;
 	`, conversationId)
 	if err != nil {
