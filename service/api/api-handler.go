@@ -21,8 +21,13 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:userId/conversations/:conversationId/messages", rt.wrap(rt.authHandler(rt.getMessages)))
 	rt.router.POST("/users/:userId/conversations/:conversationId/messages", rt.wrap(rt.authHandler(rt.postMessage)))
 	rt.router.DELETE("/users/:userId/conversations/:conversationId/messages/:messageId", rt.wrap(rt.authHandler(rt.deleteMessage)))
-	rt.router.POST("/users/{userId}/conversations/{conversationId}/messages/{MessageId}/forward_message", rt.wrap(rt.authHandler(rt.forwardMessage)))
-	// FINIRE IL PROBLEMA DELLE CONVERSAZIONI BIDIREZIONALI
+	rt.router.POST("/users/:userId/conversations/:conversationId/messages/:messageId/forward_message", rt.wrap(rt.authHandler(rt.forwardMessage)))
+	rt.router.GET("/users/:userId/conversations/:conversationId/messages/:messageId/comments", rt.wrap(rt.authHandler(rt.getComments)))
+	rt.router.POST("/users/:userId/conversations/:conversationId/messages/:messageId/comments", rt.wrap(rt.authHandler(rt.postComment)))
+	rt.router.DELETE("/users/:userId/conversations/:conversationId/messages/:messageId/comments/:commentId", rt.wrap(rt.authHandler(rt.unComment)))
+	rt.router.GET("/users/:userId/groups", rt.wrap(rt.authHandler(rt.viewGroups)))
+
+	// TODO:FINIRE IL PROBLEMA DELLE CONVERSAZIONI BIDIREZIONALI
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
 

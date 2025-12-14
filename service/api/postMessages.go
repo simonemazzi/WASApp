@@ -23,6 +23,9 @@ type Send struct {
 	Photo Upload `json:"photo"`
 }
 
+const JPEG = "image/jpeg"
+const PNG = "image/png"
+
 func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
 	userId, err := strconv.Atoi(params.ByName("userId"))
 	if err != nil {
@@ -84,13 +87,13 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 
 			mime := header.Header.Get("Content-Type")
 
-			if mime != "image/jpeg" && mime != "image/png" {
+			if mime != JPEG && mime != PNG {
 				http.Error(w, "Invalid image type", http.StatusBadRequest)
 				return
 			}
 
 			ext := ".png"
-			if mime == "image/jpeg" {
+			if mime == JPEG {
 				ext = ".jpg"
 			}
 

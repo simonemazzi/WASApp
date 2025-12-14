@@ -374,7 +374,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/conversations/{conversationId}/messages/{MessageId}:
+  /users/{userId}/conversations/{conversationId}/messages/{messageId}:
     delete:
       summary: Delete message
       description: From the list of sent message, the user can delete one of it.
@@ -397,7 +397,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
-  /users/{userId}/conversations/{conversationId}/messages/{MessageId}/forward_message:
+  /users/{userId}/conversations/{conversationId}/messages/{messageId}/forward_message:
     post:
       summary: Forward Message
       description: From a message in a conversation, the message can be sent in another conversation.
@@ -453,7 +453,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/conversations/{conversationId}/messages/{MessageId}/comments:
+  /users/{userId}/conversations/{conversationId}/messages/{messageId}/comments:
     parameters:
       - $ref: "#/components/parameters/userId"
       - $ref: "#/components/parameters/conversationId"
@@ -544,7 +544,7 @@ paths:
 
 
 
-  /users/{userId}/conversations/{conversationId}/messages/{MessageId}/comments/{commentId}:
+  /users/{userId}/conversations/{conversationId}/messages/{messageId}/comments/{commentId}:
       delete:
         summary: Delete Comment
         description: From the list of comments, the user can delete one of this.
@@ -1084,7 +1084,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/groups/{GroupId}/messages/{MessageId}:
+  /users/{userId}/groups/{GroupId}/messages/{messageId}:
     delete:
       summary: Delete message
       description: From the list of sent message, the user can delete one of it.
@@ -1107,7 +1107,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
-  /users/{userId}/groups/{GroupId}/messages/{MessageId}/forward_message:
+  /users/{userId}/groups/{GroupId}/messages/{messageId}/forward_message:
     post:
       summary: Forward Message
       description: From a message in a conversation, the message can be sent in another conversation.
@@ -1162,7 +1162,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/groups/{GroupId}/messages/{MessageId}/comments:
+  /users/{userId}/groups/{GroupId}/messages/{messageId}/comments:
     parameters:
       - $ref: "#/components/parameters/userId"
       - $ref: "#/components/parameters/GroupId"
@@ -1253,7 +1253,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{GroupId}/messages/{MessageId}/comments/{commentId}:
+  /users/{userId}/groups/{GroupId}/messages/{messageId}/comments/{commentId}:
     delete:
       summary: Delete Comment
       description: From the list of comments, the user can delete one of this.
@@ -1384,7 +1384,7 @@ components:
       description: Comment schema
       properties:
         commentId:
-          $ref : "#/components/schemas/CommentId"
+          $ref: "#/components/schemas/CommentId"
         emoji:
           type: string
           description: Unicode of emoji used in the comment.
@@ -1411,29 +1411,29 @@ components:
       description: upload's schema for responses or view
       type: object
       properties:
-          url:
-            type: string
-            minLength: 1
-            maxLength: 255
-            pattern: "^[a-zA-Z]+://.+$"
-            format: url
-            description: Photo's URL to access the image
-            example: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
-          mime:
-            description: mime represents the type of the Photo(image/png...)
-            type: string
-            minLength: 0
-            maxLength: 255
-            pattern: '^[a-zA-Z]+/[a-zA-Z.]+$'
-            example: image/jpg
-          width:
-            description: width of the image
-            type: integer
-            example: 1024
-          height:
-            description: height of the image
-            type: integer
-            example: 720
+        url:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: "^[a-zA-Z]+://.+$"
+          format: url
+          description: Photo's URL to access the image
+          example: https://www.stoccolmaaroma.it/wp-content/uploads/2013/07/logo-sapienza.jpg
+        mime:
+          description: mime represents the type of the Photo(image/png...)
+          type: string
+          minLength: 0
+          maxLength: 255
+          pattern: '^[a-zA-Z]+/[a-zA-Z.]+$'
+          example: image/jpg
+        width:
+          description: width of the image
+          type: integer
+          example: 1024
+        height:
+          description: height of the image
+          type: integer
+          example: 720
 
     Send:
       type: object
@@ -1447,7 +1447,7 @@ components:
     Message:
       type: object
       allOf:
-        - $ref : "#/components/schemas/Send"
+        - $ref: "#/components/schemas/Send"
         - properties:
             messageId:
               $ref: "#/components/schemas/MessageId"
@@ -1547,7 +1547,7 @@ components:
         message:
           description: text of the error
           type: string
-          minLength : 0
+          minLength: 0
           maxLength: 2048
           example: Unauthorized Action, request invalid or missing.
       required:
@@ -1572,7 +1572,7 @@ components:
         $ref: "#/components/schemas/ConversationId"
 
     MessageId:
-      name: MessageId
+      name: messageId
       in: path
       required: true
       description: Message Identifier
@@ -1588,7 +1588,7 @@ components:
         $ref: "#/components/schemas/CommentId"
 
     GroupId:
-      name : GroupId
+      name: GroupId
       in: path
       required: true
       description: Group Identifier

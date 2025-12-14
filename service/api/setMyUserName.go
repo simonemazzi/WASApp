@@ -72,6 +72,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, params 
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		context.Logger.WithError(err).Warn("failed to encode user response")
 		return
+
 	}
 
 }

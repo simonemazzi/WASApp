@@ -9,16 +9,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type Message struct {
-	MessageId   int    `json:"messageId"`
-	Body        string `json:"body"`
-	Read        string `json:"read"`
-	Time        string `json:"time"`
-	Sender      User   `json:"sender"`
-	IsForwarded bool   `json:"isForwarded"`
-}
-
-func (rt *_router) getMessages(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
+func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
 	userId, err := strconv.Atoi(params.ByName("userId"))
 	if err != nil {
 		context.Logger.WithError(err).Error("Error converting userId to int")
@@ -26,6 +17,7 @@ func (rt *_router) getMessages(w http.ResponseWriter, r *http.Request, params ht
 		return
 	}
 	if !rt.db.IDExists(userId) {
+		context.Logger.WithError(err).Error("User does not exist")
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
@@ -42,19 +34,26 @@ func (rt *_router) getMessages(w http.ResponseWriter, r *http.Request, params ht
 		return
 	}
 	if !isThere {
+		context.Logger.WithError(err).Error("User conversation not found")
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
-
-	messages, err := rt.db.GetMessages(conversationId, userId)
+	messageId, err := strconv.Atoi(params.ByName("messageId"))
 	if err != nil {
-		context.Logger.WithError(err).Error("Error getting messages")
+		context.Logger.WithError(err).Error("Error converting messageId to int")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	comments, err := rt.db.GetComments(messageId)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error getting comments")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(messages)
+	err = json.NewEncoder(w).Encode(comments)
 	if err != nil {
 		context.Logger.WithError(err).Error("error encoding conversations")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

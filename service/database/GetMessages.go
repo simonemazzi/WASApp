@@ -24,35 +24,33 @@ type Body struct {
 	Photo *Photo `json:"photo,omitempty"`
 }
 
+// Message rappresenta un messaggio o un inoltro
 type Message struct {
-	MessageId int     `json:"messageId"`
-	Body      Body    `json:"body"`
-	Read      *string `json:"read,omitempty"`
-	Time      string  `json:"time"`
-	Sender    User    `json:"sender"`
+	MessageId   int     `json:"messageId"`
+	Body        Body    `json:"body"`
+	Read        *string `json:"read,omitempty"`
+	Time        string  `json:"time"`
+	Sender      User    `json:"sender"`
+	IsForwarded bool    `json:"isForwarded"`
 }
 
 func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, error) {
 	rows, err := db.c.Query(`
 		SELECT
 			m.messageId,
-			m.text,
-			p.url,
-			p.mime,
-			p.width,
-			p.height,
 			m.time,
-			uu.username AS senderUsername,
-			m.sender
+			m.sender,
+			uu.username,
+			CASE WHEN m.originalMessage IS NOT NULL THEN 1 ELSE 0 END AS isForwarded
 		FROM Message m
-		LEFT JOIN Photo p ON m.photoId = p.photoId
-		JOIN UserUsername uu ON m.sender = uu.userId
-		WHERE m.conversationId = ? AND NOT EXISTS (
-      SELECT 1
-      FROM DeletedMessage d
-      WHERE d.messageId = m.messageId
-  )
-		ORDER BY m.time DESC;
+		JOIN UserUsername uu ON uu.userId = m.sender
+		WHERE m.conversationId = ?
+		  AND NOT EXISTS (
+		      SELECT 1
+		      FROM DeletedMessage d
+		      WHERE d.messageId = m.messageId
+		  )
+		ORDER BY m.time DESC
 	`, conversationId)
 	if err != nil {
 		return nil, err
@@ -60,48 +58,46 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
 		if err != nil {
-			return
+			panic(err)
 		}
 	}(rows)
 
 	messages := make([]Message, 0)
 
 	for rows.Next() {
-		var msg Message
-		var text sql.NullString
-		var photoURL, photoMime sql.NullString
-		var photoWidth, photoHeight sql.NullInt64
+		var messageId int
+		var time string
 		var senderId int
+		var senderUsername string
+		var isForwarded int
 
 		err := rows.Scan(
-			&msg.MessageId,
-			&text,
-			&photoURL,
-			&photoMime,
-			&photoWidth,
-			&photoHeight,
-			&msg.Time,
-			&msg.Sender.Username,
+			&messageId,
+			&time,
 			&senderId,
+			&senderUsername,
+			&isForwarded,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		if text.Valid {
-			msg.Body.Text = text.String
+		// Ottieni il contenuto originale (testo, foto, mittente) anche per inoltri multipli
+		originalMsg, err := db.OriginalMessageInfo(messageId)
+		if err != nil {
+			return nil, err
 		}
 
-		if photoURL.Valid {
-			msg.Body.Photo = &Photo{
-				Url:    photoURL.String,
-				Mime:   photoMime.String,
-				Width:  int(photoWidth.Int64),
-				Height: int(photoHeight.Int64),
-			}
+		// Popola i dati principali con le informazioni del messaggio visualizzato
+		msg := originalMsg
+		msg.MessageId = messageId // mantiene l'ID del messaggio corrente
+		msg.Time = time
+		msg.Sender = User{
+			UserID:   fmt.Sprint(senderId),
+			Username: senderUsername,
 		}
+		msg.IsForwarded = isForwarded == 1 // indica se il messaggio è un inoltro
 
-		msg.Sender.UserID = fmt.Sprint(senderId)
 		messages = append(messages, msg)
 	}
 
@@ -109,7 +105,7 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 		return nil, err
 	}
 
-	// ---- Gestione Read / Unread e ReadMessage ----
+	// ---- Gestione Read / Unread ----
 	for i := range messages {
 		senderId, err := strconv.Atoi(messages[i].Sender.UserID)
 		if err != nil {
@@ -117,7 +113,7 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 		}
 
 		if senderId != viewerId {
-			// Messaggi ricevuti: segna come letti nel DB ma non includere il campo Read nel JSON
+			// Messaggi ricevuti → segna come letti
 			_, err = db.c.Exec(`
 				INSERT OR IGNORE INTO ReadMessage(userId, messageId)
 				VALUES (?, ?)
@@ -127,7 +123,7 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 			}
 			messages[i].Read = nil
 		} else {
-			// Messaggi inviati: calcola lo stato Read / Unread
+			// Messaggi inviati → stato read/unread
 			var exists int
 			err = db.c.QueryRow(`
 				SELECT 1
@@ -135,12 +131,13 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 				WHERE userId != ? AND messageId = ?
 			`, viewerId, messages[i].MessageId).Scan(&exists)
 
-			if errors.Is(err, sql.ErrNoRows) {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
 				status := "unread"
 				messages[i].Read = &status
-			} else if err != nil {
+			case err != nil:
 				return nil, err
-			} else {
+			default:
 				status := "read"
 				messages[i].Read = &status
 			}

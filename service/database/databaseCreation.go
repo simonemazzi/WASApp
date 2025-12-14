@@ -83,7 +83,9 @@ CREATE TABLE IF NOT EXISTS Message(
     photoId INTEGER   REFERENCES Photo(photoId),
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     sender INTEGER   REFERENCES User(userId),
-    CHECK ( text IS NOT NULL OR photoId IS NOT NULL ),
+	originalMessage INTEGER   REFERENCES Message(messageId),
+    CHECK ( (originalMessage IS NULL AND (text IS NOT NULL OR photoId IS NOT NULL)) OR
+(originalMessage IS NOT NULL AND (text IS NULL AND photoId IS NULL) ) ),
     CHECK (
         (conversationId IS NOT NULL AND groupId IS NULL)
             OR
@@ -92,43 +94,20 @@ CREATE TABLE IF NOT EXISTS Message(
 );
 
 
-CREATE TABLE IF NOT EXISTS ForwardedMessage(
-    forwardedId INTEGER PRIMARY KEY AUTOINCREMENT ,
-    originalMessage INTEGER   REFERENCES Message(messageId) NOT NULL,
-    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    targetConv INTEGER   REFERENCES Conversation(conversationId),
-    targetGroup INTEGER   REFERENCES Group_(groupId),
-    forwarder INTEGER   REFERENCES User(userId),
-    CHECK (
-        (targetConv IS NOT NULL AND targetGroup IS NULL)
-            OR
-        (targetConv IS NULL AND targetGroup IS NOT NULL)
-        )
-);
 
 CREATE TABLE IF NOT EXISTS ReadMessage(
     userId INTEGER   REFERENCES User(userId) NOT NULL,
-    messageId INTEGER   REFERENCES Message(messageId),
+    messageId INTEGER   REFERENCES Message(messageId) NOT NULL,
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (userId,messageId)
-);
-
-CREATE TABLE IF NOT EXISTS ReadForwardedMessage(
-    userId INTEGER   REFERENCES User(userId) NOT NULL,
-    forwardedId INTEGER   REFERENCES ForwardedMessage(forwardedId),
-    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (userId,forwardedId)
 );
 
 
 CREATE TABLE IF NOT EXISTS DeletedMessage(
 	userId 	  	INTEGER   REFERENCES User(userId) NOT NULL,
 	messageId 	INTEGER   REFERENCES Message(messageId),
-	forwardedId INTEGER   REFERENCES ForwardedMessage(forwardedId),
 	time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (userId,messageId,forwardedId),
-	CHECK ((messageId IS NOT NULL AND forwardedId IS NULL)
-	OR (messageId IS  NULL AND forwardedId IS NOT NULL) )
+	PRIMARY KEY (userId,messageId)
 );
 
 ---COMMENT---
@@ -137,14 +116,11 @@ CREATE TABLE IF NOT EXISTS Comment(
     commentId INTEGER PRIMARY KEY AUTOINCREMENT,
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     emoji TEXT NOT NULL,
-    messageId INTEGER   REFERENCES Message(messageId),
-    forwardedId INTEGER   REFERENCES ForwardedMessage(forwardedId),
-    CHECK (
-        (messageId IS NOT NULL AND forwardedId IS NULL)
-            OR
-        (messageId IS NULL AND forwardedId IS NOT NULL)
-        )
+    messageId INTEGER   REFERENCES Message(messageId) NOT NULL,
+	userId INTEGER   REFERENCES User(userId) NOT NULL,
+	UNIQUE(messageId,userId)
 );
+
 
 
 ---TRIGGER---
@@ -203,64 +179,82 @@ BEGIN
             END;
 END;
 
-CREATE TRIGGER IF NOT EXISTS CHECK_MESSAGE
-    BEFORE INSERT ON Message
-    FOR EACH ROW
+
+CREATE TRIGGER IF NOT EXISTS CHECK_MESSAGE_TARGET
+BEFORE INSERT ON Message
+FOR EACH ROW
 BEGIN
     SELECT
         CASE
-            -- Messaggio in CONVERSAZIONE
+            -- Messaggio / inoltro in CONVERSAZIONE
             WHEN NEW.conversationId IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM Conversation c
-                    WHERE c.conversationId = NEW.conversationId
-                      AND (c.component_A = NEW.sender
-                        OR c.component_B = NEW.sender)
-                )
-                THEN RAISE(ABORT, 'Sender not part of the conversation')
+                 AND NOT EXISTS (
+                     SELECT 1
+                     FROM Conversation c
+                     WHERE c.conversationId = NEW.conversationId
+                       AND (c.component_A = NEW.sender
+                            OR c.component_B = NEW.sender)
+                 )
+            THEN RAISE(ABORT, 'Sender not part of the conversation')
 
-            -- Messaggio in GRUPPO
+            -- Messaggio / inoltro in GRUPPO
             WHEN NEW.groupId IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM Components comp
-                    WHERE comp.groupId = NEW.groupId
-                      AND comp.userId = NEW.sender
-                      AND comp.timeLeft IS NULL
-                )
-                THEN RAISE(ABORT, 'Sender not member of the group')
-            END;
+                 AND NOT EXISTS (
+                     SELECT 1
+                     FROM Components comp
+                     WHERE comp.groupId = NEW.groupId
+                       AND comp.userId = NEW.sender
+                       AND comp.timeLeft IS NULL
+                 )
+            THEN RAISE(ABORT, 'Sender not member of the group')
+        END;
 END;
 
-CREATE TRIGGER IF NOT EXISTS CHECK_FORWARDED_MESSAGE
-    BEFORE INSERT ON ForwardedMessage
-    FOR EACH ROW
+CREATE TRIGGER IF NOT EXISTS CHECK_ORIGINAL_MESSAGE_VISIBILITY
+BEFORE INSERT ON Message
+FOR EACH ROW
+WHEN NEW.originalMessage IS NOT NULL
 BEGIN
     SELECT
         CASE
-            -- Inoltro verso CONVERSAZIONE
-            WHEN NEW.targetConv IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM Conversation c
-                    WHERE c.conversationId = NEW.targetConv
-                      AND (c.component_A = NEW.forwarder
-                        OR c.component_B = NEW.forwarder)
-                )
-                THEN RAISE(ABORT, 'Forwarder not part of the conversation')
+            -- Originale in CONVERSAZIONE
+            WHEN EXISTS (
+                SELECT 1
+                FROM Message m
+                WHERE m.messageId = NEW.originalMessage
+                  AND m.conversationId IS NOT NULL
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM Message m
+                JOIN Conversation c
+                    ON c.conversationId = m.conversationId
+                WHERE m.messageId = NEW.originalMessage
+                  AND (c.component_A = NEW.sender
+                       OR c.component_B = NEW.sender)
+            )
+            THEN RAISE(ABORT,
+                'Forwarder cannot see original message (conversation)')
 
-            -- Inoltro verso GRUPPO
-            WHEN NEW.targetGroup IS NOT NULL
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM Components comp
-                    WHERE comp.groupId = NEW.targetGroup
-                      AND comp.userId = NEW.forwarder
-                      AND comp.timeLeft IS NULL
-                )
-                THEN RAISE(ABORT, 'Forwarder not member of the group')
-            END;
+            -- Originale in GRUPPO
+            WHEN EXISTS (
+                SELECT 1
+                FROM Message m
+                WHERE m.messageId = NEW.originalMessage
+                  AND m.groupId IS NOT NULL
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM Message m
+                JOIN Components comp
+                    ON comp.groupId = m.groupId
+                WHERE m.messageId = NEW.originalMessage
+                  AND comp.userId = NEW.sender
+                  AND comp.timeLeft IS NULL
+            )
+            THEN RAISE(ABORT,
+                'Forwarder cannot see original message (group)')
+        END;
 END;
 
 `

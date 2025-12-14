@@ -62,6 +62,19 @@ type AppDatabase interface {
 	UserMessage(userId int, messageId int) (bool, error)
 	DeleteMessage(userId int, messageId int) error
 	DeleteForwardedMessage(userId int, forwardedId int) error
+	UserGroup(userId int, groupId int, date string) (bool, error)
+	ForwardToConversation(userId int, conversationId int, messageId int) error
+	ForwardToGroup(userId int, groupId int, messageId int) error
+	IsForwardedMessage(messageId int) (bool, error)
+	GetOriginalMessageId(messageId int) (int, error)
+	ForwardToConversationWithParent(userId, conversationId, originalMsgId, parentFwdId int) error
+	ForwardToGroupWithParent(userId, groupId, originalMsgId, parentFwdId int) error
+	OriginalMessageInfo(messageId int) (Message, error)
+	GetComments(messageId int) ([]Comment, error)
+	PostComment(messageId int, userId int, emoji string) error
+	MessageComment(messageId int, commentId int) (bool, error)
+	CommentUser(commentId int, userId int) (bool, error)
+	UnComment(commentId int) error
 	Ping() error
 }
 

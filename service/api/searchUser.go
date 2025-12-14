@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
@@ -15,22 +14,16 @@ type User struct {
 }
 
 func (rt *_router) searchUser(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
-	autHeader := r.Header.Get("Authorization")
-	token := strings.TrimPrefix(autHeader, "Bearer ")
-	token = strings.TrimSpace(token)
-	if token == "" {
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 
 	username := params.ByName("username")
 	if username == "" {
 		dbUsers, err := rt.db.Users()
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			context.Logger.WithError(err).Error("Error converting userId to int")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
+
 		}
 		var users []User
 		for _, u := range dbUsers {
@@ -41,13 +34,15 @@ func (rt *_router) searchUser(w http.ResponseWriter, r *http.Request, params htt
 		}
 		err = json.NewEncoder(w).Encode(users)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			context.Logger.WithError(err).Error("Error converting userId to int")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 	} else {
 		dbUsers, err := rt.db.UsersBySearch(username)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			context.Logger.WithError(err).Error("Error converting userId to int")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		var users []User
@@ -59,7 +54,8 @@ func (rt *_router) searchUser(w http.ResponseWriter, r *http.Request, params htt
 		}
 		err = json.NewEncoder(w).Encode(users)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+			context.Logger.WithError(err).Error("Error converting userId to int")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 	}
