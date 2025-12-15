@@ -26,8 +26,21 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/users/:userId/conversations/:conversationId/messages/:messageId/comments", rt.wrap(rt.authHandler(rt.postComment)))
 	rt.router.DELETE("/users/:userId/conversations/:conversationId/messages/:messageId/comments/:commentId", rt.wrap(rt.authHandler(rt.unComment)))
 	rt.router.GET("/users/:userId/groups", rt.wrap(rt.authHandler(rt.viewGroups)))
+	rt.router.POST("/users/:userId/groups", rt.wrap(rt.authHandler(rt.createGroup)))
+	rt.router.GET("/users/:userId/groups/:groupId", rt.wrap(rt.authHandler(rt.getGroup)))
+	rt.router.PUT("/users/:userId/groups/:groupId/info/photo", rt.wrap(rt.authHandler(rt.setGroupPhoto)))
+	rt.router.PUT("/users/:userId/groups/:groupId/info/name", rt.wrap(rt.authHandler(rt.setGroupName)))
+	rt.router.POST("/users/:userId/groups/:groupId/members", rt.wrap(rt.authHandler(rt.addToGroup)))
+	rt.router.GET("/users/:userId/groups/:groupId/members", rt.wrap(rt.authHandler(rt.getMembers)))
+	rt.router.DELETE("/users/:userId/groups/:groupId/members/me", rt.wrap(rt.authHandler(rt.leaveGroup)))
+	rt.router.POST("/users/:userId/groups/:groupId/messages", rt.wrap(rt.authHandler(rt.postGroupMessage)))
+	rt.router.GET("/users/:userId/groups/:groupId/messages", rt.wrap(rt.authHandler(rt.getGroupMessages)))
+	rt.router.DELETE("/users/:userId/groups/:groupId/messages/:messageId", rt.wrap(rt.authHandler(rt.deleteGroupMessage)))
 
 	// TODO:FINIRE IL PROBLEMA DELLE CONVERSAZIONI BIDIREZIONALI
+
+	//TODO: TEST SU IMMAGINI GRUPPO E READ GRUPPO (Messaggi)
+
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
 

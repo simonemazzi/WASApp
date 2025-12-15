@@ -75,6 +75,14 @@ type AppDatabase interface {
 	MessageComment(messageId int, commentId int) (bool, error)
 	CommentUser(commentId int, userId int) (bool, error)
 	UnComment(commentId int) error
+	GetGroups(userId int) ([]Group, error)
+	CreateGroup(userId int, name string, partecipants []string, time string) (Group, error)
+	GetGroup(groupId int) (Group, error)
+	SetGroupName(groupId int, name string) error
+	AddToGroup(groupId int, userId int) error
+	LeaveGroup(groupId int, userId int) error
+	InsertGroupMessage(groupId int, userId int, text string, photoId *int) error
+	GetGroupMessages(groupId int, viewerId int) ([]Message, error)
 	Ping() error
 }
 

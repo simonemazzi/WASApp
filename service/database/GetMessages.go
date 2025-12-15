@@ -146,3 +146,125 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 
 	return messages, nil
 }
+
+func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, error) {
+	rows, err := db.c.Query(`
+		SELECT
+			m.messageId,
+			m.time,
+			m.sender,
+			uu.username,
+			CASE WHEN m.originalMessage IS NOT NULL THEN 1 ELSE 0 END AS isForwarded
+		FROM Message m
+		JOIN UserUsername uu ON uu.userId = m.sender
+		WHERE m.groupId = ?
+		  AND NOT EXISTS (
+		      SELECT 1
+		      FROM DeletedMessage d
+		      WHERE d.messageId = m.messageId
+		        AND d.userId = ?
+		  )
+		ORDER BY m.time DESC
+	`, groupId, viewerId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	messages := make([]Message, 0)
+
+	for rows.Next() {
+		var messageId int
+		var time string
+		var senderId int
+		var senderUsername string
+		var isForwarded int
+
+		if err := rows.Scan(
+			&messageId,
+			&time,
+			&senderId,
+			&senderUsername,
+			&isForwarded,
+		); err != nil {
+			return nil, err
+		}
+
+		// Contenuto originale (gestione inoltri multipli)
+		originalMsg, err := db.OriginalMessageInfo(messageId)
+		if err != nil {
+			return nil, err
+		}
+
+		msg := originalMsg
+		msg.MessageId = messageId
+		msg.Time = time
+		msg.Sender = User{
+			UserID:   fmt.Sprint(senderId),
+			Username: senderUsername,
+		}
+		msg.IsForwarded = isForwarded == 1
+
+		messages = append(messages, msg)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// ---- Gestione Read / Unread (GRUPPI) ----
+	for i := range messages {
+		senderId, err := strconv.Atoi(messages[i].Sender.UserID)
+		if err != nil {
+			return nil, err
+		}
+
+		// Se il viewer NON è il mittente → segna come letto
+		if senderId != viewerId {
+			_, err = db.c.Exec(`
+				INSERT OR IGNORE INTO ReadMessage(userId, messageId)
+				VALUES (?, ?)
+			`, viewerId, messages[i].MessageId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Conta componenti attivi del gruppo
+		var totalMembers int
+		err = db.c.QueryRow(`
+			SELECT COUNT(*)
+			FROM Components
+			WHERE groupId = ?
+			  AND timeLeft IS NULL
+		`, groupId).Scan(&totalMembers)
+		if err != nil {
+			return nil, err
+		}
+
+		// Conta letture del messaggio da componenti attivi
+		var readCount int
+		err = db.c.QueryRow(`
+			SELECT COUNT(DISTINCT rm.userId)
+			FROM ReadMessage rm
+			JOIN Components c
+			  ON c.userId = rm.userId
+			WHERE rm.messageId = ?
+			  AND c.groupId = ?
+			  AND c.timeLeft IS NULL
+		`, messages[i].MessageId, groupId).Scan(&readCount)
+		if err != nil {
+			return nil, err
+		}
+
+		if readCount == totalMembers {
+			status := "read"
+			messages[i].Read = &status
+		} else {
+			status := "unread"
+			messages[i].Read = &status
+		}
+	}
+
+	return messages, nil
+}

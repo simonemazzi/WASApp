@@ -40,7 +40,7 @@ INSERT INTO Photo (url, width, height, mime) VALUES (?,?,?,?)
 		return err
 	}
 	if !db.IDExists(groupId) {
-		var err404 = errors.New("User not found")
+		var err404 = errors.New("group not found")
 		return err404
 	}
 	_, err = db.c.Exec(`

@@ -644,12 +644,10 @@ paths:
                   minItems: 2
                   maxItems: 256
                   items:
-                    $ref: "#/components/schemas/User"
+                    $ref: "#/components/schemas/Username"
                   example:
-                    - userId: 11300
-                      username: Simone
-                    - userId: 11301
-                      username: Luca
+                      - Simone
+                      - Luca
       responses:
         "201":
           description: Group created
@@ -677,13 +675,13 @@ paths:
 
 
 
-  /users/{userId}/groups/{GroupId}/members:
+  /users/{userId}/groups/{groupId}/members:
     parameters:
       - $ref: "#/components/parameters/userId"
       - $ref: "#/components/parameters/GroupId"
     post:
       summary: Add a user into the group
-      description: The user can add antoher user into the group from their userId.
+      description: The user can add another user into the group from their userId.
       operationId: addToGroup
       tags:
         - "Group"
@@ -692,22 +690,15 @@ paths:
         content:
           application/json:
             schema:
-              allOf:
-                - $ref : "#/components/schemas/User"
-                - description: User we want to add
-                - properties:
-                    time:
-                      description: Timestamp
-                      type: string
-                      format: date-time
-                      example: 2025-10-31T15:42:00Z
-                      minLength: 20
-                      maxLength: 20
-                      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+              type: object
+              description: Request schema
+              properties:
+                username:
+                  $ref: "#/components/schemas/Username"
+              required:
+                - username
             example:
-              userId: 11300
-              username: Simone
-              time: 2025-10-31T15:42:00Z
+              username: "Simone"
 
         required: true
       responses:
@@ -716,10 +707,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/Group"
               example:
-                userId: 11300
-                username: "Simone"
+                groupId: 288344
+                name: "capodanno2026"
+
+                participants:
+                  - userId: 10012
+                    username: "Simone"
+                  - userId: 77772
+                    username: "Alessio"
 
         "404":
           $ref: "#/components/responses/NotFoundError"
@@ -769,7 +766,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{GroupId}/members/me:
+  /users/{userId}/groups/{groupId}/members/me:
     delete:
       summary: Leave the group
       description: Delete the user from the group.
@@ -791,7 +788,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
-  /users/{userId}/groups/{GroupId}/info/photo:
+  /users/{userId}/groups/{groupId}/info/photo:
     put:
       summary: Set Group Photo
       description: The user can set a personalized group Photo.
@@ -845,7 +842,7 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
-  /users/{userId}/groups/{GroupId}/info/name:
+  /users/{userId}/groups/{groupId}/info/name:
     put:
       summary: Set Group name
       description: The user can set a personalized group name.
@@ -943,7 +940,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{GroupId}:
+  /users/{userId}/groups/{groupId}:
     get:
       summary: Show the conversation
       description: Returns the details of a single conversation identified by conversationId from the user's conversations.
@@ -984,7 +981,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{GroupId}/messages:
+  /users/{userId}/groups/{groupId}/messages:
     parameters:
       - $ref: "#/components/parameters/userId"
       - $ref: "#/components/parameters/GroupId"
@@ -1084,7 +1081,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/groups/{GroupId}/messages/{messageId}:
+  /users/{userId}/groups/{groupId}/messages/{messageId}:
     delete:
       summary: Delete message
       description: From the list of sent message, the user can delete one of it.
@@ -1107,7 +1104,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
-  /users/{userId}/groups/{GroupId}/messages/{messageId}/forward_message:
+  /users/{userId}/groups/{groupId}/messages/{messageId}/forward_message:
     post:
       summary: Forward Message
       description: From a message in a conversation, the message can be sent in another conversation.
@@ -1162,7 +1159,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 
 
-  /users/{userId}/groups/{GroupId}/messages/{messageId}/comments:
+  /users/{userId}/groups/{groupId}/messages/{messageId}/comments:
     parameters:
       - $ref: "#/components/parameters/userId"
       - $ref: "#/components/parameters/GroupId"
@@ -1253,7 +1250,7 @@ paths:
 
 
 
-  /users/{userId}/groups/{GroupId}/messages/{messageId}/comments/{commentId}:
+  /users/{userId}/groups/{groupId}/messages/{messageId}/comments/{commentId}:
     delete:
       summary: Delete Comment
       description: From the list of comments, the user can delete one of this.
@@ -1588,7 +1585,7 @@ components:
         $ref: "#/components/schemas/CommentId"
 
     GroupId:
-      name: GroupId
+      name: groupId
       in: path
       required: true
       description: Group Identifier

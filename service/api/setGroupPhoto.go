@@ -3,26 +3,55 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"image/jpeg"
+	"image"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
 )
 
-type Upload struct {
-	Url    string
-	Mime   string
-	Width  int
-	Height int
-}
+func (rt *_router) setGroupPhoto(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
+	userId, err := strconv.Atoi(params.ByName("userId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error in getGroup")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	groupId, err := strconv.Atoi(params.ByName("groupId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error in getGroup")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
 
-func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
+	date := r.Header.Get("Date")
+	if date == "" {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	t, err := time.Parse(time.RFC1123, date)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		context.Logger.WithError(err).Error("error parsing date header")
+		return
+	}
+	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+
+	isThere, err := rt.db.UserGroup(userId, groupId, timestamp)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error in getGroup")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if !isThere {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
 
 	const maxSize = 10 << 20 // 10MB
 	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
@@ -53,14 +82,8 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params htt
 		return
 	}
 
-	userId := params.ByName("userId")
-	userIdInt, err := strconv.Atoi(userId)
-	if err != nil {
-		context.Logger.WithError(err).Errorf("Invalid user id: %s", userId)
-		http.Error(w, "Invalid user id", http.StatusBadRequest)
-	}
-	filename := fmt.Sprintf("avatar_%s.png", userId)
-	path := filepath.Join("uploads", "users", userId, filename)
+	filename := fmt.Sprintf("group_%d_%s.png", groupId, context.ReqUUID.String())
+	path := filepath.Join("uploads", "groups", strconv.Itoa(groupId), filename)
 
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		context.Logger.WithError(err).Error("Error creating directory")
@@ -102,7 +125,7 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params htt
 		}
 	}(imgFile)
 
-	img, err := jpeg.Decode(imgFile)
+	img, _, err := image.Decode(imgFile)
 	if err != nil {
 		context.Logger.WithError(err).Error("Error decoding jpeg")
 		http.Error(w, fmt.Sprintf("Cannot decode JPEG: %v", err), http.StatusBadRequest)
@@ -112,7 +135,7 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params htt
 	width := img.Bounds().Dx()
 	height := img.Bounds().Dy()
 
-	err = rt.db.SetMyPhoto(path, width, height, mime, userIdInt)
+	err = rt.db.SetGroupPhoto(path, width, height, mime, groupId)
 	if err != nil {
 		context.Logger.WithError(err).Error("Error setting photo")
 		http.Error(w, "error while saving photo", http.StatusInternalServerError)
@@ -130,9 +153,8 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params htt
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		context.Logger.WithError(err).Error("Error encoding response")
-		http.Error(w, "error while saving response", http.StatusInternalServerError)
+		context.Logger.WithError(err).Error("Error in getGroupPhoto")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-
 }
