@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"strconv"
 
@@ -67,6 +68,97 @@ func (rt *_router) postComment(w http.ResponseWriter, r *http.Request, params ht
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+	var req CommentRequest
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error decoding request body")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	if req.Emoji == "" || !isEmoji(req.Emoji) {
+		context.Logger.WithError(err).Error("No emoji specified or isn't a valid emoji")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	err = rt.db.PostComment(userId, messageId, req.Emoji)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error posting comment")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	comments, err := rt.db.GetComments(messageId)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error getting comments")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(comments)
+	if err != nil {
+		context.Logger.WithError(err).Error("error encoding conversations")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func (rt *_router) postGroupComment(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
+	// --- userId ---
+	userId, err := strconv.Atoi(params.ByName("userId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error converting userId")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	if !rt.db.IDExists(userId) {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	// --- groupId (origine) ---
+	groupId, err := strconv.Atoi(params.ByName("groupId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error converting groupId")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	// --- Date header ---
+	dateHeader := r.Header.Get("Date")
+	if dateHeader == "" {
+		http.Error(w, "Missing Date header", http.StatusBadRequest)
+		return
+	}
+	t, err := time.Parse(time.RFC1123, dateHeader)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error parsing Date header")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+
+	// --- user must belong to origin group ---
+	isThere, err := rt.db.UserGroup(userId, groupId, timestamp)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error checking user group")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if !isThere {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	// --- messageId ---
+	messageId, err := strconv.Atoi(params.ByName("messageId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error converting messageId")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
 	var req CommentRequest
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {

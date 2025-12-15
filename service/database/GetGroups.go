@@ -79,9 +79,15 @@ func (db *appdbimpl) GetGroups(userId int) ([]Group, error) {
 			users = append(users, u)
 		}
 		urows.Close()
+		if err := urows.Err(); err != nil {
+			return nil, err
+		}
 
 		g.Participants = users
 		groups = append(groups, g)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return groups, nil

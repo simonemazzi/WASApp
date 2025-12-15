@@ -63,6 +63,8 @@ func (db *appdbimpl) GetGroup(groupId int) (Group, error) {
 		participants = append(participants, user)
 	}
 	group.Participants = participants
-
+	if err := rows.Err(); err != nil {
+		return Group{}, err
+	}
 	return group, nil
 }

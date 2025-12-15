@@ -36,8 +36,10 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/users/:userId/groups/:groupId/messages", rt.wrap(rt.authHandler(rt.postGroupMessage)))
 	rt.router.GET("/users/:userId/groups/:groupId/messages", rt.wrap(rt.authHandler(rt.getGroupMessages)))
 	rt.router.DELETE("/users/:userId/groups/:groupId/messages/:messageId", rt.wrap(rt.authHandler(rt.deleteGroupMessage)))
-
-	// TODO:FINIRE IL PROBLEMA DELLE CONVERSAZIONI BIDIREZIONALI
+	rt.router.POST("/users/:userId/groups/:groupId/messages/:messageId/forward_message", rt.wrap(rt.authHandler(rt.forwardGroupMessage)))
+	rt.router.GET("/users/:userId/conversations/:groupId/messages/:messageId/comments", rt.wrap(rt.authHandler(rt.getGroupComments)))
+	rt.router.POST("/users/:userId/conversations/:groupId/messages/:messageId/comments", rt.wrap(rt.authHandler(rt.postGroupComment)))
+	rt.router.DELETE("/users/:userId/conversations/:groupId/messages/:messageId/comments/:commentId", rt.wrap(rt.authHandler(rt.unGroupComment)))
 
 	//TODO: TEST SU IMMAGINI GRUPPO E READ GRUPPO (Messaggi)
 

@@ -57,52 +57,6 @@ func (rt *_router) createGroup(w http.ResponseWriter, r *http.Request, params ht
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	//defaultPath := "uploads/default/default-avatar-profile-icon-social-600nw-1906669723.png"
-
-	//filename := "groupPhoto" + context.ReqUUID.String() + ".png"
-	// path := filepath.Join("uploads", "groups", strconv.Itoa(groupR.GroupId), filename)
-
-	//if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-	//		context.Logger.WithError(err).Error("Error creating group directory")
-	//		http.Error(w, "Cannot create directory", http.StatusInternalServerError)
-	//		return
-	//	}
-
-	//src, err := os.Open(defaultPath)
-	//	if err != nil {
-	//		context.Logger.WithError(err).Error("Error opening default image")
-	//		http.Error(w, "Default image missing", http.StatusInternalServerError)
-	//		return
-	//	}
-	//	defer func(src *os.File) {
-	//		err := src.Close()
-	//		if err != nil {
-	//			context.Logger.WithError(err).Error("Error closing default image")
-	//			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	//			return
-	//		}
-	//	}(src)
-
-	//dst, err := os.Create(path)
-	//	if err != nil {
-	//		context.Logger.WithError(err).Error("Error creating image file")
-	//		http.Error(w, "Cannot save image", http.StatusInternalServerError)
-	//		return
-	//	}
-	//	defer func(dst *os.File) {
-	//		err := dst.Close()
-	//		if err != nil {
-	//			context.Logger.WithError(err).Error("Error closing file")
-	//			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	//			return
-	//		}
-	//	}(dst)
-	//
-	//	if _, err := io.Copy(dst, src); err != nil {
-	//		context.Logger.WithError(err).Error("Error copying default image")
-	//		http.Error(w, "Write failed", http.StatusInternalServerError)
-	//		return
-	//	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

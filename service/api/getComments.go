@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"git.sapienzaapps.it/fantasticcoffee/fantastic-coffee-decaffeinated/service/api/reqcontext"
 	"github.com/julienschmidt/httprouter"
@@ -60,4 +61,81 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, params ht
 		return
 	}
 
+}
+
+func (rt *_router) getGroupComments(
+	w http.ResponseWriter,
+	r *http.Request,
+	params httprouter.Params,
+	context reqcontext.RequestContext,
+) {
+	// --- userId ---
+	userId, err := strconv.Atoi(params.ByName("userId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error converting userId")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	if !rt.db.IDExists(userId) {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	// --- groupId (origine) ---
+	groupId, err := strconv.Atoi(params.ByName("groupId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error converting groupId")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	// --- Date header ---
+	dateHeader := r.Header.Get("Date")
+	if dateHeader == "" {
+		http.Error(w, "Missing Date header", http.StatusBadRequest)
+		return
+	}
+	t, err := time.Parse(time.RFC1123, dateHeader)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error parsing Date header")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+
+	// --- user must belong to origin group ---
+	isThere, err := rt.db.UserGroup(userId, groupId, timestamp)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error checking user group")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if !isThere {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+
+	// --- messageId ---
+	messageId, err := strconv.Atoi(params.ByName("messageId"))
+	if err != nil {
+		context.Logger.WithError(err).Error("Error converting messageId")
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	// --- get comments ---
+	comments, err := rt.db.GetComments(messageId)
+	if err != nil {
+		context.Logger.WithError(err).Error("Error getting comments")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(comments); err != nil {
+		context.Logger.WithError(err).Error("Error encoding comments")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }

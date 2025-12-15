@@ -34,6 +34,9 @@ type Message struct {
 	IsForwarded bool    `json:"isForwarded"`
 }
 
+const READ = "read"
+const RECEIVED = "received"
+
 func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, error) {
 	rows, err := db.c.Query(`
 		SELECT
@@ -133,12 +136,12 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 
 			switch {
 			case errors.Is(err, sql.ErrNoRows):
-				status := "unread"
+				status := RECEIVED
 				messages[i].Read = &status
 			case err != nil:
 				return nil, err
 			default:
-				status := "read"
+				status := READ
 				messages[i].Read = &status
 			}
 		}
@@ -258,10 +261,10 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 		}
 
 		if readCount == totalMembers {
-			status := "read"
+			status := READ
 			messages[i].Read = &status
 		} else {
-			status := "unread"
+			status := RECEIVED
 			messages[i].Read = &status
 		}
 	}
