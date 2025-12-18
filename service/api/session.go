@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -30,7 +29,6 @@ func (rt *_router) postSession(w http.ResponseWriter, r *http.Request, params ht
 	if err != nil {
 		context.Logger.WithError(err).Error("Error reading body")
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("Invalid body"))
 		return
 	}
 
@@ -39,24 +37,22 @@ func (rt *_router) postSession(w http.ResponseWriter, r *http.Request, params ht
 	if err := json.Unmarshal(body, &req); err != nil {
 		context.Logger.WithError(err).Error("Error parsing JSON")
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("Invalid JSON"))
 		return
 	}
 
 	var resp SessionResponse
 	// Execute query and return response
 	resp.UserId, resp.Token, resp.Time, err = rt.db.CreateSession(req.Name)
-	fmt.Println("UserID:", resp.UserId)
-	fmt.Println("Token:", resp.Token)
-	fmt.Println("Time:", resp.Time)
+
 	if err != nil {
-		fmt.Println("Failed to create session:", err)
+		context.Logger.WithError(err).Error("Error creating session")
 		http.Error(w, "Failed to create session1", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
+		context.Logger.WithError(err).Error("Error marshalling response")
 		http.Error(w, "Failed to create session", http.StatusInternalServerError)
 		return
 	}
