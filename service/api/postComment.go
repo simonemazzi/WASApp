@@ -125,19 +125,7 @@ func (rt *_router) postGroupComment(w http.ResponseWriter, r *http.Request, para
 		return
 	}
 
-	// --- Date header ---
-	dateHeader := r.Header.Get("Date")
-	if dateHeader == "" {
-		http.Error(w, "Missing Date header", http.StatusBadRequest)
-		return
-	}
-	t, err := time.Parse(time.RFC1123, dateHeader)
-	if err != nil {
-		context.Logger.WithError(err).Error("Error parsing Date header")
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().UTC().Format("2006-01-02 15:04:05")
 
 	// --- user must belong to origin group ---
 	isThere, err := rt.db.UserGroup(userId, groupId, timestamp)

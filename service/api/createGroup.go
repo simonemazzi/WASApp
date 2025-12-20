@@ -29,18 +29,7 @@ func (rt *_router) createGroup(w http.ResponseWriter, r *http.Request, params ht
 		return
 	}
 
-	date := r.Header.Get("Date")
-	if date == "" {
-		http.Error(w, "Missing Date header", http.StatusBadRequest)
-		return
-	}
-	t, err := time.Parse(time.RFC1123, date)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		context.Logger.WithError(err).Error("error parsing date header")
-		return
-	}
-	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().UTC().Format("2006-01-02 15:04:05")
 
 	var group GroupRequest
 	err = json.NewDecoder(r.Body).Decode(&group)

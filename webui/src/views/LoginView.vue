@@ -12,7 +12,7 @@ const login = async () => {
 	try{
 		const userData = await doLogin(username.value);
 
-		localStorage.setItem('username', userData.username);
+		localStorage.setItem('username', username.value);
 		localStorage.setItem('userId', userData.userId);
 		localStorage.setItem('token', userData.token);
 
@@ -59,5 +59,4 @@ const login = async () => {
 </template>
 
 <style>
-
 </style>

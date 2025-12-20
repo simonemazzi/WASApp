@@ -9,7 +9,7 @@ func (db *appdbimpl) UserByToken(token string) (int, error) {
 		FROM User u
 		JOIN Login l ON u.userId = l.userId
 		LEFT JOIN UserUsername uu ON uu.userId = u.userId
-		WHERE l.loginId = ? AND l.Time < CURRENT_TIMESTAMP
+		WHERE l.loginId = ? AND l.Time <= CURRENT_TIMESTAMP
 		ORDER BY l.time DESC
 		LIMIT 1
 	`, token).Scan(&userId, &username)

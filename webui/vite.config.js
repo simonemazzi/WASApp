@@ -12,6 +12,7 @@ export default defineConfig(({command, mode, ssrBuild}) => {
 				'@': fileURLToPath(new URL('./src', import.meta.url))
 			}
 		},
+		
 	};
 	ret.define = {
 		// Do not modify this constant, it is used in the evaluation.

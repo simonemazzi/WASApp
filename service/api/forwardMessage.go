@@ -85,21 +85,10 @@ func (rt *_router) forwardMessage(w http.ResponseWriter, r *http.Request, params
 		}
 	}
 
-	// --- forward verso gruppi ---
-	dateHeader := r.Header.Get("Date")
-	if dateHeader == "" {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	t, err := time.Parse(time.RFC1123, dateHeader)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	date := t.UTC().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().UTC().Format("2006-01-02 15:04:05")
 
 	for _, groupId := range request.ForwardToGroup {
-		isThere, err := rt.db.UserGroup(userId, groupId, date)
+		isThere, err := rt.db.UserGroup(userId, groupId, timestamp)
 		if err != nil {
 			context.Logger.WithError(err).Error("Error checking user group")
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -148,18 +137,7 @@ func (rt *_router) forwardGroupMessage(
 	}
 
 	// --- Date header ---
-	dateHeader := r.Header.Get("Date")
-	if dateHeader == "" {
-		http.Error(w, "Missing Date header", http.StatusBadRequest)
-		return
-	}
-	t, err := time.Parse(time.RFC1123, dateHeader)
-	if err != nil {
-		context.Logger.WithError(err).Error("Error parsing Date header")
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().UTC().Format("2006-01-02 15:04:05")
 
 	// --- user must belong to origin group ---
 	isThere, err := rt.db.UserGroup(userId, groupId, timestamp)

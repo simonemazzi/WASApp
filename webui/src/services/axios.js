@@ -5,13 +5,13 @@ const instance = axios.create({
 	timeout: 1000 * 5
 });
 
-export const setAuthHeader = token => {
-	instance.defaults.headers.common.Authorization = `Bearer ${token}`;
-};
+
+export const BASE_URL = "http://localhost:3000";
 
 instance.interceptors.request.use(config => {
-	if (!config.headers.Date) {
-		config.headers.Date = new Date().toUTCString();
+	const token = localStorage.getItem("token");
+	if (token) {
+		config.headers.Authorization = `Bearer ${token}`;
 	}
 	return config;
 });
@@ -34,8 +34,7 @@ export const doLogin = async (username) => {
 };
 
 
-export const getConversations = async (userId,token) => {
-	setAuthHeader(token);
+export const getConversations = async (userId) => {
 	try{
 		const response = await instance.get(`users/${userId}/conversations`);
 		return response.data;
@@ -47,8 +46,7 @@ export const getConversations = async (userId,token) => {
 
 
 
-export const getGroups = async (userId,token) => {
-	setAuthHeader(token);
+export const getGroups = async (userId) => {
 	try{
 		const response = await instance.get(`users/${userId}/groups`);
 		return response.data;

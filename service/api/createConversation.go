@@ -37,20 +37,7 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-	dateHeader := r.Header.Get("Date")
-	if dateHeader == "" {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		context.Logger.WithError(err).Error("error getting date header")
-		return
-	}
-
-	t, err := time.Parse(time.RFC1123, dateHeader)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		context.Logger.WithError(err).Error("error parsing date header")
-		return
-	}
-	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().UTC().Format("2006-01-02 15:04:05")
 	conversation, err := rt.db.CreateConversation(userId_creator, body.Name, timestamp)
 	if err != nil {
 		context.Logger.WithError(err).Error("error creating conversation")

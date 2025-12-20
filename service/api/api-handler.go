@@ -40,6 +40,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:userId/groups/:groupId/messages/:messageId/comments", rt.wrap(rt.authHandler(rt.getGroupComments)))
 	rt.router.POST("/users/:userId/groups/:groupId/messages/:messageId/comments", rt.wrap(rt.authHandler(rt.postGroupComment)))
 	rt.router.DELETE("/users/:userId/groups/:groupId/messages/:messageId/comments/:commentId", rt.wrap(rt.authHandler(rt.unGroupComment)))
+	rt.router.GET("/file", rt.wrap(rt.getFile))
 
 	//TODO: TEST SU IMMAGINI GRUPPO E READ GRUPPO (Messaggi)
 
