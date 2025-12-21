@@ -2,8 +2,10 @@
 import {BASE_URL, getConversations, getGroups} from "../services/axios";
 import router from "../router";
 import {nextTick} from "vue";
+import LoadingSpinner from "../components/LoadingSpinner.vue";
 
 export default {
+	components: {LoadingSpinner},
 	data() {
 		return {
 			errormsg: null,
@@ -121,6 +123,7 @@ export default {
 </script>
 
 <template>
+	<LoadingSpinner v-if="loading ===true"></LoadingSpinner>
 	<div>
 		<div class="row align-items-center pt-3 pb-2 mb-3 border-bottom">
 			<div class="col-3 d-flex justify-content-start">

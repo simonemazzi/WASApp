@@ -22,11 +22,11 @@ export default {}
 	<div class="container-fluid">
 		<div class="row">
 			<nav v-if="route.path !== '/' && route.path !== '/home'" id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-				<SidebarContent />
+				<SidebarContent  />
 			</nav>
 
 			<main :class="['px-md-4', (route.path === '/' || route.path === '/home') ? 'col-12' : 'col-md-9 ms-sm-auto col-lg-10']">
-				<RouterView />
+				<RouterView/>
 			</main>
 		</div>
 	</div>

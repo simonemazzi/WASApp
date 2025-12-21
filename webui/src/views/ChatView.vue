@@ -1,26 +1,31 @@
 <script>
-import { BASE_URL, getConversation, getConversations, getGroups, getMessages } from "../services/axios";
+import { BASE_URL, getConversation, getConversations, getGroups, getMessages,postMessage } from "../services/axios";
 import router from "../router";
-//TODO:Fare bottone per azioni e send
+import LoadingSpinner from "../components/LoadingSpinner.vue";
+//TODO:Fare bottone per azioni
 export default {
+	components: {LoadingSpinner},
 	data() {
 		return {
 			errormsg: null,
+			errorTimeout:null,
 			loading: false,
 
 			messages: [],
 			currentConversation: null,
-			conversations: [],
-			groups: [],
 
 			username: null,
 			userId: null,
 			token: null,
 			conversation_id: null,
 
-			searchQuery: "",
+			searchMessage: "",
 
 			pollingInterval: null, // per il polling
+
+			refreshDebounced: null, //per evitare troppe richieste al server
+
+			openMessageOptions:null,
 		};
 	},
 	methods: {
@@ -44,7 +49,6 @@ export default {
 				}
 
 				this.messages = msgs;
-
 				this.$nextTick(() => {
 					if (container && isAtBottom) {
 						container.scrollTop = container.scrollHeight;
@@ -52,27 +56,34 @@ export default {
 				});
 
 			} catch (err) {
-				console.error("Errore fetching messages:", err);
+				if(err.response?.data?.includes("database is locked")) {
+					setTimeout(() => this.fetchMessages(), 2000); // ritenta dopo 2 secondi
+				} else {
+					console.error("Errore fetching messages:", err);
+				}
+
 			}
 		},
 
 		async refresh() {
+			if(this.refreshDebounced)   clearTimeout(this.refreshDebounced);
+
+			this.refreshDebounced = setTimeout(async() => {
 			this.loading = true;
 			this.errormsg = null;
+
 
 			this.userId = this.userId || localStorage.getItem("userId");
 			this.token = this.token || localStorage.getItem("token");
 			this.conversation_id = this.conversation_id || this.$route.params.conversation_id;
 
 			if (!this.userId || !this.token) {
-				this.errormsg = "Effettua il login";
+				this.errormsg = "Do login!";
 				this.loading = false;
 				return;
 			}
 
 			try {
-				this.conversations = (await getConversations(this.userId)) || [];
-				this.groups = (await getGroups(this.userId)) || [];
 				this.currentConversation = await getConversation(this.userId, this.conversation_id);
 
 				await this.fetchMessages(); // primo caricamento messaggi
@@ -80,7 +91,7 @@ export default {
 				this.errormsg = err.toString();
 			} finally {
 				this.loading = false;
-			}
+			}},300); //300ms tra una richiesta e l'altra
 		},
 
 		startPolling() {
@@ -89,8 +100,62 @@ export default {
 		},
 
 		stopPolling() {
-			if (this.pollingInterval) clearInterval(this.pollingInterval);
+			if (this.pollingInterval) {
+				clearInterval(this.pollingInterval);
+				this.pollingInterval = null;
+			}
 		},
+		async sendMessageButton() {
+			const textInput = this.$refs.messageText;
+			const photoInput = this.$refs.messagePhoto;
+
+			const text = textInput.value;
+			const photo = photoInput.files[0];
+
+			// controllo estensione foto
+			if (photo && photo.type !== "image/png" && photo.type !== "image/jpeg") {
+				this.showError("Only PNG or JPEG!");
+				photoInput.value = "";
+				return;
+			}
+
+			if (text || photo) {
+				try {
+					this.messages = await postMessage(this.userId, this.conversation_id, text, photo,"direct");
+					textInput.value = "";
+					photoInput.value = "";
+					await this.fetchMessages();
+				} catch (e) {
+					console.error("Error send message:", e);
+					this.showError("Error sending message");
+				}
+			}
+		},
+
+		showError(msg) {
+			this.errormsg = msg;
+
+			// cancella eventuale timeout precedente
+			if (this.errorTimeout) clearTimeout(this.errorTimeout);
+
+			// setta il nuovo timeout
+			this.errorTimeout = setTimeout(() => {
+				this.errormsg = null;
+				this.errorTimeout = null;
+			}, 5000);
+		},
+		showOptions(messageId){
+			if (this.openMessageOptions === messageId) {
+				this.openMessageOptions = null;
+			} else {
+				this.openMessageOptions = messageId;
+			}
+		},
+		forwardMessage(messageId){
+
+		},
+		seeComments(messageId){},
+		deleteMessage(messageId){},
 	},
 	created() {
 		this.username = localStorage.getItem("username");
@@ -106,13 +171,33 @@ export default {
 	beforeUnmount() {
 		this.stopPolling();
 	},
+	watch: {
+		'$route.params.conversation_id'(newId) {
+			this.stopPolling();
+			this.conversation_id = newId;
+			this.refresh();
+			this.startPolling();
+		}
+	},
+	computed: {
+		filteredMessages() {
+			let result = this.messages
+
+			if(this.searchMessage.trim().length !== ""){
+				const q = this.searchMessage.toLowerCase();
+				result=result.filter(chat => chat.body.text.toLowerCase().includes(q));
+			}
+			return result;
+		}
+	}
 };
 </script>
 
 <template>
+	<LoadingSpinner v-if="loading ===true"></LoadingSpinner>
 	<div class="chat-header-wrapper">
 		<div class="d-flex justify-content-between align-items-center">
-			<div class="d-flex align-items-center gap-2">
+			<div class="d-flex align-items-center gap-2 p-lg-2">
 				<img
 					:src="`${BASE_URL()}/file?file=${this.currentConversation.avatar.url}`"
 					alt="Avatar"
@@ -122,14 +207,18 @@ export default {
 				/>
 				<h1 class="mb-0 align-bottom">{{ this.currentConversation.name }}</h1>
 			</div>
+			<div>
+				<input type="text" placeholder="Search message..." v-model="searchMessage">
+			</div>
 		</div>
 	</div>
 
 	<div class="chat-body">
 		<div class="messages-container" ref="messageContainer">
+			<ErrorMsg v-if="errormsg" :msg="errormsg" />
 			<div
-				v-for="msg in messages"
-				:key="msg.message_id"
+				v-for="msg in filteredMessages"
+				:key="msg.messageId"
 				:class="['message-row gap-3', msg.sender.userId === userId ? 'mine' : 'theirs']"
 			>
 				<img v-if="msg.sender.userId !== userId"
@@ -140,11 +229,21 @@ export default {
 					height="35"
 				/>
 				<div class="message-bubble">
+					<div class="d-flex justify-content-end"
+						 v-if="openMessageOptions === msg.messageId">
+						<button class="btn btn-outline-secondary" @click="forwardMessage(msg.messageId)"><img src="../icons/share-icon_4662621.png" alt="Forward" width="25" height="25"></button>
+						<button class="btn btn-outline-primary" @click="seeComments(msg.messageId)"><img src="../icons/chat-dots-fill.svg" alt="comment" width="23" height="23"></button>
+						<button v-if="msg.sender.userId === userId" class="btn btn-outline-danger" @click="deleteMessage(msg.messageId)"><img src="../icons/trash3-fill.svg" alt="Delete" width="23" height="23"></button>
+					</div>
 					<div class="d-flex justify-content-between">
 						<small v-if="msg.sender.userId !== userId" class="sender">{{ msg.sender.username }}</small>
 						<small v-if="msg.sender.userId === userId" class="sender"></small>
-						<small v-if="!msg.isForwarded" class="text-end">(forwarded)</small>
+						<div class="d-flex">
+						<small v-if="msg.isForwarded" class="text-end">(forwarded)</small>
+						<button class="icon-btn" @click="showOptions(msg.messageId)"><img src="../icons/dots_16164512.png" width="15" height="15" alt="Options"></button>
+						</div>
 					</div>
+					<img v-if="msg.body.photo && msg.body.photo.url" :src="`${BASE_URL()}/file?file=${msg.body.photo.url}`" alt="PhotoMessage" class="message-photo">
 					<p class="text">{{ msg.body.text }}</p>
 					<div class="justify-content-between">
 						<span>{{msg.time}}</span>
@@ -155,8 +254,9 @@ export default {
 			</div>
 		</div>
 		<div class ="d-flex justify-content-between">
-		<input class="input-group" type="text">
-		<button class="btn">Send</button>
+			<input type="file" ref="messagePhoto">
+			<input class="input-group" type="text" placeholder="Write message..." ref="messageText">
+			<button class="btn btn-outline-dark" @click="sendMessageButton">Send</button>
 		</div>
 	</div>
 
@@ -199,15 +299,16 @@ export default {
 	margin-bottom: 0.75rem;
 }
 
-.message-row.mine {
+.message-row {
 	justify-content: flex-end;
 }
 
-.message-row.theirs {
+.message-row {
 	justify-content: flex-start;
 }
 
 .message-bubble {
+	position: relative;
 	max-width: 70%;
 	padding: 0.6rem 0.9rem;
 	border-radius: 14px;
@@ -234,6 +335,24 @@ export default {
 	opacity: 0.7;
 	display: block;
 	margin-bottom: 2px;
+}
+
+.message-photo {
+	max-width: 300px;   /* larghezza massima */
+	max-height: 300px;  /* altezza massima */
+	width: auto;        /* scala proporzionalmente */
+	height: auto;
+	border-radius: 10px;
+	object-fit: contain; /* mantiene proporzioni */
+}
+
+.icon-btn {
+	padding-bottom: 5px;
+	border: none;
+	background: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 }
 
 

@@ -78,9 +78,47 @@ export const getConversation = async (userId,conversationId) => {
 }
 
 
+export const postMessage = async (userId,chatId,messageText,messagePhoto,type) => {
+	try{
+		let response;
+		if (messagePhoto) {
+			const formData = new FormData();
+			formData.append("body",messageText);
+			formData.append("photo",messagePhoto);
+			if(type === "direct") {
+				response = await instance.post(`users/${userId}/conversations/${chatId}/messages`, formData,{headers:{"Content-Type": "multipart/form-data"}});
+			} else if(type === "group") {
+				response = await instance.post(`users/${userId}/groups/${chatId}/messages`, formData,{headers:{"Content-Type": "multipart/form-data"}});
+			}
+		}else{
+			if(type === "direct") {
+				response = await instance.post(`users/${userId}/conversations/${chatId}/messages`, {body: messageText});
+			} else if(type === "group") {
+				response = await instance.post(`users/${userId}/groups/${chatId}/messages`,{body: messageText});
+			}
+		}
+		return response.data;
+	}catch(error){
+		console.error("PostMessage error:", error);
+		throw error;
+	}
+}
 
-
-
+//TODO: DA completare
+export const forwardMessage = async (userId,chatId,messageId,type) => {
+	try{
+		let response;
+		if(type === "direct") {
+			response = await instance.post(`users/${userId}/conversations/${chatId}/messages/${messageId}/forward_message`);
+		} else if(type === "group") {
+			response = await instance.post(`users/${userId}/groups/${chatId}/messages/${messageId}/forward_message`);
+		}
+		return response.data;
+	}catch(error){
+		console.error("PostMessage error:", error);
+		throw error;
+	}
+}
 
 
 
