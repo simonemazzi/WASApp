@@ -299,11 +299,11 @@ export default {
 	margin-bottom: 0.75rem;
 }
 
-.message-row {
+.message-row.mine {
 	justify-content: flex-end;
 }
 
-.message-row {
+.message-row.theirs {
 	justify-content: flex-start;
 }
 
