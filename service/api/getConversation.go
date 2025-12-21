@@ -38,7 +38,7 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, param
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
-	conversation, err := rt.db.GetConversationById(conversationId)
+	conversation, err := rt.db.GetConversationById(userId, conversationId)
 	if err != nil {
 		context.Logger.WithError(err).Error("Error getting conversation")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

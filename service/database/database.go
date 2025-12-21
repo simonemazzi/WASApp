@@ -52,7 +52,7 @@ type AppDatabase interface {
 	CreateConversation(userId int, username string, time string) (Conversation, error)
 	SearchUserByUsername(username string, time string) (int, error)
 	GetPhoto(userId int, time string) (Avatar, error)
-	GetConversationById(conversationId int) (Conversation, error)
+	GetConversationById(currentUserId int, conversationId int) (Conversation, error)
 	UserConversation(userId int, conversationId int) (bool, error)
 	GetMessages(conversationId int, userId int) ([]Message, error)
 	InsertPhoto(url string, width int, height int, mime string) (int, error)

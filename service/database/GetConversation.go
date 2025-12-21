@@ -5,8 +5,9 @@ import (
 	"errors"
 )
 
-func (db *appdbimpl) GetConversationById(conversationId int) (Conversation, error) {
-	rows, err := db.c.Query(`SELECT
+func (db *appdbimpl) GetConversationById(currentUserId int, conversationId int) (Conversation, error) {
+	rows, err := db.c.Query(`
+SELECT
     c.conversationId,
     uu.username,
     p.url,
@@ -14,27 +15,34 @@ func (db *appdbimpl) GetConversationById(conversationId int) (Conversation, erro
     p.width,
     p.height
 FROM Conversation c
-JOIN UserUsername uu ON uu.userId = c.component_B
+JOIN UserUsername uu ON uu.userId = (
+    CASE
+        WHEN c.component_A = ? THEN c.component_B
+        ELSE c.component_A
+    END
+)
 AND uu.updateId = (
     SELECT MAX(updateId)
     FROM UserUsername
-    WHERE userId = c.component_B
+    WHERE userId = uu.userId
 )
-LEFT JOIN UsPhoto up ON up.userId = c.component_B
+LEFT JOIN UsPhoto up ON up.userId = uu.userId
 AND up.updateId = (
     SELECT MAX(updateId)
     FROM UsPhoto
-    WHERE userId = c.component_B
+    WHERE userId = uu.userId
 )
 LEFT JOIN Photo p ON p.photoId = up.photoId
-WHERE c.conversationId = ?`, conversationId)
+WHERE c.conversationId = ?
+`, currentUserId, conversationId)
+
 	if err != nil {
 		return Conversation{}, err
 	}
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
 		if err != nil {
-			panic(err)
+			return
 		}
 	}(rows)
 
@@ -60,5 +68,4 @@ WHERE c.conversationId = ?`, conversationId)
 	}
 
 	return conv, nil
-
 }

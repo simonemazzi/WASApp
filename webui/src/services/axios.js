@@ -46,7 +46,7 @@ export const getConversations = async (userId) => {
 
 
 
-export const getGroups = async (userId) => {
+export const getGroups = async  (userId) => {
 	try{
 		const response = await instance.get(`users/${userId}/groups`);
 		return response.data;
@@ -57,6 +57,25 @@ export const getGroups = async (userId) => {
 }
 
 
+export const getMessages = async (userId,conversationId) => {
+	try{
+		const response = await instance.get(`users/${userId}/conversations/${conversationId}/messages`);
+		return response.data;
+	}catch(error){
+		console.error("Get conversations error:", error);
+		throw error;
+	}
+}
+
+export const getConversation = async (userId,conversationId) => {
+	try{
+		const response = await instance.get(`users/${userId}/conversations/${conversationId}`);
+		return response.data;
+	}catch(error){
+		console.error("Get conversations error:", error);
+		throw error;
+	}
+}
 
 
 
