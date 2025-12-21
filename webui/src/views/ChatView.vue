@@ -2,9 +2,14 @@
 import { BASE_URL, getConversation, getConversations, getGroups, getMessages,postMessage } from "../services/axios";
 import router from "../router";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
+import Comment from "../components/Comment.vue";
+import Delete from "../components/Delete.vue";
+import Forward from "../components/Forward.vue";
+
+
 //TODO:Fare bottone per azioni
 export default {
-	components: {LoadingSpinner},
+	components: {Forward, Delete, Comment, LoadingSpinner},
 	data() {
 		return {
 			errormsg: null,
@@ -26,6 +31,15 @@ export default {
 			refreshDebounced: null, //per evitare troppe richieste al server
 
 			openMessageOptions:null,
+
+			selectedMessageId : null,
+
+			showForward: false,
+			forwardMessageId: null,
+			deleteMessageId: null,
+			deleteMessage: false,
+			showComments: false,
+			commentMessageId: null,
 		};
 	},
 	methods: {
@@ -151,11 +165,18 @@ export default {
 				this.openMessageOptions = messageId;
 			}
 		},
-		forwardMessage(messageId){
-
+		forward(messageId) {
+			this.forwardMessageId = messageId;
+			this.showForward = true;
 		},
-		seeComments(messageId){},
-		deleteMessage(messageId){},
+		comment(messageId){
+			this.showComments = true;
+			this.commentMessageId = messageId;
+		},
+		deleteM(messageId){
+			this.deleteMessage = true;
+			this.deleteMessageId = messageId;
+		},
 	},
 	created() {
 		this.username = localStorage.getItem("username");
@@ -195,6 +216,30 @@ export default {
 
 <template>
 	<LoadingSpinner v-if="loading ===true"></LoadingSpinner>
+	<Comment
+			:userId="userId"
+			:show="showComments"
+			:messageId="commentMessageId"
+			:chatId="conversation_id"
+			:type="`direct`"
+			@close="showComments=false"
+	/>
+	<Delete
+			:userId="userId"
+			:show="deleteMessage"
+			:messageId="deleteMessageId"
+			:chatId="conversation_id"
+			:type="`direct`"
+			@close="deleteMessage=false"
+	/>
+	<Forward
+		:userId="userId"
+		:show="showForward"
+		:messageId="forwardMessageId"
+		:chatId="conversation_id"
+		:type="`direct`"
+		@close="showForward = false"
+	/>
 	<div class="chat-header-wrapper">
 		<div class="d-flex justify-content-between align-items-center">
 			<div class="d-flex align-items-center gap-2 p-lg-2">
@@ -231,9 +276,9 @@ export default {
 				<div class="message-bubble">
 					<div class="d-flex justify-content-end"
 						 v-if="openMessageOptions === msg.messageId">
-						<button class="btn btn-outline-secondary" @click="forwardMessage(msg.messageId)"><img src="../icons/share-icon_4662621.png" alt="Forward" width="25" height="25"></button>
-						<button class="btn btn-outline-primary" @click="seeComments(msg.messageId)"><img src="../icons/chat-dots-fill.svg" alt="comment" width="23" height="23"></button>
-						<button v-if="msg.sender.userId === userId" class="btn btn-outline-danger" @click="deleteMessage(msg.messageId)"><img src="../icons/trash3-fill.svg" alt="Delete" width="23" height="23"></button>
+						<button class="btn btn-outline-secondary" @click="forward(msg.messageId)"><img src="../icons/share-icon_4662621.png" alt="Forward" width="25" height="25"></button>
+						<button class="btn btn-outline-primary" @click="comment(msg.messageId)"><img src="../icons/chat-dots-fill.svg" alt="comment" width="23" height="23"></button>
+						<button v-if="msg.sender.userId === userId" class="btn btn-outline-danger" @click="deleteM(msg.messageId)"><img src="../icons/trash3-fill.svg" alt="Delete" width="23" height="23"></button>
 					</div>
 					<div class="d-flex justify-content-between">
 						<small v-if="msg.sender.userId !== userId" class="sender">{{ msg.sender.username }}</small>

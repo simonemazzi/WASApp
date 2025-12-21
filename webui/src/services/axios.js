@@ -105,27 +105,87 @@ export const postMessage = async (userId,chatId,messageText,messagePhoto,type) =
 }
 
 //TODO: DA completare
-export const forwardMessage = async (userId,chatId,messageId,type) => {
-	try{
-		let response;
-		if(type === "direct") {
-			response = await instance.post(`users/${userId}/conversations/${chatId}/messages/${messageId}/forward_message`);
-		} else if(type === "group") {
-			response = await instance.post(`users/${userId}/groups/${chatId}/messages/${messageId}/forward_message`);
+export const forwardMessage = async (
+	userId,
+	originChatId,
+	messageId,
+	originType, // "direct" | "group"
+	forwardToConversation,
+	forwardToGroup
+) => {
+	try {
+		const body = {
+			forwardToConversation,
+			forwardToGroup
+		};
+
+		let url;
+		if (originType === "direct") {
+			url = `users/${userId}/conversations/${originChatId}/messages/${messageId}/forward_message`;
+		} else {
+			url = `users/${userId}/groups/${originChatId}/messages/${messageId}/forward_message`;
 		}
+
+		const response = await instance.post(url, body);
 		return response.data;
-	}catch(error){
-		console.error("PostMessage error:", error);
+
+	} catch (error) {
+		console.error("ForwardMessage error:", error);
+		throw error;
+	}
+};
+
+
+
+export const deleteMessage = async (userId,conversationId,messageId,type) =>{
+	try{
+		let url;
+		if (type === "direct") {
+			url = `users/${userId}/conversations/${conversationId}/messages/${messageId}`;
+		} else {
+			url = `users/${userId}/groups/${conversationId}/messages/${messageId}`;
+		}
+
+		const response = await instance.delete(url);
+		return response.data;
+	}catch (error) {
+		console.error("DeleteMessage error:", error);
 		throw error;
 	}
 }
 
 
+export const commentMessage = async (userId,conversationId,messageId,type,emoji) =>{
+	try{
+		let url;
+		if (type === "direct") {
+			url = `users/${userId}/conversations/${conversationId}/messages/${messageId}/comments`;
+		} else {
+			url = `users/${userId}/groups/${conversationId}/messages/${messageId}/comments`;
+		}
+		const response = await instance.post(url, {emoji:emoji});
+		return response.data;
+	}catch(error){
+		console.error("CommentMessage error:", error);
+		throw error;
+	}
+}
 
-
-
-
-
+export const getComments = async (userId,conversationId,messageId,type) =>{
+	try{
+		let url;
+		if (type === "direct") {
+			url = `users/${userId}/conversations/${conversationId}/messages/${messageId}/comments`;
+		} else {
+			url = `users/${userId}/groups/${conversationId}/messages/${messageId}/comments`;
+		}
+		const response = await instance.get(url);
+		return response.data;
+	}catch(error){
+		console.error("CommentMessage error:", error);
+		throw error;
+	}
+}
 
 
 

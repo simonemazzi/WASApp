@@ -35,6 +35,7 @@ func (rt *_router) unComment(w http.ResponseWriter, r *http.Request, params http
 		return
 	}
 	if !isThere {
+		context.Logger.WithError(err).Error("Error checking user conversation")
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
@@ -61,6 +62,7 @@ func (rt *_router) unComment(w http.ResponseWriter, r *http.Request, params http
 		return
 	}
 	if !isThere {
+		context.Logger.WithError(err).Error("Error checking message comment")
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}

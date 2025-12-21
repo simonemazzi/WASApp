@@ -7,7 +7,7 @@ import (
 
 func (db *appdbimpl) MessageComment(messageId int, commentId int) (bool, error) {
 	var exists int
-	err := db.c.QueryRow(`SELECT 1 FROM Comment c WHERE c.messageId = ? AND c.commentId = ?`, messageId, commentId).Scan(&exists)
+	err := db.c.QueryRow(`SELECT 1 FROM Comment c WHERE c.commentId = ? AND c.messageId = ?`, commentId, messageId).Scan(&exists)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
