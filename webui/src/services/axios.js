@@ -213,5 +213,15 @@ export const getUsers = async () =>{
 	}
 }
 
+export const createConversation = async (userId,username) =>{
+	try{
+		const response = await instance.post(`users/${userId}/conversations`, {name: username});
+		return response.data;
+	}catch(error){
+		console.error("CreateConversation error:", error);
+		throw error;
+	}
+}
+
 
 export default instance;

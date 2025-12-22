@@ -3,9 +3,10 @@ import {BASE_URL, getConversations, getGroups} from "../services/axios";
 import router from "../router";
 import {nextTick} from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
+import NewChat from "../components/NewChat.vue";
 
 export default {
-	components: {LoadingSpinner},
+	components: {LoadingSpinner,NewChat},
 	data() {
 		return {
 			errormsg: null,
@@ -21,7 +22,13 @@ export default {
 			activeFilter: "all",
 			sidebarOpen: false,
 
-			searchQuery: ""
+			searchQuery: "",
+
+			newChat:false,
+
+			pollingInterval: null, //per il polling
+
+			firstLoad: true, //per evitare blink effect
 		}
 	},
 	methods: {
@@ -32,7 +39,9 @@ export default {
 			return BASE_URL;
 		},
 		async refresh() {
-			this.loading = true;
+			if (this.firstLoad) {
+				this.loading = true;
+			}
 			this.errormsg = null;
 			if(!this.userId) this.userId = sessionStorage.getItem('userId');
 			if(!this.token) this.token = sessionStorage.getItem('token');
@@ -51,7 +60,10 @@ export default {
 			}catch(err){
 				this.errormsg=err.toString();
 			}
-			this.loading = false;
+			if (this.firstLoad) {
+				this.loading = false;
+				this.firstLoad = false;
+			}
 		},
 		openChat(id, type){
 			if (type === "direct"){
@@ -71,7 +83,25 @@ export default {
 		},
 		goToParticipants(groupId) {
 			router.push({name: 'participants', params: {group_id: groupId}});
-		}
+		},
+		openNewChat() {
+			this.newChat = !this.newChat;
+		},
+		startPolling() {
+			// evita doppi interval
+			if (this.pollingInterval) return;
+
+			this.pollingInterval = setInterval(() => {
+				this.refresh();
+			}, 2000);
+		},
+
+		stopPolling() {
+			if (this.pollingInterval) {
+				clearInterval(this.pollingInterval);
+				this.pollingInterval = null;
+			}
+		},
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
@@ -80,7 +110,11 @@ export default {
 		this.sidebarOpen= false;
 		if (this.token && this.userId) {
 			this.refresh();
+			this.startPolling();
 		}
+	},
+	beforeUnmount() {
+		this.stopPolling();
 	},
 	computed: {
 		filteredChats() {
@@ -124,6 +158,9 @@ export default {
 
 <template>
 	<LoadingSpinner v-if="loading ===true"></LoadingSpinner>
+	<NewChat :show="newChat"
+			 @close="newChat = false"
+	> </NewChat>
 	<div>
 		<div class="row align-items-center pt-3 pb-2 mb-3 border-bottom">
 			<div class="col-3 d-flex justify-content-start">
@@ -148,13 +185,7 @@ export default {
 				<h1 class="h2 mb-0">Welcome Back, {{ username }}!</h1>
 			</div>
 
-			<div class="col-3 d-flex justify-content-end">
-				<div class="btn-toolbar mb-2 mb-md-0">
-					<button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">
-						Refresh
-					</button>
-				</div>
-			</div>
+
 		</div>
 
 		<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
@@ -181,7 +212,7 @@ export default {
 				</div>
 				<div class="d-flex justify-content-end gap-2">
 					<input type="text" class="form-control" placeholder="Search..." v-model="searchQuery">
-					<button class="btn btn-primary" @click="CreateChat">
+					<button class="btn btn-primary" @click="openNewChat">
 						<img src="../icons/new-svgrepo-com.svg" width="25" height="25"  alt="New"/>
 					</button>
 				</div>

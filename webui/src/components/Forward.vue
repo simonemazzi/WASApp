@@ -77,8 +77,7 @@ export default {
 <template>
 	<div v-if="show" class="overlay">
 		<div class="action-box">
-			<h4>Forward message</h4>
-
+			<h4 class="text-center">Forward message</h4>
 			<div
 				v-for="chat in chats"
 				:key="chat.conversation_id || chat.group_id"

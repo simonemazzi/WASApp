@@ -63,7 +63,7 @@ export default {
 				}
 
 				this.messages = msgs;
-				this.$nextTick(() => {
+				await this.$nextTick(() => { //await
 					if (container && isAtBottom) {
 						container.scrollTop = container.scrollHeight;
 					}
