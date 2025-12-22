@@ -1,89 +1,131 @@
-<script setup>
-import { ref , onMounted,watch} from 'vue'
-import {commentMessage,getComments} from "../services/axios";
+<script>
+import { commentMessage, getComments, unComment } from "../services/axios";
 
-const props = defineProps({
-	userId: Number,
-	show: Boolean,
-	messageId: Number,
-	chatId: Number,
-	type: String
-})
+export default {
+	name: 'Comment',
 
-const emit = defineEmits(['close', 'confirm'])
-const emojiInput = ref('')
-const userId = props.userId
+	props: {
+		userId: Number,
+		show: Boolean,
+		messageId: Number,
+		chatId: Number,
+		type: String
+	},
 
-const comments = ref([])
+	data() {
+		return {
+			emojiInput: '',
+			comments: [],
+			pollingInterval: null
+		}
+	},
 
-// Funzione per lasciare solo emoji
-function filterEmoji() {
-	// Regex che prende tutti i simboli emoji
-	emojiInput.value = Array.from(emojiInput.value)
-		.filter(char => /\p{Emoji}/u.test(char))
-		.join('')
-}
+	computed: {
+		// nessun computed extra nel tuo setup, ma puoi aggiungere se vuoi
+	},
 
-function confirmComment() {
-	if (emojiInput.value.trim()) {
-		commentMessage(userId,props.chatId,props.messageId,props.type,emojiInput.value)
-		emojiInput.value = ''
+	methods: {
+		filterEmoji() {
+			this.emojiInput = Array.from(this.emojiInput)
+				.filter(char => /\p{Emoji}/u.test(char))
+				.join('')
+		},
+
+		confirmComment() {
+			if (this.emojiInput.trim()) {
+				commentMessage(this.userId, this.chatId, this.messageId, this.type, this.emojiInput)
+				this.emojiInput = ''
+			}
+		},
+
+		insertEmoji(emoji) {
+			this.emojiInput = emoji
+			this.filterEmoji()
+		},
+
+		deleteEmoji(commentId) {
+			unComment(this.userId, this.chatId, this.messageId, commentId, this.type)
+		},
+
+		async loadComments() {
+			if (!this.userId || !this.chatId || !this.messageId) return
+			const comm = await getComments(this.userId, this.chatId, this.messageId, this.type) || []
+			this.comments = [...comm]
+		},
+
+		startPolling() {
+			this.stopPolling()
+			this.pollingInterval = setInterval(() => {
+				if (this.show) {
+					this.loadComments()
+				}
+			}, 2000)
+		},
+
+		stopPolling() {
+			if (this.pollingInterval) {
+				clearInterval(this.pollingInterval)
+				this.pollingInterval = null
+			}
+		}
+	},
+
+	mounted() {
+		if (this.messageId) this.loadComments()
+		this.startPolling()
+	},
+
+	beforeUnmount() {
+		this.stopPolling()
+	},
+
+	watch: {
+		messageId(newId) {
+			if (newId) this.loadComments()
+		}
 	}
 }
-
-function insertEmoji(emoji) {
-	emojiInput.value = emoji
-	filterEmoji()
-}
-
-
-async function loadComments()  {
-	if (!userId || !props.chatId || !props.messageId) return;
-	const comm = await getComments(userId, props.chatId, props.messageId, props.type) || []
-	comments.value = [...comm]
-}
-
-onMounted(() => {
-	if (props.messageId) loadComments()
-})
-
-watch(() => props.messageId, (newId) => {
-	if (newId) loadComments()
-})
 </script>
 
 <template>
-<div v-if="show" class="overlay">
-	<div class="action-box">
-		<h2 class="text-center">Send Comment</h2>
-		<div class="comment-box">
-			<div v-for="comment in comments" :key="comment.id" class=" d-flex justify-content-between">
-				<p >{{ comment.sender.username }}</p>
-				<p >{{comment.emoji}}</p>
+	<div v-if="show" class="overlay">
+		<div class="action-box">
+			<h2 class="text-center">Comments</h2>
+			<div v-if="comments.length > 0 " class="comment-box">
+				<div v-for="comment in comments" :key="comment.id" class="d-flex justify-content-between align-items-center">
+					<div class="pb-0 m-0">
+						<span v-if="comment.sender.userId !== userId" class="emoji">{{ comment.sender.username }}</span>
+						<span v-else class="emoji">You</span>
+					</div>
+					<div class="d-flex align-items-center gap-2">
+						<button v-if="comment.sender.userId === userId" class="btn btn-danger" @click="deleteEmoji(comment.commentId)">
+							<img src="../icons/trash3-fill.svg" alt="Delete" width="16" height="16" class="d-flex align-items-center">
+						</button>
+						<span class="emoji">{{ comment.emoji }}</span>
+					</div>
+				</div>
+			</div>
+			<input
+				type="text"
+				v-model="emojiInput"
+				@input="filterEmoji"
+				placeholder="Comment with an emoji..."
+			/>
+			<div class="d-flex justify-content-center">
+				<button class="btn" @click="insertEmoji(`🕶`)">🕶</button>
+				<button class="btn" @click="insertEmoji(`✨`)">✨</button>
+				<button class="btn" @click="insertEmoji(`😍`)">😍</button>
+				<button class="btn" @click="insertEmoji(`💕`)">💕</button>
+			</div>
+			<div class="actions">
+				<button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+				<button class="btn btn-primary" @click="confirmComment">Comment</button>
 			</div>
 		</div>
-		<input
-			type="text"
-			v-model="emojiInput"
-			@input="filterEmoji"
-			placeholder="Comment with an emoji..."
-		/>
-		<div class="d-flex justify-content-center">
-			<button class="btn" @click="insertEmoji(`🕶`)">🕶</button>
-			<button class="btn" @click="insertEmoji(`✨`)">✨</button>
-			<button class="btn" @click="insertEmoji(`😍`)">😍</button>
-			<button class="btn" @click="insertEmoji(`💕`)">💕</button>
-		</div>
-		<div class="actions">
-			<button class="btn btn-secondary" @click="emit('close')">Cancel</button>
-			<button class="btn btn-primary" @click="confirmComment">Comment</button>
-		</div>
 	</div>
-</div>
 </template>
 
 <style scoped>
-
 .overlay {
 	position: fixed;
 	inset: 0;
@@ -99,7 +141,7 @@ watch(() => props.messageId, (newId) => {
 	padding: 20px;
 	width: 400px;
 	max-height: 80vh;
-	overflow-y: auto;      /* scroll se troppe chat */
+	overflow-y: auto;
 	border-radius: 8px;
 	box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 	z-index: 1201;
@@ -124,4 +166,7 @@ watch(() => props.messageId, (newId) => {
 	border-top-left-radius: 10px;
 }
 
+.emoji {
+	font-size: 1.2rem;
+}
 </style>

@@ -12,7 +12,7 @@ func (rt *_router) Handler() http.Handler {
 
 	// paths
 	rt.router.POST("/session", rt.wrap(rt.postSession))
-	rt.router.GET("/users", rt.wrap(rt.authHandler(rt.searchUser)))
+	rt.router.GET("/users", rt.wrap(rt.searchUser))
 	rt.router.PUT("/users/:userId/info/username", rt.wrap(rt.authHandler(rt.setMyUserName)))
 	rt.router.PUT("/users/:userId/info/photo", rt.wrap(rt.authHandler(rt.setMyPhoto)))
 	rt.router.GET("/users/:userId/conversations", rt.wrap(rt.authHandler(rt.getConversations)))

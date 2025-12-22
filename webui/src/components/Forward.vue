@@ -1,66 +1,77 @@
-<script setup>
-import { ref, onMounted, watch } from 'vue'
-import { getConversations, getGroups,forwardMessage } from '../services/axios'
+<script>
 
-const props = defineProps({
-	userId: Number,
-	show: Boolean,
-	messageId: Number,
-	chatId: Number,
-	type: String
-})
+import { getConversations, getGroups, forwardMessage } from '../services/axios'
 
-const emit = defineEmits(['close', 'confirm'])
+export default {
+	name: 'ForwardMessage',
 
-const chats = ref([])
-const selected = ref(new Set())
-const userId = props.userId
+	props: {
+		userId: Number,
+		show: Boolean,
+		messageId: Number,
+		chatId: Number,
+		type: String
+	},
 
-async function loadChats() {
-	const conversations = await getConversations(userId) || []
-	const groups = await getGroups(userId) || []
-	chats.value = [...conversations, ...groups]
-}
-
-function toggle(chat) {
-	const id = chat.conversation_id || `g-${chat.group_id}`
-	selected.value.has(id)
-		? selected.value.delete(id)
-		: selected.value.add(id)
-}
-
-function confirmForward() {
-	const conversations = []
-	const groups = []
-
-	chats.value.forEach(chat => {
-		const id = chat.conversation_id || `g-${chat.group_id}`
-		if (selected.value.has(id)) {
-			chat.conversation_id
-				? conversations.push(chat.conversation_id)
-				: groups.push(chat.group_id)
+	data() {
+		return {
+			chats: [],
+			selected: new Set()
 		}
-	})
+	},
 
-	forwardMessage(
-		userId,
-		props.chatId,
-		props.messageId,
-		props.type,
-		conversations,
-		groups
-	)
+	methods: {
+		async loadChats() {
+			const conversations = await getConversations(this.userId) || []
+			const groups = await getGroups(this.userId) || []
+			this.chats = [...conversations, ...groups]
+		},
 
-	emit('close')
-}
+		toggle(chat) {
+			const id = chat.conversation_id || `g-${chat.group_id}`
+			this.selected.has(id)
+				? this.selected.delete(id)
+				: this.selected.add(id)
+		},
 
-onMounted(loadChats)
+		confirmForward() {
+			const conversations = []
+			const groups = []
 
-watch(() => props.show, (newVal) => {
-	if (newVal) {
-		selected.value.clear()
+			this.chats.forEach(chat => {
+				const id = chat.conversation_id || `g-${chat.group_id}`
+				if (this.selected.has(id)) {
+					chat.conversation_id
+						? conversations.push(chat.conversation_id)
+						: groups.push(chat.group_id)
+				}
+			})
+
+			forwardMessage(
+				this.userId,
+				this.chatId,
+				this.messageId,
+				this.type,
+				conversations,
+				groups
+			)
+
+			this.$emit('close')
+		}
+	},
+
+	mounted() {
+		this.loadChats()
+	},
+
+	watch: {
+		show(newVal) {
+			if (newVal) {
+				this.selected.clear()
+			}
+		}
 	}
-})
+}
 </script>
 
 <template>
@@ -68,17 +79,21 @@ watch(() => props.show, (newVal) => {
 		<div class="action-box">
 			<h4>Forward message</h4>
 
-			<div v-for="chat in chats"
-				 :key="chat.conversation_id || chat.group_id"
-				 class="chat-item"
-				 @click="toggle(chat)">
-				<input type="checkbox"
-					   :checked="selected.has(chat.conversation_id || `g-${chat.group_id}`)">
+			<div
+				v-for="chat in chats"
+				:key="chat.conversation_id || chat.group_id"
+				class="chat-item"
+				@click="toggle(chat)"
+			>
+				<input
+					type="checkbox"
+					:checked="selected.has(chat.conversation_id || `g-${chat.group_id}`)"
+				>
 				<span class="ms-2">{{ chat.name }}</span>
 			</div>
 
 			<div class="actions">
-				<button class="btn btn-secondary" @click="emit('close')">Cancel</button>
+				<button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
 				<button class="btn btn-primary" @click="confirmForward">Forward</button>
 			</div>
 		</div>
@@ -101,7 +116,7 @@ watch(() => props.show, (newVal) => {
 	padding: 20px;
 	width: 400px;
 	max-height: 80vh;
-	overflow-y: auto;      /* scroll se troppe chat */
+	overflow-y: auto;
 	border-radius: 8px;
 	box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 	z-index: 1201;

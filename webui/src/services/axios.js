@@ -187,8 +187,31 @@ export const getComments = async (userId,conversationId,messageId,type) =>{
 	}
 }
 
+export const unComment = async (userId,conversationId,messageId,commentId,type) =>{
+	try{
+		let url;
+		if (type === "direct") {
+			url = `users/${userId}/conversations/${conversationId}/messages/${messageId}/comments/${commentId}`;
+		} else {
+			url = `users/${userId}/groups/${conversationId}/messages/${messageId}/comments/${commentId}`;
+		}
+		const response = await instance.delete(url);
+		return response.data;
+	}catch(error){
+		console.error("CommentMessage error:", error);
+		throw error;
+	}
+}
 
-
+export const getUsers = async () =>{
+	try{
+		const response= await instance.get("users");
+		return response.data;
+	}catch(error){
+		console.error("GetUserss error:", error);
+		throw error;
+	}
+}
 
 
 export default instance;
