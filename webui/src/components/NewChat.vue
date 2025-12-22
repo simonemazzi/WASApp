@@ -22,6 +22,8 @@ export default {
 			refreshDebounced: null, //per evitare troppe richieste al server
 			searchUsers: "",
 
+			selectedUsers: new Set(), //per i selezionati del gruppo
+
 		}
 	},
 	methods:{
@@ -90,7 +92,14 @@ export default {
 		},
 		createGroupBegin(){
 			this.isGroup = !this.isGroup;
+			if(!this.isGroup){
+				this.selectedUsers.clear();
+			}
 		},
+		toggleUser(user){
+			const id = user.user_id;
+			this.selectedUsers.has(id) ? this.selectedUsers.delete(id) : this.selectedUsers.add(id);
+		}
 
 	},
 	beforeUnmount() {
@@ -131,7 +140,7 @@ export default {
 		<div class="action-box">
 			<h4 class="text-center">New Chat</h4>
 			<input type="text" v-model="this.searchUsers" placeholder="Search user..." class="input-group">
-			<div class="d-flex pt-2">
+			<div class="top-controls pt-2">
 				<button
 					:class="['btn', 'h-25', isGroup ? 'btn-danger' : 'btn-outline-primary']"
 					:style="{ width: !isGroup ? '100%' : '15%' }"
@@ -141,16 +150,15 @@ export default {
 				</button>
 				<input v-if="this.isGroup" type="text" placeholder="Name group" class="w-100"/>
 			</div>
-			<div v-if="!isGroup"class="users-box">
-				<div v-for="user in filteredUsers" :key="user.user_id" class=" d-flex justify-content-between pt-2">
-					<span>{{user.username}}</span>
-					<button v-if="this.getConversationWith(user.username) === undefined" class="btn btn-success" @click="goToConversation(user.username)">Crea</button>
-					<button v-else class="btn btn-success" @click="goToConversation(user.username)">Apri</button>
-				</div>
-			</div>
-			<div v-else class="users-box">
-				<div v-for="user in filteredUsers" :key="user.user_id" class=" d-flex justify-content-between pt-2">
-					<span>{{user.username}}</span>
+			<div class="users-box">
+				<div v-for="user in filteredUsers" :key="user.user_id" class="user-row" @click="isGroup && toggleUser(user)">
+					<div class="user-left">
+						<input v-if="isGroup" type="checkbox" class="selected" :checked="selectedUsers.has(user.user_id)">
+					</div>
+					<div class="user-name">{{ user.username }}</div>
+					<div class="user-right">
+						<button v-if="!isGroup" class="btn btn-success btn-sm" @click.stop="goToConversation(user.username)">{{ getConversationWith(user.username) ? 'Open' : 'Create' }}</button>
+					</div>
 
 				</div>
 			</div>
@@ -201,6 +209,78 @@ export default {
 	justify-content: space-between;
 	align-items: center;
 	overflow-y: auto;
+}
+
+.selected {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 18px;
+	height: 18px;
+	border: 2px solid #0d6efd;
+	border-radius: 4px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+	background-color: white;
+}
+
+.selected:checked {
+	background-color: #0d6efd;
+	border-color: #0d6efd;
+}
+
+.selected:checked::after {
+	content: "✓";
+	color: white;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 1;
+}
+
+.user-row {
+	display: flex;
+	align-items: center;
+	padding: 8px 6px;
+	border-radius: 6px;
+	cursor: pointer;
+}
+
+.user-row:hover {
+	background-color: #f0f4ff;
+}
+
+.user-left {
+	width: 26px;
+	display: flex;
+	justify-content: center;
+}
+
+.user-name {
+	flex: 1;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.user-right {
+	width: 80px;
+	display: flex;
+	justify-content: flex-end;
+}
+
+
+.top-controls {
+	display: flex;
+	gap: 8px;
+	width: 100%;
+}
+
+
+.top-controls > input {
+	flex: 1; /* prende lo spazio rimanente */
 }
 
 </style>

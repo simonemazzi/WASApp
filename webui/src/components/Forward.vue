@@ -87,6 +87,7 @@ export default {
 				<input
 					type="checkbox"
 					:checked="selected.has(chat.conversation_id || `g-${chat.group_id}`)"
+					class="selected"
 				>
 				<span class="ms-2">{{ chat.name }}</span>
 			</div>
@@ -139,5 +140,33 @@ export default {
 	justify-content: space-between;
 	gap: 10px;
 	margin-top: 10px;
+}
+
+.selected {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 18px;
+	height: 18px;
+	border: 2px solid #0d6efd;
+	border-radius: 4px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+	background-color: white;
+}
+
+.selected:checked {
+	background-color: #0d6efd;
+	border-color: #0d6efd;
+}
+
+.selected:checked::after {
+	content: "✓";
+	color: white;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 1;
 }
 </style>
