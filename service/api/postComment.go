@@ -80,7 +80,7 @@ func (rt *_router) postComment(w http.ResponseWriter, r *http.Request, params ht
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	err = rt.db.PostComment(userId, messageId, req.Emoji)
+	err = rt.db.PostComment(messageId, userId, req.Emoji)
 	if err != nil {
 		context.Logger.WithError(err).Error("Error posting comment")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -159,7 +159,7 @@ func (rt *_router) postGroupComment(w http.ResponseWriter, r *http.Request, para
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	err = rt.db.PostComment(userId, messageId, req.Emoji)
+	err = rt.db.PostComment(messageId, userId, req.Emoji)
 	if err != nil {
 		context.Logger.WithError(err).Error("Error posting comment")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

@@ -87,8 +87,8 @@ export default {
 			this.errormsg = null;
 
 
-			this.userId = this.userId || localStorage.getItem("userId");
-			this.token = this.token || localStorage.getItem("token");
+			this.userId = this.userId || sessionStorage.getItem("userId");
+			this.token = this.token || sessionStorage.getItem("token");
 			this.conversation_id = this.conversation_id || this.$route.params.conversation_id;
 
 			if (!this.userId || !this.token) {
@@ -179,9 +179,9 @@ export default {
 		},
 	},
 	created() {
-		this.username = localStorage.getItem("username");
-		this.token = localStorage.getItem("token");
-		this.userId = localStorage.getItem("userId");
+		this.username = sessionStorage.getItem("username");
+		this.token = sessionStorage.getItem("token");
+		this.userId = sessionStorage.getItem("userId");
 		this.conversation_id = this.$route.params.conversation_id;
 
 		if (this.token && this.userId) {

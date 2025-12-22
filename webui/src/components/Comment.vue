@@ -57,9 +57,9 @@ watch(() => props.messageId, (newId) => {
 	<div class="action-box">
 		<h2 class="text-center">Send Comment</h2>
 		<div class="comment-box">
-			<div v-for="comment in comments" :key="comment.id" class="justify-content-between">
-				<small class="text-muted">{{ comment.username }}</small>
-				<small class="text-muted">{{comment.emoji}}</small>
+			<div v-for="comment in comments" :key="comment.id" class=" d-flex justify-content-between">
+				<p >{{ comment.sender.username }}</p>
+				<p >{{comment.emoji}}</p>
 			</div>
 		</div>
 		<input
@@ -112,6 +112,16 @@ watch(() => props.messageId, (newId) => {
 	justify-content: space-between;
 	gap: 10px;
 	margin-top: 10px;
+}
+
+.comment-box {
+	background: rgba(0, 0, 0, 0.11);
+	padding: 20px;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	border-top-right-radius: 10px;
+	border-top-left-radius: 10px;
 }
 
 </style>

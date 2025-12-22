@@ -12,9 +12,9 @@ const login = async () => {
 	try{
 		const userData = await doLogin(username.value);
 
-		localStorage.setItem('username', username.value);
-		localStorage.setItem('userId', userData.userId);
-		localStorage.setItem('token', userData.token);
+		sessionStorage.setItem('username', username.value);
+		sessionStorage.setItem('userId', userData.userId);
+		sessionStorage.setItem('token', userData.token);
 
 		router.push('/home');
 	} catch(err){

@@ -34,8 +34,8 @@ export default {
 		async refresh() {
 			this.loading = true;
 			this.errormsg = null;
-			if(!this.userId) this.userId = localStorage.getItem('userId');
-			if(!this.token) this.token = localStorage.getItem('token');
+			if(!this.userId) this.userId = sessionStorage.getItem('userId');
+			if(!this.token) this.token = sessionStorage.getItem('token');
 
 			if(!this.userId || !this.token){
 				this.errormsg="Do the Login"
@@ -74,9 +74,9 @@ export default {
 		}
 	},
 	created() {
-		this.username = localStorage.getItem("username");
-		this.token = localStorage.getItem("token");
-		this.userId = localStorage.getItem("userId");
+		this.username = sessionStorage.getItem("username");
+		this.token = sessionStorage.getItem("token");
+		this.userId = sessionStorage.getItem("userId");
 		this.sidebarOpen= false;
 		if (this.token && this.userId) {
 			this.refresh();

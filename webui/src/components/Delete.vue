@@ -11,7 +11,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'confirm']);
 
-const userId= localStorage.getItem('userId')
+const userId= sessionStorage.getItem('userId')
 
 
 function doDelete() {

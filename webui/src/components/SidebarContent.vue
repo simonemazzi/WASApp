@@ -4,7 +4,7 @@ import {getConversations, getGroups,BASE_URL} from '../services/axios'
 import router from '../router'
 
 const chats = ref([])
-const userId = localStorage.getItem('userId')
+const userId = sessionStorage.getItem('userId')
 const inputMarginTop = ref('0px')
 const searchQuery = ref('')
 
