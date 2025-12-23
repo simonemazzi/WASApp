@@ -4,7 +4,7 @@ import router from "../router";
 import {nextTick} from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import NewChat from "../components/NewChat.vue";
-
+//TODO: FARE CHANGE FOTO E SALVARE TUTTO SU DB
 export default {
 	components: {LoadingSpinner,NewChat},
 	data() {
@@ -87,6 +87,7 @@ export default {
 			router.push('/');
 		},
 		UserList(){
+			this.editMode = false;
 			router.push('/users');
 		},
 		goToParticipants(groupId) {
@@ -112,6 +113,12 @@ export default {
 		},
 		EditMode(){
 			this.editMode = true;
+		},
+		EditModeCancel(){
+			this.editMode = false;
+		},
+		commitChanges(){
+
 		}
 	},
 	created() {
@@ -184,7 +191,7 @@ export default {
 					</button>
 
 					<div class="sidebar" :class="{ open: sidebarOpen }">
-						<div class="d-flex justify-content-center flex-column align-items-center">
+						<div class="d-flex justify-content-center flex-column align-items-center gap-2">
 							<img
 								:src="`${BASE_URL()}/file?file=${myActualPhoto.Url}`"
 								alt="Avatar"
@@ -192,10 +199,15 @@ export default {
 								width="100"
 								height="100"
 							/>
-							<h1 class="h1 font-weight-bold mb-0">{{this.username}}</h1>
+							<div>
+							<h1 v-if="!editMode" class="name-display mb-0">{{ username }}</h1>
+							<input v-else type="text" class="name-input mb-0 text-center" :placeholder="username" />
+							</div>
 						</div>
 
-						<button class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
+						<button v-if="!editMode" class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
+						<button v-if="editMode" class="btn btn-outline-success w-100" @click="CommitChanges">Save</button>
+						<button v-if="editMode" class="btn btn-outline-danger w-100" @click="EditModeCancel">Cancel</button>
 						<button class="btn btn-outline-primary w-100" @click="UserList">User List</button>
 						<button class="btn w-100" id="Logout" @click="Logout">Logout</button>
 					</div>
@@ -347,5 +359,19 @@ export default {
 .participant:hover {
 	color: rgb(108, 108, 108);
 	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.name-display,
+.name-input {
+	font-size: 2rem;
+	font-weight: bold;
+	line-height: 1.2;
+	width: 100%;
+	max-width: 200px;
+	box-sizing: border-box;
+	text-align: center;
+}
+.name-input {
+	padding: 0.25rem 0.5rem;
 }
 </style>
