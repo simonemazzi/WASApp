@@ -72,10 +72,10 @@ paths:
         - "User"
       parameters:
         - in: query
-          name: username
+          name: userId
           schema:
-            $ref : "#/components/schemas/Username"
-          description: username or part of the username to search for. If not specified, returns all users
+            $ref : "#/components/schemas/UserId"
+          description: UserId or part of the username to search for. If not specified, returns all users
           required: false
       responses:
         "200":
@@ -91,17 +91,40 @@ paths:
                     minItems: 0
                     maxItems: 99999
                     items:
-                      $ref: "#/components/schemas/User"
+                      allOf:
+                        - $ref: "#/components/schemas/User"
+                        - properties:
+                            avatar:
+                              $ref: "#/components/schemas/Upload"
+
               example:
                 users:
                   - userId: 1001
                     username: Simone
+                    avatar:
+                      url: "https://example.com/avatar.jpg"
+                      mime: "image/png"
+                      width: 512
+                      height: 512
+
                   - userId: 1002
                     username: Alessio
+                    avatar:
+                      url: "https://example.com/avatar.jpg"
+                      mime: "image/png"
+                      width: 512
+                      height: 512
                   - userId: 1003
                     username: Luca
+                    avatar:
+                      url: "https://example.com/avatar.jpg"
+                      mime: "image/png"
+                      width: 512
+                      height: 512
         "500":
           $ref: "#/components/responses/InternalError"
+
+
   /users/{userId}/info/username:
     put:
       operationId: setMyUserName

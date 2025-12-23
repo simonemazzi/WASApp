@@ -13,6 +13,7 @@ instance.interceptors.request.use(config => {
 	if (token) {
 		config.headers.Authorization = `Bearer ${token}`;
 	}
+
 	return config;
 });
 
@@ -57,9 +58,16 @@ export const getGroups = async  (userId) => {
 }
 
 
-export const getMessages = async (userId,conversationId) => {
+export const getMessages = async (userId,chatId,originType) => {
+	let url;
+	if (originType === "direct") {
+		url = `users/${userId}/conversations/${chatId}/messages`;
+	} else {
+		url = `users/${userId}/groups/${chatId}/messages`;
+	}
+
 	try{
-		const response = await instance.get(`users/${userId}/conversations/${conversationId}/messages`);
+		const response = await instance.get(url);
 		return response.data;
 	}catch(error){
 		console.error("Get conversations error:", error);
@@ -67,9 +75,15 @@ export const getMessages = async (userId,conversationId) => {
 	}
 }
 
-export const getConversation = async (userId,conversationId) => {
+export const getConversation = async (userId,chatId,originType) => {
+	let url;
+	if (originType === "direct") {
+		url = `users/${userId}/conversations/${chatId}`;
+	} else {
+		url = `users/${userId}/groups/${chatId}`;
+	}
 	try{
-		const response = await instance.get(`users/${userId}/conversations/${conversationId}`);
+		const response = await instance.get(url);
 		return response.data;
 	}catch(error){
 		console.error("Get conversations error:", error);
@@ -104,7 +118,6 @@ export const postMessage = async (userId,chatId,messageText,messagePhoto,type) =
 	}
 }
 
-//TODO: DA completare
 export const forwardMessage = async (
 	userId,
 	originChatId,
@@ -238,6 +251,18 @@ export const createGroup = async (userId,participants,name) =>{
 	}
 }
 
+
+export const getUserInfo = async (userId) => {
+	try {
+		const response = await instance.get("users", {
+			params: { userId: userId }
+		}); // users?userId=userID
+		return response.data;
+	} catch (error) {
+		console.error("GetUserInfo error:", error);
+		throw error;
+	}
+};
 
 
 

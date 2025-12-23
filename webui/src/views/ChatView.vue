@@ -52,7 +52,8 @@ export default {
 
 		async fetchMessages() {
 			try {
-				const msgs = await getMessages(this.userId, this.conversation_id) || [];
+
+				const msgs = await getMessages(this.userId, this.conversation_id,"direct") || [];
 
 				const container = this.$refs.messageContainer;
 				let isAtBottom = false;
@@ -81,7 +82,6 @@ export default {
 
 		async refresh() {
 			if(this.refreshDebounced)   clearTimeout(this.refreshDebounced);
-
 			this.refreshDebounced = setTimeout(async() => {
 			this.loading = true;
 			this.errormsg = null;
@@ -98,11 +98,11 @@ export default {
 			}
 
 			try {
-				this.currentConversation = await getConversation(this.userId, this.conversation_id);
+				this.currentConversation = await getConversation(this.userId, this.conversation_id,"direct");
 
 				await this.fetchMessages(); // primo caricamento messaggi
 			} catch (err) {
-				this.errormsg = err.toString();
+				this.showError(err.toString());
 			} finally {
 				this.loading = false;
 			}},300); //300ms tra una richiesta e l'altra
@@ -196,9 +196,11 @@ export default {
 		'$route.params.conversation_id'(newId) {
 			this.stopPolling();
 			this.conversation_id = newId;
+			this.messages=[];
+			this.openMessageOptions=null;
 			this.refresh();
 			this.startPolling();
-		}
+		},
 	},
 	computed: {
 		filteredMessages() {

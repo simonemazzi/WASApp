@@ -29,6 +29,11 @@ export default {
 			pollingInterval: null, //per il polling
 
 			firstLoad: true, //per evitare blink effect
+
+			editMode: false, //per modifica nome e foto
+
+			myActualUsername: null,
+			myActualPhoto: null,
 		}
 	},
 	methods: {
@@ -102,6 +107,9 @@ export default {
 				this.pollingInterval = null;
 			}
 		},
+		EditMode(){
+			this.editMode = true;
+		}
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
@@ -172,7 +180,7 @@ export default {
 					</button>
 
 					<div class="sidebar" :class="{ open: sidebarOpen }">
-						<button class="btn btn-outline-primary w-100" @click="doSomething">Edit Profile</button>
+						<button class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
 						<button class="btn btn-outline-primary w-100" @click="UserList">User List</button>
 						<button class="btn w-100" id="Logout" @click="Logout">Logout</button>
 					</div>

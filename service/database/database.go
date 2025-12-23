@@ -43,7 +43,7 @@ type AppDatabase interface {
 	CreateSession(string) (string, string, time.Time, error)
 	UserByToken(token string) (int, error)
 	Users() ([]DBUser, error)
-	UsersBySearch(token string) ([]DBUser, error)
+	GetUserById(userId int) ([]DBUser, error)
 	SetMyUserName(int, string) error
 	SetMyPhoto(url string, width int, height int, mime string, userId int) error
 	IDExists(token int) bool
@@ -84,6 +84,7 @@ type AppDatabase interface {
 	InsertGroupMessage(groupId int, userId int, text string, photoId *int) error
 	GetGroupMessages(groupId int, viewerId int) ([]Message, error)
 	GroupExists(groupId int) bool
+	DeleteGroupMessage(messageId int) error
 	Ping() error
 }
 

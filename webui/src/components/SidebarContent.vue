@@ -10,7 +10,8 @@ export default {
 			chats: [],
 			userId: sessionStorage.getItem('userId'),
 			inputMarginTop: '0px',
-			searchQuery: ''
+			searchQuery: '',
+			editProfile: false,
 		}
 	},
 
@@ -61,7 +62,7 @@ export default {
 
 <template>
 	<div>
-		<h2 class="d-flex flex-column p-lg-2">Chats</h2>
+		<h2 class="d-flex flex-column p-2">Chats</h2>
 		<input
 			type="text"
 			placeholder="Search..."

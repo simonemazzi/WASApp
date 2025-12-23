@@ -6,84 +6,115 @@ import (
 )
 
 type DBUser struct {
-	UserId   string
+	UserId   int
 	Username string
+	Avatar   Avatar
 }
 
 func (db *appdbimpl) Users() ([]DBUser, error) {
 
 	rows, err := db.c.Query(`
-        SELECT u.userId, uu.username
+        SELECT
+            u.userId,
+            uu.username,
+            p.URL,
+            p.mime,
+            p.width,
+            p.height
         FROM User u
         JOIN UserUsername uu
           ON uu.userId = u.userId
-        WHERE uu.updateId = (
-            SELECT MAX(updateId)
-            FROM UserUsername
-            WHERE userId = u.userId
-        )
+         AND uu.updateId = (
+             SELECT MAX(updateId)
+             FROM UserUsername
+             WHERE userId = u.userId
+         )
+        JOIN UsPhoto up
+          ON up.userId = u.userId
+         AND up.updateId = (
+             SELECT MAX(updateId)
+             FROM UsPhoto
+             WHERE userId = u.userId
+         )
+        JOIN Photo p
+          ON p.photoId = up.photoId
     `)
 	if err != nil {
 		return nil, err
 	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(rows)
+	defer rows.Close()
 
 	var result []DBUser
 
 	for rows.Next() {
 		var u DBUser
-		if err := rows.Scan(&u.UserId, &u.Username); err != nil {
+		if err := rows.Scan(
+			&u.UserId,
+			&u.Username,
+			&u.Avatar.Url,
+			&u.Avatar.Mime,
+			&u.Avatar.Width,
+			&u.Avatar.Height,
+		); err != nil {
 			return nil, err
 		}
 		result = append(result, u)
 	}
+
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return result, nil
 }
 
-func (db *appdbimpl) UsersBySearch(token string) ([]DBUser, error) {
-	rows, err := db.c.Query(`
-        SELECT u.userId, uu.username
+func (db *appdbimpl) GetUserById(userId int) ([]DBUser, error) {
+	var u DBUser
+
+	err := db.c.QueryRow(`
+        SELECT
+            u.userId,
+            uu.username,
+            p.URL,
+            p.mime,
+            p.width,
+            p.height
         FROM User u
         JOIN UserUsername uu
           ON uu.userId = u.userId
-        WHERE uu.updateId = (
-            SELECT MAX(updateId)
-            FROM UserUsername
-            WHERE userId = u.userId
-        ) AND uu.username LIKE ?
-    `, token)
+         AND uu.updateId = (
+             SELECT MAX(updateId)
+             FROM UserUsername
+             WHERE userId = u.userId
+         )
+        JOIN UsPhoto up
+          ON up.userId = u.userId
+         AND up.updateId = (
+             SELECT MAX(updateId)
+             FROM UsPhoto
+             WHERE userId = u.userId
+         )
+        JOIN Photo p
+          ON p.photoId = up.photoId
+        WHERE u.userId = ?
+    `, userId).Scan(
+		&u.UserId,
+		&u.Username,
+		&u.Avatar.Url,
+		&u.Avatar.Mime,
+		&u.Avatar.Width,
+		&u.Avatar.Height,
+	)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []DBUser{}, errors.New("user not found")
+		}
 		return []DBUser{}, err
 	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			return
-		}
-	}(rows)
-
-	var result []DBUser
-
-	for rows.Next() {
-		var u DBUser
-		if err := rows.Scan(&u.UserId, &u.Username); err != nil {
-			return nil, err
-		}
-		result = append(result, u)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return result, nil
+	list := []DBUser{}
+	list = append(list, u)
+	return list, nil
 }
 
 func (db *appdbimpl) IDExists(userId int) bool {

@@ -28,18 +28,7 @@ func (rt *_router) deleteGroupMessage(w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-	date := r.Header.Get("Date")
-	if date == "" {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-	t, err := time.Parse(time.RFC1123, date)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		context.Logger.WithError(err).Error("error parsing date header")
-		return
-	}
-	timestamp := t.UTC().Format("2006-01-02 15:04:05")
+	timestamp := time.Now().UTC().Format("2006-01-02 15:04:05")
 
 	isThere, err := rt.db.UserGroup(userId, groupId, timestamp)
 	if err != nil {
@@ -71,7 +60,7 @@ func (rt *_router) deleteGroupMessage(w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 
-	err = rt.db.DeleteMessage(userId, messageId)
+	err = rt.db.DeleteGroupMessage(messageId)
 	if err != nil {
 		context.Logger.WithError(err).Error("Error deleting message")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
