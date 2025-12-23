@@ -83,6 +83,7 @@ type AppDatabase interface {
 	LeaveGroup(groupId int, userId int) error
 	InsertGroupMessage(groupId int, userId int, text string, photoId *int) error
 	GetGroupMessages(groupId int, viewerId int) ([]Message, error)
+	GroupExists(groupId int) bool
 	Ping() error
 }
 

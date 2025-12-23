@@ -1,6 +1,6 @@
 <script>
 import router from "../router";
-import {BASE_URL, createConversation, getConversations, getGroups, getUsers} from "../services/axios";
+import {BASE_URL, createConversation, createGroup, getConversations, getGroups, getUsers} from "../services/axios";
 
 
 export default {
@@ -23,6 +23,7 @@ export default {
 			searchUsers: "",
 
 			selectedUsers: new Set(), //per i selezionati del gruppo
+			groupName:"",
 
 		}
 	},
@@ -97,8 +98,27 @@ export default {
 			}
 		},
 		toggleUser(user){
-			const id = user.user_id;
+			const id = user.username;
 			this.selectedUsers.has(id) ? this.selectedUsers.delete(id) : this.selectedUsers.add(id);
+		},
+
+		async newGroup(){
+			const members=[...this.selectedUsers];
+			const name = this.groupName;
+			if (name !== ""){
+				try{
+					const group= await createGroup(sessionStorage.getItem('userId'), members, name);
+					await router.push({
+						name: 'group',
+						params: {group_id: group.group_id}
+					});
+				}catch(e){
+					console.error(e);
+				}
+			}else{
+				this.showError("Name can't be empty");
+			}
+
 		}
 
 	},
@@ -138,6 +158,7 @@ export default {
 
 	<div v-if="this.$props.show" class="overlay">
 		<div class="action-box">
+			<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
 			<h4 class="text-center">New Chat</h4>
 			<input type="text" v-model="this.searchUsers" placeholder="Search user..." class="input-group">
 			<div class="top-controls pt-2">
@@ -148,12 +169,12 @@ export default {
 					<span v-if="!isGroup">Create Group</span>
 					<img v-else src="../icons/reject.png" alt="Cancel" width="25" height="25" />
 				</button>
-				<input v-if="this.isGroup" type="text" placeholder="Name group" class="w-100"/>
+				<input v-if="this.isGroup" type="text" placeholder="Name group" class="w-100" v-model="groupName"/>
 			</div>
 			<div class="users-box">
 				<div v-for="user in filteredUsers" :key="user.user_id" class="user-row" @click="isGroup && toggleUser(user)">
 					<div class="user-left">
-						<input v-if="isGroup" type="checkbox" class="selected" :checked="selectedUsers.has(user.user_id)">
+						<input v-if="isGroup" type="checkbox" class="selected" :checked="selectedUsers.has(user.username)">
 					</div>
 					<div class="user-name">{{ user.username }}</div>
 					<div class="user-right">
@@ -165,7 +186,7 @@ export default {
 
 			<div class="actions">
 				<button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
-				<button v-if="isGroup"class="btn btn-success" @click="createGroup">Create</button>
+				<button v-if="isGroup" class="btn btn-success" @click="newGroup">Create</button>
 			</div>
 		</div>
 	</div>

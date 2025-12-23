@@ -39,7 +39,7 @@ INSERT INTO Photo (url, width, height, mime) VALUES (?,?,?,?)
 	if err != nil {
 		return err
 	}
-	if !db.IDExists(groupId) {
+	if !db.GroupExists(groupId) {
 		var err404 = errors.New("group not found")
 		return err404
 	}

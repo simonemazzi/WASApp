@@ -126,3 +126,14 @@ LIMIT 1`, userId, time).Scan(&id)
 	}
 	return id, nil
 }
+
+func (db *appdbimpl) GroupExists(groupId int) bool {
+	var tmp int
+	err := db.c.QueryRow(`
+		SELECT 1
+		FROM Group_
+		WHERE groupId = ?
+	`, groupId).Scan(&tmp)
+
+	return err == nil
+}

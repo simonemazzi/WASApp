@@ -224,4 +224,23 @@ export const createConversation = async (userId,username) =>{
 }
 
 
+
+
+
+
+export const createGroup = async (userId,participants,name) =>{
+	try{
+		const response = await instance.post(`users/${userId}/groups`, {name: name,participants:participants});
+		return response.data;
+	}catch(error){
+		console.error("CreateGroup error:", error);
+		throw error;
+	}
+}
+
+
+
+
+
+
 export default instance;
