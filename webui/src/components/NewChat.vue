@@ -38,7 +38,7 @@ export default {
 			try {
 				// fetch utenti e conversazioni
 				this.users = await getUsers();
-				this.conversations = await getConversations(sessionStorage.getItem('userId'));
+				this.conversations = await getConversations(Number(sessionStorage.getItem('userId')));
 			} catch (err) {
 				this.showError("Errore fetching data: " + err.toString());
 			}
@@ -76,7 +76,7 @@ export default {
 			if (!conversation) {
 				try {
 					conversation = await createConversation(
-						sessionStorage.getItem('userId'),
+						Number(sessionStorage.getItem('userId')),
 						username
 					);
 					this.fetchData()
@@ -107,7 +107,7 @@ export default {
 			const name = this.groupName;
 			if (name !== ""){
 				try{
-					const group= await createGroup(sessionStorage.getItem('userId'), members, name);
+					const group= await createGroup(Number(sessionStorage.getItem('userId')), members, name);
 					await router.push({
 						name: 'group',
 						params: {group_id: group.group_id}
@@ -138,14 +138,14 @@ export default {
 		filteredUsers() {
 			if (!this.searchUsers) {
 				return this.users.filter(
-					u => u.user_id !== sessionStorage.getItem('userId')
+					u => u.user_id !== Number(sessionStorage.getItem('userId'))
 				);
 			}
 
 			const search = this.searchUsers.toLowerCase();
 
 			return this.users.filter(user =>
-				user.user_id !== sessionStorage.getItem('userId') &&
+				user.user_id !== Number(sessionStorage.getItem('userId')) &&
 				user.username.toLowerCase().includes(search)
 			);
 		}

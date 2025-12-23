@@ -47,7 +47,7 @@ export default {
 				this.loading = true;
 			}
 			this.errormsg = null;
-			if(!this.userId) this.userId = sessionStorage.getItem('userId');
+			if(!this.userId) this.userId = Number(sessionStorage.getItem('userId'));
 			if(!this.token) this.token = sessionStorage.getItem('token');
 			if(!this.myActualPhoto){
 				const info = await getUserInfo(this.userId);

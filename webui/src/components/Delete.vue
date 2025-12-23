@@ -13,7 +13,7 @@ export default {
 
 	data() {
 		return {
-			userId: sessionStorage.getItem('userId')
+			userId: Number(sessionStorage.getItem('userId'))
 		}
 	},
 

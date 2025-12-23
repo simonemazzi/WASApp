@@ -8,7 +8,7 @@ export default {
 	data() {
 		return {
 			chats: [],
-			userId: sessionStorage.getItem('userId'),
+			userId: Number(sessionStorage.getItem('userId')),
 			inputMarginTop: '0px',
 			searchQuery: '',
 			editProfile: false,
