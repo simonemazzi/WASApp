@@ -257,7 +257,11 @@ export const getUserInfo = async (userId) => {
 		const response = await instance.get("users", {
 			params: { userId: userId }
 		}); // users?userId=userID
-		return response.data;
+		if (!response.data || response.data.length === 0) {
+			new Error("Utente non trovato");
+		}
+		const user = response.data[0];
+		return user;
 	} catch (error) {
 		console.error("GetUserInfo error:", error);
 		throw error;

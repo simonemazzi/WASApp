@@ -1,5 +1,5 @@
 <script>
-import {BASE_URL, getConversations, getGroups} from "../services/axios";
+import {BASE_URL, getConversations, getGroups, getUserInfo} from "../services/axios";
 import router from "../router";
 import {nextTick} from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
@@ -32,7 +32,6 @@ export default {
 
 			editMode: false, //per modifica nome e foto
 
-			myActualUsername: null,
 			myActualPhoto: null,
 		}
 	},
@@ -50,6 +49,10 @@ export default {
 			this.errormsg = null;
 			if(!this.userId) this.userId = sessionStorage.getItem('userId');
 			if(!this.token) this.token = sessionStorage.getItem('token');
+			if(!this.myActualPhoto){
+				const info = await getUserInfo(this.userId);
+				this.myActualPhoto = info.avatar;
+			}
 
 			if(!this.userId || !this.token){
 				this.errormsg="Do the Login"
@@ -115,7 +118,8 @@ export default {
 		this.username = sessionStorage.getItem("username");
 		this.token = sessionStorage.getItem("token");
 		this.userId = sessionStorage.getItem("userId");
-		this.sidebarOpen= false;
+
+		this.sidebarOpen = false;
 		if (this.token && this.userId) {
 			this.refresh();
 			this.startPolling();
@@ -180,6 +184,17 @@ export default {
 					</button>
 
 					<div class="sidebar" :class="{ open: sidebarOpen }">
+						<div class="d-flex justify-content-center flex-column align-items-center">
+							<img
+								:src="`${BASE_URL()}/file?file=${myActualPhoto.Url}`"
+								alt="Avatar"
+								class="rounded-circle "
+								width="100"
+								height="100"
+							/>
+							<h1 class="h1 font-weight-bold mb-0">{{this.username}}</h1>
+						</div>
+
 						<button class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
 						<button class="btn btn-outline-primary w-100" @click="UserList">User List</button>
 						<button class="btn w-100" id="Logout" @click="Logout">Logout</button>
