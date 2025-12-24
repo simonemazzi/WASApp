@@ -5,11 +5,12 @@ import LoadingSpinner from "../components/LoadingSpinner.vue";
 import Comment from "../components/Comment.vue";
 import Delete from "../components/Delete.vue";
 import Forward from "../components/Forward.vue";
+import InfoProfile from "../components/InfoProfile.vue";
 
 
 //TODO:Fare bottone per azioni
 export default {
-	components: {Forward, Delete, Comment, LoadingSpinner},
+	components: {InfoProfile, Forward, Delete, Comment, LoadingSpinner},
 	data() {
 		return {
 			errormsg: null,
@@ -40,6 +41,8 @@ export default {
 			deleteMessage: false,
 			showComments: false,
 			commentMessageId: null,
+
+			infoProfile:false,
 		};
 	},
 	methods: {
@@ -177,6 +180,9 @@ export default {
 			this.deleteMessage = true;
 			this.deleteMessageId = messageId;
 		},
+		moreInfo(){
+			this.infoProfile = true;
+		}
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
@@ -242,9 +248,16 @@ export default {
 		:type="`direct`"
 		@close="showForward = false"
 	/>
+	<InfoProfile
+		:show="infoProfile"
+		:username="currentConversation.name"
+		:photo="currentConversation.avatar.url"
+		@close="infoProfile=false"
+	/>
+
 	<div class="chat-header-wrapper">
 		<div class="d-flex justify-content-between align-items-center">
-			<div class="d-flex align-items-center gap-2 p-lg-2">
+			<div class="d-flex align-items-center gap-2 p-lg-2" @click="moreInfo">
 				<img
 					:src="`${BASE_URL()}/file?file=${this.currentConversation.avatar.url}`"
 					alt="Avatar"

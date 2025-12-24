@@ -117,7 +117,12 @@ export default {
 			}
 		},
 		EditMode(){
-			this.editMode = !this.editMode;
+			this.editMode = true;
+		},
+		Cancel(){
+			this.editMode = false;
+			this.selectedFile = null;
+			this.previewUrl = null;
 		},
 
 		async CommitChanges() {
@@ -267,7 +272,7 @@ export default {
 
 						<button v-if="!editMode" class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
 						<button v-if="editMode" class="btn btn-outline-success w-100" @click="CommitChanges">Save</button>
-						<button v-if="editMode" class="btn btn-outline-danger w-100" @click="EditMode">Cancel</button>
+						<button v-if="editMode" class="btn btn-outline-danger w-100" @click="Cancel">Cancel</button>
 						<button class="btn btn-outline-primary w-100" @click="UserList">User List</button>
 						<button class="btn w-100" id="Logout" @click="Logout">Logout</button>
 					</div>

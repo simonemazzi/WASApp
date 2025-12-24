@@ -87,7 +87,7 @@ export default {
 						height="40"
 					/>
 					<span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
-					<br />
+					<br /> <!--mettere messaggio-->
 					<small class="text-muted">ID: {{ chat.conversation_id || chat.group_id }}</small>
 				</button>
 			</div>
