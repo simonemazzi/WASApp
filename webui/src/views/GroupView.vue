@@ -5,10 +5,11 @@ import LoadingSpinner from "../components/LoadingSpinner.vue";
 import Comment from "../components/Comment.vue";
 import Delete from "../components/Delete.vue";
 import Forward from "../components/Forward.vue";
+import InfoGroup from "../components/InfoGroup.vue";
 
 
 export default {
-	components: {Forward, Delete, Comment, LoadingSpinner},
+	components: {InfoGroup, Forward, Delete, Comment, LoadingSpinner},
 	data() {
 		return {
 			errormsg: null,
@@ -39,6 +40,8 @@ export default {
 			deleteMessage: false,
 			showComments: false,
 			commentMessageId: null,
+
+			infoGroup:false,
 		};
 	},
 	methods: {
@@ -240,9 +243,15 @@ export default {
 		:type="`group`"
 		@close="showForward = false"
 	/>
-	<div class="chat-header-wrapper">
+	<InfoGroup
+		:user_id="userId"
+		:group_id="group_id"
+		:show="infoGroup"
+		@close="infoGroup=false"
+	/>
+	<div class="chat-header-wrapper mb-2">
 		<div class="d-flex justify-content-between align-items-center">
-			<div class="d-flex align-items-center gap-2 p-lg-2">
+			<div class="d-flex align-items-center gap-2 p-lg-2 info" @click="infoGroup=true">
 				<img
 					:src="`${BASE_URL()}/file?file=${this.currentGroup.photo.url}`"
 					alt="photo"
@@ -445,4 +454,7 @@ export default {
 	opacity: 0.5;
 }
 
+.info{
+	cursor: pointer;
+}
 </style>

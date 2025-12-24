@@ -125,7 +125,7 @@ export default {
 			this.isGroup = false;
 			this.selectedUsers.clear();
 			this.groupName = "";
-			
+
 			this.$emit('close');
 		}
 
@@ -167,7 +167,11 @@ export default {
 	<div v-if="this.$props.show" class="overlay">
 		<div class="action-box">
 			<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
-			<h4 class="text-center">New Chat</h4>
+			<div class="header d-flex align-items-center position-relative mb-2">
+				<button class="btn btn-close header-close" @click="ClosePanel"></button>
+				<h4 class="header-title">New Chat</h4>
+			</div>
+
 			<input type="text" v-model="this.searchUsers" placeholder="Search user..." class="input-group">
 			<div class="top-controls pt-2">
 				<button
@@ -201,7 +205,6 @@ export default {
 			</div>
 
 			<div class="actions">
-				<button class="btn btn-secondary" @click="ClosePanel">Cancel</button>
 				<button v-if="isGroup" class="btn btn-success" @click="newGroup">Create</button>
 			</div>
 		</div>
@@ -236,7 +239,7 @@ export default {
 
 .actions {
 	display: flex;
-	justify-content: space-between;
+	justify-content: end;
 	gap: 10px;
 	margin-top: 10px;
 }
@@ -324,4 +327,22 @@ export default {
 	object-fit: cover;    /* taglia l’immagine mantenendo proporzioni 100x100 */
 }
 
+.header {
+	height: 40px; /* riferimento comune */
+}
+
+.header-close {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.header-title {
+	position: absolute;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	top: 50%;
+	margin: 0;
+}
 </style>

@@ -180,9 +180,6 @@ export default {
 			this.deleteMessage = true;
 			this.deleteMessageId = messageId;
 		},
-		moreInfo(){
-			this.infoProfile = true;
-		}
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
@@ -255,9 +252,9 @@ export default {
 		@close="infoProfile=false"
 	/>
 
-	<div class="chat-header-wrapper">
+	<div class="chat-header-wrapper mb-2">
 		<div class="d-flex justify-content-between align-items-center">
-			<div class="d-flex align-items-center gap-2 p-lg-2" @click="moreInfo">
+			<div class="d-flex align-items-center gap-2 p-lg-2 info" @click="infoProfile = true;">
 				<img
 					:src="`${BASE_URL()}/file?file=${this.currentConversation.avatar.url}`"
 					alt="Avatar"
@@ -456,5 +453,9 @@ export default {
 
 .no-messages h1 {
 	opacity: 0.5;
+}
+
+.info{
+	cursor: pointer;
 }
 </style>

@@ -299,4 +299,36 @@ export const setPhotoUser = async (userId, file) => {
 };
 
 
+export const getGroup=async (userId,groupId) =>{
+	try{
+		const response = await instance.get(`users/${userId}/groups/${groupId}`)
+		return response.data;
+	}catch(error){
+		console.error("GetGroup error:", error);
+		throw error;
+	}
+}
+
+export const deleteFromGroup = async (userId,groupId) =>{
+	try{
+		const response = await instance.delete(`users/${userId}/groups/${groupId}/members/me`);
+		return response.data;
+	}catch(error){
+		console.error("DeleteFromGroup error:", error);
+		throw error;
+	}
+}
+
+
+export const addToGroup = async (userId,groupId,username) =>{
+	try{
+		const response = await instance.post(`users/${userId}/groups/${groupId}/members`, {name: username});
+		return response.data;
+	}catch(error){
+		console.error("AddToGroup error:", error);
+		throw error;
+	}
+}
+//TODO:members con foto cosi non ho problemi con il correttore
+
 export default instance;
