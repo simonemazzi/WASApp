@@ -260,16 +260,43 @@ export const getUserInfo = async (userId) => {
 		if (!response.data || response.data.length === 0) {
 			new Error("Utente non trovato");
 		}
-		const user = response.data[0];
-		return user;
+		return response.data[0];
 	} catch (error) {
 		console.error("GetUserInfo error:", error);
 		throw error;
 	}
 };
 
+export const setUsername= async (userId,username) =>{
+	try{
+		const response = await instance.put(`users/${userId}/info/username`, {newusername: username});
+		return response.data;
+	}catch(error){
+		console.error("SetUsername error:", error);
+		throw error;
+	}
+}
 
 
+export const setPhotoUser = async (userId, file) => {
+	try {
+		const formData = new FormData();
+		formData.append("photo", file);
+
+		const response = await instance.put(
+			`users/${userId}/info/photo`,
+			formData,
+			{
+				headers: { "Content-Type": "multipart/form-data" }
+			}
+		);
+
+		return response.data;
+	} catch (error) {
+		console.error("SetPhotoUser error:", error);
+		throw error;
+	}
+};
 
 
 export default instance;

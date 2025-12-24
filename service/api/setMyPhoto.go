@@ -3,7 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"image"
 	"image/jpeg"
+	"image/png"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -47,11 +49,6 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params htt
 	}(file)
 
 	mime := header.Header.Get("Content-Type")
-	if mime != "image/jpeg" && mime != "image/png" {
-		context.Logger.WithError(err).Errorf("Invalid image type: %s", mime)
-		http.Error(w, "Invalid image type", http.StatusBadRequest)
-		return
-	}
 
 	userId := params.ByName("userId")
 	userIdInt, err := strconv.Atoi(userId)
@@ -59,7 +56,7 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params htt
 		context.Logger.WithError(err).Errorf("Invalid user id: %s", userId)
 		http.Error(w, "Invalid user id", http.StatusBadRequest)
 	}
-	filename := fmt.Sprintf("avatar_%s.png", userId)
+	filename := fmt.Sprintf("avatar_%s_%s.png", userId, context.ReqUUID.String())
 	path := filepath.Join("uploads", "users", userId, filename)
 
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
@@ -102,10 +99,26 @@ func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params htt
 		}
 	}(imgFile)
 
-	img, err := jpeg.Decode(imgFile)
-	if err != nil {
-		context.Logger.WithError(err).Error("Error decoding jpeg")
-		http.Error(w, fmt.Sprintf("Cannot decode JPEG: %v", err), http.StatusBadRequest)
+	var img image.Image
+
+	switch mime {
+	case "image/jpeg":
+		img, err = jpeg.Decode(imgFile)
+		if err != nil {
+			context.Logger.WithError(err).Error("Error decoding jpeg")
+			http.Error(w, fmt.Sprintf("Cannot decode JPEG: %v", err), http.StatusBadRequest)
+			return
+		}
+	case "image/png":
+		img, err = png.Decode(imgFile)
+		if err != nil {
+			context.Logger.WithError(err).Error("Error decoding png")
+			http.Error(w, fmt.Sprintf("Cannot decode PNG: %v", err), http.StatusBadRequest)
+			return
+		}
+	default:
+		context.Logger.WithError(err).Errorf("Invalid image type: %s", mime)
+		http.Error(w, "Invalid image type", http.StatusBadRequest)
 		return
 	}
 

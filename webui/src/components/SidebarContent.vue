@@ -61,36 +61,37 @@ export default {
 </script>
 
 <template>
-	<div>
-		<h2 class="d-flex flex-column p-2">Chats</h2>
-		<input
-			type="text"
-			placeholder="Search..."
-			class="input-group"
-			:style="{ marginTop: inputMarginTop }"
-			v-model="searchQuery"
-		/>
-	</div>
-	<div>
-		<div
-			v-for="chat in filteredchats"
-			:key="chat.conversation_id || chat.group_id"
-			class="d-flex justify-content-start align-items-center mb-2"
-		>
-			<button class="btn w-100 text-start" @click="openChat(chat)">
-				<img
-					:src="getAvatarUrl(chat)"
-					alt="Avatar"
-					class="rounded-circle"
-					width="40"
-					height="40"
+		<div class="sticky-top">
+			<h2 class="p-2">Chats</h2>
+			<div class="search-bar">
+				<input
+					type="text"
+					placeholder="Search..."
+					class="input-group"
+					v-model="searchQuery"
 				/>
-				<span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
-				<br />
-				<small class="text-muted">ID: {{ chat.conversation_id || chat.group_id }}</small>
-			</button>
+			</div>
 		</div>
-	</div>
+		<div class="container-chats">
+			<div
+				v-for="chat in filteredchats"
+				:key="chat.conversation_id || chat.group_id"
+				class="d-flex justify-content-start align-items-center mb-2"
+			>
+				<button class="btn w-100 text-start" @click="openChat(chat)">
+					<img
+						:src="getAvatarUrl(chat)"
+						alt="Avatar"
+						class="rounded-circle avatar"
+						width="40"
+						height="40"
+					/>
+					<span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
+					<br />
+					<small class="text-muted">ID: {{ chat.conversation_id || chat.group_id }}</small>
+				</button>
+			</div>
+		</div>
 </template>
 
 <style scoped>
@@ -99,4 +100,22 @@ export default {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+
+.avatar {
+	object-fit: cover;    /* taglia l’immagine mantenendo proporzioni 100x100 */
+}
+
+.search-bar {
+	display: flex;
+	margin-left: 10px;
+	margin-right: 10px;
+	padding-bottom: 10px;
+}
+
+.container-chats {
+	overflow-y: auto;
+	height: calc(100vh - 120px); /* header + search */
+
+}
+
 </style>

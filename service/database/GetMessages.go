@@ -39,14 +39,20 @@ const RECEIVED = "received"
 
 func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, error) {
 	rows, err := db.c.Query(`
-		SELECT
+		SELECT DISTINCT
 			m.messageId,
 			m.time,
 			m.sender,
 			uu.username,
 			CASE WHEN m.originalMessage IS NOT NULL THEN 1 ELSE 0 END AS isForwarded
 		FROM Message m
-		JOIN UserUsername uu ON uu.userId = m.sender
+		JOIN UserUsername uu
+  			ON uu.userId = m.sender
+			 AND uu.updateId = (
+				 SELECT MAX(updateId)
+				 FROM UserUsername
+				 WHERE userId = m.sender
+			 )
 		WHERE m.conversationId = ?
 		  AND NOT EXISTS (
 		      SELECT 1
@@ -61,7 +67,7 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
 		if err != nil {
-			panic(err)
+			return
 		}
 	}(rows)
 
@@ -74,37 +80,29 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 		var senderUsername string
 		var isForwarded int
 
-		err := rows.Scan(
-			&messageId,
-			&time,
-			&senderId,
-			&senderUsername,
-			&isForwarded,
-		)
-		if err != nil {
+		if err := rows.Scan(&messageId, &time, &senderId, &senderUsername, &isForwarded); err != nil {
 			return nil, err
 		}
 
-		// Ottieni il contenuto originale (testo, foto, mittente) anche per inoltri multipli
+		// Ottieni i dati del messaggio originale solo per popolare Body
 		originalMsg, err := db.OriginalMessageInfo(messageId)
 		if err != nil {
 			return nil, err
 		}
 
-		// Popola i dati principali con le informazioni del messaggio visualizzato
-		msg := originalMsg
-		msg.MessageId = messageId // mantiene l'ID del messaggio corrente
-		msg.Time = time
-		msg.Sender = User{
-			UserID:   fmt.Sprint(senderId),
-			Username: senderUsername,
+		// Popola il messaggio corrente
+		msg := Message{
+			MessageId:   messageId,
+			Time:        time,
+			Sender:      User{UserID: fmt.Sprint(senderId), Username: senderUsername},
+			Body:        originalMsg.Body, // include testo/foto dall'originale se inoltro
+			IsForwarded: isForwarded == 1,
 		}
-		msg.IsForwarded = isForwarded == 1 // indica se il messaggio è un inoltro
 
 		messages = append(messages, msg)
 	}
 
-	if err = rows.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -152,14 +150,20 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 
 func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, error) {
 	rows, err := db.c.Query(`
-		SELECT
+		SELECT DISTINCT
 			m.messageId,
 			m.time,
 			m.sender,
 			uu.username,
 			CASE WHEN m.originalMessage IS NOT NULL THEN 1 ELSE 0 END AS isForwarded
 		FROM Message m
-		JOIN UserUsername uu ON uu.userId = m.sender
+		JOIN UserUsername uu
+			ON uu.userId = m.sender
+			AND uu.updateId = (
+				SELECT MAX(updateId)
+				FROM UserUsername
+				WHERE userId = m.sender
+			)
 		WHERE m.groupId = ?
 		  AND NOT EXISTS (
 		      SELECT 1
@@ -172,7 +176,12 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}(rows)
 
 	messages := make([]Message, 0)
 
@@ -183,30 +192,24 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 		var senderUsername string
 		var isForwarded int
 
-		if err := rows.Scan(
-			&messageId,
-			&time,
-			&senderId,
-			&senderUsername,
-			&isForwarded,
-		); err != nil {
+		if err := rows.Scan(&messageId, &time, &senderId, &senderUsername, &isForwarded); err != nil {
 			return nil, err
 		}
 
-		// Contenuto originale (gestione inoltri multipli)
+		// Ottieni il contenuto originale solo per Body
 		originalMsg, err := db.OriginalMessageInfo(messageId)
 		if err != nil {
 			return nil, err
 		}
 
-		msg := originalMsg
-		msg.MessageId = messageId
-		msg.Time = time
-		msg.Sender = User{
-			UserID:   fmt.Sprint(senderId),
-			Username: senderUsername,
+		// Popola il messaggio corrente senza duplicare l’originale
+		msg := Message{
+			MessageId:   messageId,
+			Time:        time,
+			Sender:      User{UserID: fmt.Sprint(senderId), Username: senderUsername},
+			Body:        originalMsg.Body, // testo/foto originale se inoltro
+			IsForwarded: isForwarded == 1,
 		}
-		msg.IsForwarded = isForwarded == 1
 
 		messages = append(messages, msg)
 	}
@@ -215,15 +218,15 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 		return nil, err
 	}
 
-	// ---- Gestione Read / Unread (GRUPPI) ----
+	// ---- Gestione Read / Unread ----
 	for i := range messages {
 		senderId, err := strconv.Atoi(messages[i].Sender.UserID)
 		if err != nil {
 			return nil, err
 		}
 
-		// Se il viewer NON è il mittente → segna come letto
 		if senderId != viewerId {
+			// messaggi ricevuti → segna come letti
 			_, err = db.c.Exec(`
 				INSERT OR IGNORE INTO ReadMessage(userId, messageId)
 				VALUES (?, ?)
@@ -245,13 +248,12 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 			return nil, err
 		}
 
-		// Conta letture del messaggio da componenti attivi
+		// Conta letture dei componenti attivi
 		var readCount int
 		err = db.c.QueryRow(`
 			SELECT COUNT(DISTINCT rm.userId)
 			FROM ReadMessage rm
-			JOIN Components c
-			  ON c.userId = rm.userId
+			JOIN Components c ON c.userId = rm.userId
 			WHERE rm.messageId = ?
 			  AND c.groupId = ?
 			  AND c.timeLeft IS NULL

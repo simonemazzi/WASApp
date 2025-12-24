@@ -248,7 +248,7 @@ export default {
 				<img
 					:src="`${BASE_URL()}/file?file=${this.currentConversation.avatar.url}`"
 					alt="Avatar"
-					class="rounded-circle align-self-center"
+					class="rounded-circle align-self-center avatar"
 					width="45"
 					height="45"
 				/>
@@ -263,6 +263,9 @@ export default {
 	<div class="chat-body">
 		<div class="messages-container" ref="messageContainer">
 			<ErrorMsg v-if="errormsg" :msg="errormsg" />
+			<div v-if="filteredMessages.length === 0 && !loading" class="no-messages">
+				<h1>No Messages...</h1>
+			</div>
 			<div
 				v-for="msg in filteredMessages"
 				:key="msg.messageId"
@@ -271,7 +274,7 @@ export default {
 				<img v-if="msg.sender.userId !== userId"
 					:src="`${BASE_URL()}/file?file=${this.currentConversation.avatar.url}`"
 					alt="Avatar"
-					class="rounded-circle align-self-end"
+					class="rounded-circle align-self-end avatar"
 					width="35"
 					height="35"
 				/>
@@ -300,10 +303,20 @@ export default {
 				</div>
 			</div>
 		</div>
-		<div class ="d-flex justify-content-between">
-			<input type="file" ref="messagePhoto">
+		<div class ="d-flex justify-content-between gap-2 mt-2">
+			<div class="d-flex icon">
+				<input type="file" ref="messagePhoto" id="fileInput" class="d-none">
+				<label
+					for="fileInput"
+					class="btn btn-primary btn-sm d-flex align-items-center justify-content-center">
+					<img src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon" />
+				</label>
+			</div>
+
 			<input class="input-group" type="text" placeholder="Write message..." ref="messageText">
-			<button class="btn btn-outline-dark" @click="sendMessageButton">Send</button>
+			<button class="btn btn-dark" @click="sendMessageButton">
+				<img src="../icons/send-message-svgrepo-com.svg" alt="Send Message" width="25" height="25" class="icon" />
+			</button>
 		</div>
 	</div>
 
@@ -322,6 +335,7 @@ export default {
 }
 
 .messages-container {
+	position: relative;
 	flex: 1;
 	overflow-y: auto;
 	padding: 1rem;
@@ -402,6 +416,32 @@ export default {
 	justify-content: center;
 }
 
+.avatar {
+	object-fit: cover;    /* taglia l’immagine mantenendo proporzioni 100x100 */
+}
 
+.btn-primary img {
+	filter: brightness(0) invert(1);
+}
 
+.btn-dark img {
+	filter: brightness(0) invert(1);
+}
+
+.btn{
+	border-radius: 6px;
+}
+
+.no-messages {
+	position: absolute;
+	inset: 0; /* top right bottom left = 0 */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none; /* non blocca scroll/click */
+}
+
+.no-messages h1 {
+	opacity: 0.5;
+}
 </style>

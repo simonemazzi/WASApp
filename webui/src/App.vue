@@ -21,7 +21,7 @@ export default {}
 
 	<div class="container-fluid">
 		<div class="row">
-			<nav v-if="route.path !== '/' && route.path !== '/home'" id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+			<nav v-if="route.path.includes('conversation') || route.path.includes('group')" id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
 				<SidebarContent  />
 			</nav>
 
@@ -33,4 +33,9 @@ export default {}
 </template>
 
 <style>
+.sidebar {
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
 </style>

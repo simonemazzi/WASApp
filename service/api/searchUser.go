@@ -53,6 +53,11 @@ func (rt *_router) searchUser(w http.ResponseWriter, r *http.Request, params htt
 		}
 	} else {
 		paramUserIDInt, err := strconv.Atoi(paramUserID)
+		if err != nil {
+			context.Logger.WithError(err).Error("Error converting userId to int")
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
 		dbUsers, err := rt.db.GetUserById(paramUserIDInt)
 		if err != nil {
 			context.Logger.WithError(err).Error("Error converting userId to int")

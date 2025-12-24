@@ -62,6 +62,7 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, params 
 		context.Logger.WithError(err).Warn("failed to set user name")
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	var u User
 	u.UserId = strconv.Itoa(userId)

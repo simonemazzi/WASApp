@@ -119,6 +119,14 @@ export default {
 				this.showError("Name can't be empty");
 			}
 
+		},
+		ClosePanel(){
+
+			this.isGroup = false;
+			this.selectedUsers.clear();
+			this.groupName = "";
+			
+			this.$emit('close');
 		}
 
 	},
@@ -169,14 +177,22 @@ export default {
 					<span v-if="!isGroup">Create Group</span>
 					<img v-else src="../icons/reject.png" alt="Cancel" width="25" height="25" />
 				</button>
-				<input v-if="this.isGroup" type="text" placeholder="Name group" class="w-100" v-model="groupName"/>
+				<input v-if="this.isGroup" type="text" placeholder="Name group" class="w-100 " v-model="groupName"/>
 			</div>
 			<div class="users-box">
 				<div v-for="user in filteredUsers" :key="user.user_id" class="user-row" @click="isGroup && toggleUser(user)">
-					<div class="user-left">
-						<input v-if="isGroup" type="checkbox" class="selected" :checked="selectedUsers.has(user.username)">
+					<div v-if="isGroup" class="user-left">
+						<input type="checkbox" class="selected" :checked="selectedUsers.has(user.username)">
 					</div>
-					<div class="user-name">{{ user.username }}</div>
+					<div class="user-name">
+						<img :src="`${BASE_URL()}/file?file=${user.avatar.Url}`"
+							 alt="User Photo"
+							 :class="['rounded-circle','avatar','mx-2']"
+							 width="25"
+							 height="25" />
+						{{ user.username }}
+
+					</div>
 					<div class="user-right">
 						<button v-if="!isGroup" class="btn btn-success btn-sm" @click.stop="goToConversation(user.username)">{{ getConversationWith(user.username) ? 'Open' : 'Create' }}</button>
 					</div>
@@ -185,7 +201,7 @@ export default {
 			</div>
 
 			<div class="actions">
-				<button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+				<button class="btn btn-secondary" @click="ClosePanel">Cancel</button>
 				<button v-if="isGroup" class="btn btn-success" @click="newGroup">Create</button>
 			</div>
 		</div>
@@ -302,6 +318,10 @@ export default {
 
 .top-controls > input {
 	flex: 1; /* prende lo spazio rimanente */
+}
+
+.avatar {
+	object-fit: cover;    /* taglia l’immagine mantenendo proporzioni 100x100 */
 }
 
 </style>

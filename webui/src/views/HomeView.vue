@@ -1,5 +1,5 @@
 <script>
-import {BASE_URL, getConversations, getGroups, getUserInfo} from "../services/axios";
+import {BASE_URL, getConversations, getGroups, getUserInfo, setPhotoUser, setUsername} from "../services/axios";
 import router from "../router";
 import {nextTick} from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
@@ -33,6 +33,12 @@ export default {
 			editMode: false, //per modifica nome e foto
 
 			myActualPhoto: null,
+
+			newUsername:"",
+
+			selectedFile: null,
+
+			previewUrl:undefined,
 		}
 	},
 	methods: {
@@ -47,12 +53,11 @@ export default {
 				this.loading = true;
 			}
 			this.errormsg = null;
-			if(!this.userId) this.userId = Number(sessionStorage.getItem('userId'));
-			if(!this.token) this.token = sessionStorage.getItem('token');
-			if(!this.myActualPhoto){
-				const info = await getUserInfo(this.userId);
-				this.myActualPhoto = info.avatar;
-			}
+			this.userId = Number(sessionStorage.getItem('userId'));
+			this.token = sessionStorage.getItem('token');
+			const info = await getUserInfo(this.userId);
+			this.username = info.username;
+			this.myActualPhoto = info.avatar;
 
 			if(!this.userId || !this.token){
 				this.errormsg="Do the Login"
@@ -112,19 +117,46 @@ export default {
 			}
 		},
 		EditMode(){
-			this.editMode = true;
+			this.editMode = !this.editMode;
 		},
-		EditModeCancel(){
-			this.editMode = false;
-		},
-		commitChanges(){
 
-		}
+		async CommitChanges() {
+			if (this.newUsername !== this.username) {
+				try {
+					const result = await setUsername(this.userId, this.newUsername);
+					sessionStorage.setItem('username', result.username);
+				} catch (err) {
+					console.error("error while saving changes", err);
+				}
+			}
+			if (this.selectedFile) {
+				try {
+					await setPhotoUser(this.userId, this.selectedFile);
+				} catch (err) {
+					console.error(err);
+				}
+			}
+			this.previewUrl = undefined;
+			this.editMode = false;
+			await this.refresh();
+
+		},
+
+		onFileChange(e) {
+			const file = e.target.files[0];
+			if (!file) return;
+
+			this.selectedFile = file;
+			this.previewUrl = URL.createObjectURL(file);
+		},
+
+
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
 		this.token = sessionStorage.getItem("token");
 		this.userId = sessionStorage.getItem("userId");
+		this.newUsername= this.username;
 
 		this.sidebarOpen = false;
 		if (this.token && this.userId) {
@@ -195,19 +227,47 @@ export default {
 							<img
 								:src="`${BASE_URL()}/file?file=${myActualPhoto.Url}`"
 								alt="Avatar"
-								class="rounded-circle "
+								class="rounded-circle avatar "
 								width="100"
 								height="100"
 							/>
+							<img
+								v-if="previewUrl && editMode"
+								src="../icons/arrow-downward-svgrepo-com.svg"
+								alt="Arrow down"
+								width="50"
+								height="50" />
+
+							<img v-if="previewUrl && editMode"
+								 :src="previewUrl"
+								 alt="Avatar"
+								 class="rounded-circle avatar"
+								 width="100"
+								 height="100"
+								 />
+
+
 							<div>
 							<h1 v-if="!editMode" class="name-display mb-0">{{ username }}</h1>
-							<input v-else type="text" class="name-input mb-0 text-center" :placeholder="username" />
+							<input v-if="editMode" type="text" class="name-input mb-0 text-center" :placeholder="username" v-model="newUsername"/>
+							</div>
+							<div v-if="editMode" class="d-flex justify-content-center flex-column align-items-center mt-2">
+								<label for="fileInput" class="btn btn-outline-primary">
+									Choose New Photo
+								</label>
+								<input
+									type="file"
+									@change="onFileChange"
+									ref="fileInput"
+									id="fileInput"
+									class="d-none"
+								/>
 							</div>
 						</div>
 
 						<button v-if="!editMode" class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
 						<button v-if="editMode" class="btn btn-outline-success w-100" @click="CommitChanges">Save</button>
-						<button v-if="editMode" class="btn btn-outline-danger w-100" @click="EditModeCancel">Cancel</button>
+						<button v-if="editMode" class="btn btn-outline-danger w-100" @click="EditMode">Cancel</button>
 						<button class="btn btn-outline-primary w-100" @click="UserList">User List</button>
 						<button class="btn w-100" id="Logout" @click="Logout">Logout</button>
 					</div>
@@ -247,7 +307,7 @@ export default {
 				</div>
 				<div class="d-flex justify-content-end gap-2">
 					<input type="text" class="form-control" placeholder="Search..." v-model="searchQuery">
-					<button class="btn btn-primary" @click="openNewChat">
+					<button class="btn btn-primary btn-sm btn-rad" @click="openNewChat">
 						<img src="../icons/new-svgrepo-com.svg" width="25" height="25"  alt="New"/>
 					</button>
 				</div>
@@ -263,7 +323,7 @@ export default {
 						<img
 							:src="chat.conversation_id ? `${BASE_URL()}/file?file=${chat.avatar.url}` : `${BASE_URL()}/file?file=${chat.photo.url}`"
 							alt="Avatar"
-							class="rounded-circle"
+							class="rounded-circle avatar"
 							width="40"
 							height="40"
 						/>
@@ -290,7 +350,7 @@ export default {
 </template>
 
 <style scoped>
-/* mantiene lo stile esistente */
+
 .hamburger {
 	display: flex;
 	flex-direction: column;
@@ -373,5 +433,17 @@ export default {
 }
 .name-input {
 	padding: 0.25rem 0.5rem;
+}
+
+.avatar {
+	object-fit: cover;    /* taglia l’immagine mantenendo proporzioni 100x100 */
+}
+
+.btn img {
+	filter: brightness(0) invert(1);
+}
+
+.btn-rad{
+	border-radius: 6px;
 }
 </style>
