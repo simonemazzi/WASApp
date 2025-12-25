@@ -2,14 +2,17 @@
 
 import {addToGroup, BASE_URL, deleteFromGroup, getGroup, getUserInfo} from "../services/axios";
 import router from "../router";
+import AddUser from "./AddUser.vue";
 
 export default {
+	components: {AddUser},
 	data(){
 		return {
 			group:null,
 			users:[],
 			editMode:false,
 			addUserMode:false,
+			pollInterval: null,
 		}
 	},
 	props:{
@@ -27,22 +30,24 @@ export default {
 		},
 		async refresh(){
 			try{
-				this.group = await getGroup(this.user_id,this.group_id);
-				this.users = this.group.participants;
-				this.users = await Promise.all(
-					this.group.participants.map(async user => {
-						const userInfo = await getUserInfo(String(user.userId));
-						return {
-							...user,
-							avatar: userInfo.avatar
-						};
-					})
-				);
-			}catch(error){
+				const group = await getGroup(this.user_id, this.group_id);
 
+				// aggiorna solo se cambia qualcosa
+				if (JSON.stringify(group.participants) !== JSON.stringify(this.users)) {
+					this.group = group;
+					this.users = await Promise.all(
+						group.participants.map(async user => {
+							const userInfo = await getUserInfo(String(user.userId));
+							return {
+								...user,
+								avatar: userInfo.avatar
+							};
+						})
+					);
+				}
+			}catch(error){
 				console.error(error);
 			}
-
 		},
 		closePanel(){
 			this.editMode = false;
@@ -57,20 +62,28 @@ export default {
 			}
 			router.push('/home');
 		},
-		addMember(username){
-			try{
-				addToGroup(this.user_id,this.group_id,username);
-			}catch (error){
-				console.error(error);
 
-			}
-		},
 		addUserLayout(){
-			this.addUserMode = !this.addUserMode;
+			this.addUserMode = true;
+			this.editMode = false;
+		},
+		EditGroup(){
+			this.editMode = true;
+			this.addUserMode=false;
 		}
 	},
 	mounted(){
 		this.refresh();
+		this.pollInterval = setInterval(() => {
+			if (!this.addUserMode) {   //non serve menre aggiungo utenti
+				this.refresh();
+			}
+		}, 3000);
+	},
+	beforeUnmount(){
+		if (this.pollInterval) {
+			clearInterval(this.pollInterval);
+		}
 	}
 }
 //TODO: FARE ADD USER LAYOUT CON BOTTONI E FUNZIONI
@@ -79,10 +92,11 @@ export default {
 <template>
 	<div v-if="show" class="overlay">
 		<div class="action-box">
+
 			<div class="header d-flex align-items-center justify-content-between">
 				<button class="btn btn-close" @click="closePanel"></button>
 				<h4 class="h4">Info Group</h4>
-				<button class="btn" @click="editMode=true" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
+				<button class="btn" @click="EditGroup" :disabled="addUserMode" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
 					<img src="../icons/edit.png" alt="Edit" width="20" height="20" class="mb-1"/>
 				</button>
 			</div>
@@ -90,13 +104,19 @@ export default {
 				<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${group.photo.url}`" width="200" height="200" alt="Photo"/>
 				<h4 class="fw-bold text-center">{{group.name}}</h4>
 			</div>
-
-			<div class="d-flex flex-column gap-3 mx-2 participants-wrapper">
+			<AddUser :show="addUserMode && !editMode"
+					 :group_id="group_id"
+					 :user_id="user_id"
+					 @close="addUserMode=false"
+					 @members-updated="refresh"
+			/>
+			<div v-if="!addUserMode" class="d-flex flex-column gap-3 mx-2 participants-wrapper">
 				<div class="d-flex justify-content-between align-items-center">
 					<h2 class="h2">Participants</h2>
 					<button class="btn d-flex align-items-center justify-content-center"
 							@click="addUserLayout"
-							style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
+							style="border-radius: 50px; padding: 0; height: 45px; width: 45px;"
+							:disabled="editMode">
 						<img src="../icons/plus.png" alt="Add" width="20" height="20"/>
 					</button>
 				</div>
@@ -110,7 +130,7 @@ export default {
 			</div>
 
 			<div class="d-flex justify-content-between">
-				<button class="btn btn-danger" @click="leaveGroup">Leave Group</button>
+				<button v-if="!addUserMode" class="btn btn-danger" @click="leaveGroup">Leave Group</button>
 			</div>
 		</div>
 
@@ -133,8 +153,7 @@ export default {
 	background: white;
 	padding: 20px;
 	width: 400px;
-	max-height: 80vh;
-	overflow-y: auto;
+	max-height: 85vh;
 	border-radius: 8px;
 	box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 	z-index: 1201;
