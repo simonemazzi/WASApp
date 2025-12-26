@@ -1327,7 +1327,10 @@ components:
 
     UserId:
       description: Operation User's ID
-      type: integer
+      type: string
+      pattern: "^[0-9]$"
+      minLength: 1
+      maxLength: 9999
       example: 11300
       readOnly: true
 
@@ -1386,24 +1389,32 @@ components:
 
     ConversationId:
       description: Unique ID assigned to each conversation resource in the system.
-      type: integer
+      pattern: "^[0-9]$"
+      minLength: 1
+      maxLength: 9999
       example: 110056
       readOnly: true
 
     CommentId:
       description: Unique ID assigned to each comment resource in the system.
-      type: integer
+      pattern: "^[0-9]$"
+      minLength: 1
+      maxLength: 9999
       example: 100446
       readOnly: true
     MessageId:
       description: Unique ID assigned to each message resource in the system.
-      type: integer
+      pattern: "^[0-9]$"
+      minLength: 1
+      maxLength: 9999
       example: 2635444
       readOnly: true
 
     GroupId:
       description: Unique ID assigned to each group resource in the system.
-      type: integer
+      pattern: "^[0-9]$"
+      minLength: 1
+      maxLength: 9999
       example: 2773354
       readOnly: true
 

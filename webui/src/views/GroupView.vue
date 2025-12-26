@@ -42,6 +42,7 @@ export default {
 			commentMessageId: null,
 
 			infoGroup:false,
+			photoSend:false,
 		};
 	},
 	methods: {
@@ -140,15 +141,18 @@ export default {
 
 			if (text || photo) {
 				try {
-					this.messages = await postMessage(this.userId, this.groupId, text, photo,"group");
+					await postMessage(this.userId, this.groupId, text, photo,"group");
 					textInput.value = "";
 					photoInput.value = "";
 					await this.fetchMessages();
 				} catch (e) {
 					console.error("Error send message:", e);
 					this.showError("Error sending message");
+				}finally {
+					await this.refresh();
 				}
 			}
+			this.photoSend = false;
 		},
 
 		showError(msg) {
@@ -182,6 +186,18 @@ export default {
 			this.deleteMessage = true;
 			this.deleteMessageId = messageId;
 		},
+		onPhotoSelected(event) {
+			const file = event.target.files[0];
+			if (!file) return;
+
+			if (file.type !== "image/png" && file.type !== "image/jpeg") {
+				this.showError("Only PNG or JPEG!");
+				event.target.value = "";
+				return;
+			}
+
+			this.photoSend = true;
+		}
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
@@ -315,11 +331,16 @@ export default {
 		</div>
 		<div class ="d-flex justify-content-between gap-2 mt-2">
 			<div class="d-flex icon">
-				<input type="file" ref="messagePhoto" id="fileInput" class="d-none">
+				<input type="file" ref="messagePhoto" id="fileInput" class="d-none" @change="onPhotoSelected">
 				<label
 					for="fileInput"
 					class="btn btn-primary btn-sm d-flex align-items-center justify-content-center">
-					<img src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon" />
+					<img v-if="!this.photoSend" src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon" />
+					<img
+						v-if="photoSend"
+						src="../icons/check.png"
+						width="25" height="25"
+						alt="Preview"/>
 				</label>
 			</div>
 

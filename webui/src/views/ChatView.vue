@@ -139,13 +139,15 @@ export default {
 
 			if (text || photo) {
 				try {
-					this.messages = await postMessage(this.userId, this.conversationId, text, photo,"direct");
+					await postMessage(this.userId, this.conversationId, text, photo,"direct");
 					textInput.value = "";
 					photoInput.value = "";
 					await this.fetchMessages();
 				} catch (e) {
 					console.error("Error send message:", e);
 					this.showError("Error sending message");
+				}finally {
+					await this.refresh();
 				}
 			}
 			this.photoSend = false;
