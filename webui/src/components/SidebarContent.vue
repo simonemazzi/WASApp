@@ -1,7 +1,7 @@
 <script>
 import { getConversations, getGroups, BASE_URL } from '../services/axios'
 import router from '../router'
-
+//TODO:Fare polling
 export default {
 	name: 'Chats',
 

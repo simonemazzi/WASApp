@@ -1,6 +1,14 @@
 <script>
 
-import {addToGroup, BASE_URL, deleteFromGroup, getGroup, getUserInfo} from "../services/axios";
+import {
+	addToGroup,
+	BASE_URL,
+	deleteFromGroup,
+	getGroup,
+	getUserInfo,
+	setGroupName,
+	setGroupPhoto
+} from "../services/axios";
 import router from "../router";
 import AddUser from "./AddUser.vue";
 
@@ -13,6 +21,9 @@ export default {
 			editMode:false,
 			addUserMode:false,
 			pollInterval: null,
+			newGroupName:"",
+			selectedFile:null,
+			previewUrl:undefined,
 		}
 	},
 	props:{
@@ -29,9 +40,9 @@ export default {
 			return BASE_URL;
 		},
 		async refresh(){
+			if(this.group_id){
 			try{
 				const group = await getGroup(this.user_id, this.group_id);
-
 				// aggiorna solo se cambia qualcosa
 				if (JSON.stringify(group.participants) !== JSON.stringify(this.users)) {
 					this.group = group;
@@ -48,7 +59,7 @@ export default {
 			}catch(error){
 				console.error(error);
 			}
-		},
+		}},
 		closePanel(){
 			this.editMode = false;
 			this.$emit('close');
@@ -58,9 +69,11 @@ export default {
 				deleteFromGroup(this.user_id,this.group_id);
 			}catch(error){
 				console.error(error);
-				return;
+			}finally {
+				router.push('/home');
+				this.$emit('close');
 			}
-			router.push('/home');
+
 		},
 
 		addUserLayout(){
@@ -70,12 +83,46 @@ export default {
 		EditGroup(){
 			this.editMode = true;
 			this.addUserMode=false;
+		},
+		EditGroupRevert(){
+			this.editMode = false;
+			this.newGroupName = "";
+			this.previewUrl=undefined;
+			this.selectedFile = null;
+		},
+		onFileChange(e) {
+			const file = e.target.files[0];
+			if (!file) return;
+
+			this.selectedFile = file;
+			this.previewUrl = URL.createObjectURL(file);
+		},
+		async saveChanges(){
+			if(this.newGroupName !== this.group.name && this.newGroupName !== ""){
+				try{
+					await setGroupName(this.user_id,this.group_id,this.newGroupName);
+				}catch(error){
+					console.error(error);
+				}
+				this.newGroupName = "";
+			}
+			if(this.selectedFile){
+				try{
+					await setGroupPhoto(this.user_id,this.group_id,this.selectedFile);
+				}catch(error){
+					console.error(error);
+				}
+				this.previewUrl=undefined;
+			}
+
+			this.editMode = false;
+			await this.refresh();
 		}
 	},
 	mounted(){
 		this.refresh();
 		this.pollInterval = setInterval(() => {
-			if (!this.addUserMode) {   //non serve menre aggiungo utenti
+			if (!this.addUserMode && this.show) {   //non serve menre aggiungo utenti
 				this.refresh();
 			}
 		}, 3000);
@@ -96,13 +143,45 @@ export default {
 			<div class="header d-flex align-items-center justify-content-between">
 				<button class="btn btn-close" @click="closePanel"></button>
 				<h4 class="h4">Info Group</h4>
-				<button class="btn" @click="EditGroup" :disabled="addUserMode" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
+				<button v-if="!editMode" class="btn btn-clean" @click="EditGroup" :disabled="addUserMode" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
 					<img src="../icons/edit.png" alt="Edit" width="20" height="20" class="mb-1"/>
 				</button>
+				<div v-if="editMode" class="btn-group">
+					<button class="btn btn-clean" @click="EditGroupRevert" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
+						<img src="../icons/back-arrow.png" alt="Edit" width="25" height="25" class="mb-1"/>
+					</button>
+					<button v-if="editMode" class="btn btn-clean" type="submit" @click="saveChanges">
+						<img src="../icons/check.png" alt="Edit" width="25" height="25" class="mb-1"/>
+					</button>
+				</div>
+
 			</div>
 			<div class="d-flex align-items-center justify-content-center flex-column gap-3">
-				<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${group.photo.url}`" width="200" height="200" alt="Photo"/>
-				<h4 class="fw-bold text-center">{{group.name}}</h4>
+				<div class="d-flex align-items-center gap-3">
+					<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${group.photo.url}`" :width="previewUrl && editMode? 100:200" :height="previewUrl && editMode? 100:200" alt="Photo"/>
+					<img v-if="previewUrl && editMode" src="../icons/right-arrow.png" alt="Arrow to ..." width="50" height="50"/>
+					<img v-if="previewUrl && editMode"
+						 :src="previewUrl"
+						 alt="Avatar"
+						 class="rounded-circle avatar"
+						 width="100"
+						 height="100"
+					/>
+				</div>
+
+				<div v-if="editMode">
+					<label for="fileInput" class="btn btn-outline-primary">Select Group Photo</label>
+					<input type="file" id="fileInput" class="d-none" @change="onFileChange"/>
+				</div>
+
+				<div class="d-flex justify-content-between">
+					<div>
+						<h4 v-if="!editMode" class="fw-bold text-center name-display">{{group.name}}</h4>
+						<input v-if="editMode" type="text" class="name-input mb-0 text-center name-input" :placeholder="group.name" v-model="newGroupName"/>
+					</div>
+				</div>
+
+
 			</div>
 			<AddUser :show="addUserMode && !editMode"
 					 :group_id="group_id"
@@ -113,7 +192,7 @@ export default {
 			<div v-if="!addUserMode" class="d-flex flex-column gap-3 mx-2 participants-wrapper">
 				<div class="d-flex justify-content-between align-items-center">
 					<h2 class="h2">Participants</h2>
-					<button class="btn d-flex align-items-center justify-content-center"
+					<button class="btn d-flex align-items-center justify-content-center btn-clean"
 							@click="addUserLayout"
 							style="border-radius: 50px; padding: 0; height: 45px; width: 45px;"
 							:disabled="editMode">
@@ -156,7 +235,8 @@ export default {
 	max-height: 85vh;
 	border-radius: 8px;
 	box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-	z-index: 1201;
+	z-index: 1300;
+	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
 }
@@ -165,9 +245,6 @@ export default {
 .header {
 	height: 40px; /* riferimento comune */
 }
-
-
-
 
 .avatar {
 	object-fit: cover;    /* taglia l’immagine mantenendo proporzioni 100x100 */
@@ -185,7 +262,29 @@ export default {
 	max-height: 300px;         /* altezza massima per scroll */
 	padding-right: 5px;        /* evita che il scrollbar tocchi il testo */
 }
+.name-display,
+.name-input {
+	font-size: 1.5rem;
+	font-weight: bold;
+	line-height: 1.2;
+	width: 100%;
+	max-width: 200px;
+	box-sizing: border-box;
+	text-align: center;
+}
 
+.btn-clean {
+	outline: none !important;
+	box-shadow: none !important;
+	border: none !important;
+}
 
+.btn-clean:focus,
+.btn-clean:focus-visible,
+.btn-clean:active,
+.btn-clean:active:focus {
+	outline: none !important;
+	box-shadow: none !important;
+}
 
 </style>

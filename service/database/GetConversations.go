@@ -53,7 +53,7 @@ WHERE c.component_A = ? OR c.component_B = ?;`, userId, userId, userId)
 		}
 	}(rows)
 
-	var conversations []Conversation
+	conversations := make([]Conversation, 0)
 
 	for rows.Next() {
 		var conv Conversation

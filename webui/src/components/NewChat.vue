@@ -36,11 +36,17 @@ export default {
 		},
 		async fetchData() {
 			try {
-				// fetch utenti e conversazioni
 				this.users = await getUsers();
-				this.conversations = await getConversations(Number(sessionStorage.getItem('userId')));
-			} catch (err) {
-				this.showError("Errore fetching data: " + err.toString());
+			} catch (e) {
+				this.showError("Errore getUsers");
+			}
+
+			try {
+				this.conversations = await getConversations(
+					Number(sessionStorage.getItem('userId'))
+				);
+			} catch (e) {
+				this.showError("Errore getConversations");
 			}
 		},
 		getConversationWith(username) {

@@ -331,4 +331,40 @@ export const addToGroup = async (userId,groupId,username) =>{
 }
 //TODO:members con foto cosi non ho problemi con il correttore
 
+export const setGroupName = async (userId,groupId,groupName) =>{
+	try{
+		const response = await instance.put(`users/${userId}/groups/${groupId}/info/name`, {name: groupName});
+		return response.data;
+	}catch(error){
+		console.error("SetGroupName error:", error);
+		throw error;
+	}
+}
+
+
+export const setGroupPhoto = async (userId,groupId,file) =>{
+	try {
+		const formData = new FormData();
+		formData.append("photo", file);
+
+		const response = await instance.put(
+			`users/${userId}/groups/${groupId}/info/photo`,
+			formData,
+			{
+				headers: { "Content-Type": "multipart/form-data" }
+			}
+		);
+
+		return response.data;
+	} catch (error) {
+		console.error("SetPhotoUser error:", error);
+		throw error;
+	}
+}
+
+
+
+
+
+
 export default instance;

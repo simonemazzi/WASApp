@@ -75,7 +75,7 @@ export default {
 		<div v-if="show" class="d-flex flex-column gap-3 mx-2 mb-3">
 			<div class="d-flex justify-content-between align-items-center">
 				<h2 class="h2">Add Members</h2>
-				<button class="btn d-flex align-items-center justify-content-center"
+				<button class="btn d-flex align-items-center justify-content-center btn-clean"
 						@click="closePanel"
 						style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
 					<img src="../icons/minus-sign.png" alt="Add" width="20" height="20"/>
@@ -156,5 +156,19 @@ export default {
 .already-member {
 	opacity: 0.6;
 	cursor: not-allowed;
+}
+
+.btn-clean {
+	outline: none !important;
+	box-shadow: none !important;
+	border: none !important;
+}
+
+.btn-clean:focus,
+.btn-clean:focus-visible,
+.btn-clean:active,
+.btn-clean:active:focus {
+	outline: none !important;
+	box-shadow: none !important;
 }
 </style>

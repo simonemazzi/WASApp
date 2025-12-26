@@ -4,9 +4,11 @@ import router from "../router";
 import {nextTick} from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import NewChat from "../components/NewChat.vue";
+import InfoGroup from "../components/InfoGroup.vue";
+import ShowParticipants from "../components/ShowParticipants.vue";
 //TODO: FARE CHANGE FOTO E SALVARE TUTTO SU DB
 export default {
-	components: {LoadingSpinner,NewChat},
+	components: {ShowParticipants, InfoGroup, LoadingSpinner,NewChat},
 	data() {
 		return {
 			errormsg: null,
@@ -39,6 +41,9 @@ export default {
 			selectedFile: null,
 
 			previewUrl:undefined,
+
+			showParticipants: false,
+			group_id_info: null,
 		}
 	},
 	methods: {
@@ -91,12 +96,9 @@ export default {
 		Logout(){
 			router.push('/');
 		},
-		UserList(){
-			this.editMode = false;
-			router.push('/users');
-		},
 		goToParticipants(groupId) {
-			router.push({name: 'participants', params: {group_id: groupId}});
+			this.group_id_info = groupId;
+			this.showParticipants = true;
 		},
 		openNewChat() {
 			this.newChat = !this.newChat;
@@ -122,7 +124,7 @@ export default {
 		Cancel(){
 			this.editMode = false;
 			this.selectedFile = null;
-			this.previewUrl = null;
+			this.previewUrl = undefined;
 		},
 
 		async CommitChanges() {
@@ -155,6 +157,10 @@ export default {
 			this.previewUrl = URL.createObjectURL(file);
 		},
 
+		closePanel() {
+			this.group_id_info=null;
+			this.showParticipants = false;
+		}
 
 	},
 	created() {
@@ -164,6 +170,7 @@ export default {
 		this.newUsername= this.username;
 
 		this.sidebarOpen = false;
+		this.infoGroup = false;
 		if (this.token && this.userId) {
 			this.refresh();
 			this.startPolling();
@@ -273,7 +280,6 @@ export default {
 						<button v-if="!editMode" class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
 						<button v-if="editMode" class="btn btn-outline-success w-100" @click="CommitChanges">Save</button>
 						<button v-if="editMode" class="btn btn-outline-danger w-100" @click="Cancel">Cancel</button>
-						<button class="btn btn-outline-primary w-100" @click="UserList">User List</button>
 						<button class="btn w-100" id="Logout" @click="Logout">Logout</button>
 					</div>
 
@@ -321,7 +327,10 @@ export default {
 			<div v-if="filteredChats.length === 0" class="alert alert-secondary">
 				No chats found.
 			</div>
-
+			<ShowParticipants :show="showParticipants"
+							  :group_id="group_id_info"
+							  :user_id="userId"
+							  @close="closePanel"/>
 			<ul class="list-group shadow-sm">
 				<li v-for="chat in filteredChats" :key="chat.conversation_id || chat.group_id" class="list-group-item d-flex justify-content-between align-items-center py-3">
 					<div>
@@ -451,4 +460,5 @@ export default {
 .btn-rad{
 	border-radius: 6px;
 }
+
 </style>
