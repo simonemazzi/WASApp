@@ -20,6 +20,10 @@ tags:
 security:
   - WASATextAuth: []
 
+servers:
+  - url: http://0.0.0.0:3000/api/v1
+    description: Local Server
+
 
 
 paths:
@@ -53,6 +57,7 @@ paths:
                 $ref: "#/components/schemas/Login"
               example:
                 userId: 19934
+                token: 876kjnkjbk32bjb23
                 time: 2025-10-31T15:42:00Z
 
         "404":
@@ -1305,6 +1310,12 @@ components:
       properties:
         userId:
           $ref: "#/components/schemas/UserId"
+        token:
+          type: string
+          minLength: 0
+          maxLength: 255
+          pattern: "^[a-zA-Z0-9_-]+$"
+          description: Session token
         time:
           description: Timestamp
           type: string
