@@ -10,13 +10,13 @@ const router = createRouter({
 	routes: [
 		{path: '/', component: LoginView},
 		{path: '/home', component: HomeView},
-		{	path: '/conversation/:conversation_id',
+		{	path: '/conversation/:conversationId',
 			name: 'conversation',
 			component: ChatView},
-		{	path: '/group/:group_id/participants',
+		{	path: '/group/:groupId/participants',
 			name: 'participants',
 			component: ParticipantsGroupView},
-		{	path: '/group/:group_id',
+		{	path: '/group/:groupId',
 			name: 'group',
 			component: GroupView},
 	]

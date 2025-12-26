@@ -10,6 +10,13 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type Comment struct {
+	CommentId int       `json:"commentId"`
+	Emoji     string    `json:"emoji"`
+	Time      time.Time `json:"time"`
+	Sender    User      `json:"sender"`
+}
+
 func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
 	userId, err := strconv.Atoi(params.ByName("userId"))
 	if err != nil {
@@ -52,9 +59,21 @@ func (rt *_router) getComments(w http.ResponseWriter, r *http.Request, params ht
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	apiComments := make([]Comment, 0, len(comments))
+	for _, dbC := range comments {
+		apiComments = append(apiComments, Comment{
+			CommentId: dbC.CommentId,
+			Emoji:     dbC.Emoji,
+			Time:      dbC.Time,
+			Sender: User{
+				UserId:   dbC.Sender.UserID,
+				Username: dbC.Sender.Username,
+			},
+		})
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(comments)
+	err = json.NewEncoder(w).Encode(CommentsResponse{Comments: apiComments})
 	if err != nil {
 		context.Logger.WithError(err).Error("error encoding conversations")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -118,10 +137,22 @@ func (rt *_router) getGroupComments(
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	apiComments := make([]Comment, 0, len(comments))
+	for _, dbC := range comments {
+		apiComments = append(apiComments, Comment{
+			CommentId: dbC.CommentId,
+			Emoji:     dbC.Emoji,
+			Time:      dbC.Time,
+			Sender: User{
+				UserId:   dbC.Sender.UserID,
+				Username: dbC.Sender.Username,
+			},
+		})
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(comments); err != nil {
+	if err := json.NewEncoder(w).Encode(CommentsResponse{Comments: apiComments}); err != nil {
 		context.Logger.WithError(err).Error("Error encoding comments")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return

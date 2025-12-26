@@ -38,7 +38,7 @@ export const doLogin = async (username) => {
 export const getConversations = async (userId) => {
 	try{
 		const response = await instance.get(`users/${userId}/conversations`);
-		return response.data;
+		return response.data.conversations;
 	} catch (error) {
 		console.error("Get conversations error:", error);
 		throw error;
@@ -50,7 +50,7 @@ export const getConversations = async (userId) => {
 export const getGroups = async  (userId) => {
 	try{
 		const response = await instance.get(`users/${userId}/groups`);
-		return response.data;
+		return response.data.groups;
 	} catch (error) {
 		console.error("Get conversations error:", error);
 		throw error;
@@ -68,7 +68,7 @@ export const getMessages = async (userId,chatId,originType) => {
 
 	try{
 		const response = await instance.get(url);
-		return response.data;
+		return response.data.messages;
 	}catch(error){
 		console.error("Get conversations error:", error);
 		throw error;
@@ -193,7 +193,7 @@ export const getComments = async (userId,conversationId,messageId,type) =>{
 			url = `users/${userId}/groups/${conversationId}/messages/${messageId}/comments`;
 		}
 		const response = await instance.get(url);
-		return response.data;
+		return response.data.comments;
 	}catch(error){
 		console.error("CommentMessage error:", error);
 		throw error;
@@ -219,7 +219,7 @@ export const unComment = async (userId,conversationId,messageId,commentId,type) 
 export const getUsers = async () =>{
 	try{
 		const response= await instance.get("users");
-		return response.data;
+		return response.data.users;
 	}catch(error){
 		console.error("GetUserss error:", error);
 		throw error;
@@ -260,7 +260,7 @@ export const getUserInfo = async (userId) => {
 		if (!response.data || response.data.length === 0) {
 			new Error("Utente non trovato");
 		}
-		return response.data[0];
+		return response.data.users[0];
 	} catch (error) {
 		console.error("GetUserInfo error:", error);
 		throw error;

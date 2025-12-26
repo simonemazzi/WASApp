@@ -10,7 +10,7 @@ type Avatar struct {
 }
 
 type Conversation struct {
-	ConversationID int    `json:"conversation_id"`
+	ConversationID int    `json:"conversationId"`
 	Name           string `json:"name"`
 	Avatar         Avatar `json:"avatar"`
 }

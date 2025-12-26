@@ -28,7 +28,7 @@ export default {
 		},
 
 		toggle(chat) {
-			const id = chat.conversation_id || `g-${chat.group_id}`
+			const id = chat.conversationId || `g-${chat.groupId}`
 			this.selected.has(id)
 				? this.selected.delete(id)
 				: this.selected.add(id)
@@ -39,11 +39,11 @@ export default {
 			const groups = []
 
 			this.chats.forEach(chat => {
-				const id = chat.conversation_id || `g-${chat.group_id}`
+				const id = chat.conversationId || `g-${chat.groupId}`
 				if (this.selected.has(id)) {
-					chat.conversation_id
-						? conversations.push(chat.conversation_id)
-						: groups.push(chat.group_id)
+					chat.conversationId
+						? conversations.push(Number(chat.conversationId))
+						: groups.push(Number(chat.groupId))
 				}
 			})
 
@@ -80,13 +80,13 @@ export default {
 			<h4 class="text-center">Forward message</h4>
 			<div
 				v-for="chat in chats"
-				:key="chat.conversation_id || chat.group_id"
+				:key="chat.conversationId || chat.groupId"
 				class="chat-item"
 				@click="toggle(chat)"
 			>
 				<input
 					type="checkbox"
-					:checked="selected.has(chat.conversation_id || `g-${chat.group_id}`)"
+					:checked="selected.has(chat.conversationId || `g-${chat.groupId}`)"
 					class="selected"
 				>
 				<span class="ms-2">{{ chat.name }}</span>

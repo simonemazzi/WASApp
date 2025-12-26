@@ -5,8 +5,8 @@ import {addToGroup, BASE_URL, getGroup, getUsers} from "../services/axios";
 export default {
 	props: {
 		show:Boolean,
-		group_id:Number,
-		user_id:Number,
+		groupId:Number,
+		userId:Number,
 	},
 	emits:[`close`,'members-updated'],
 	data(){
@@ -24,7 +24,7 @@ export default {
 		async refresh(){
 			try{
 				this.users = await getUsers();
-				const group= await getGroup(this.user_id,this.group_id);
+				const group= await getGroup(this.userId,this.groupId);
 				this.participants=group.participants;
 				this.selectedUsers = this.participants.map(p => p.username); //preseleziono i già membri
 			}catch (error){
@@ -43,7 +43,7 @@ export default {
 				);
 
 				for (const username of newUsers) {
-					await addToGroup(this.user_id, this.group_id, username);
+					await addToGroup(this.userId, this.groupId, username);
 				}
 
 				this.closePanel();
@@ -82,17 +82,17 @@ export default {
 				</button>
 			</div>
 			<div class="box">
-				<div v-for="user in users" :key="user.user_id" class="user-row " :class="{ 'already-member': isAlreadyMember(user.username) }">
+				<div v-for="user in users" :key="user.userId" class="user-row " :class="{ 'already-member': isAlreadyMember(user.username) }">
 					<input
 						type="checkbox"
-						:id="user.user_id"
+						:id="user.userId"
 						:value="user.username"
 						v-model="selectedUsers"
 						class="selected"
 						:disabled="isAlreadyMember(user.username)"
 						:style="isAlreadyMember(user.username) ? `cursor : not-allowed` : `cursor: pointer;`"
  					/> <!--se è già membro non lo posso riselezionale-deselezionare -->
-					<img :src="`${BASE_URL()}/file?file=${user.avatar.Url}`"
+					<img :src="`${BASE_URL()}/file?file=${user.avatar.url}`"
 						 alt="User Photo"
 						 :class="['rounded-circle','avatar','mx-2']"
 						 width="50"

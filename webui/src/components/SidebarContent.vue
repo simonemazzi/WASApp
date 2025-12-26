@@ -36,18 +36,18 @@ export default {
 		},
 
 		openChat(chat) {
-			if (chat.conversation_id) {
-				router.push({ name: 'conversation', params: { conversation_id: chat.conversation_id } })
-			} else if (chat.group_id) {
-				router.push({ name: 'group', params: { group_id: chat.group_id } })
+			if (chat.conversationId) {
+				router.push({ name: 'conversation', params: { conversationId: chat.conversationId } })
+			} else if (chat.groupId) {
+				router.push({ name: 'group', params: { groupId: chat.groupId } })
 			}
 		},
 
 		getAvatarUrl(chat) {
 			// funzione helper per gestire BASE_URL e avatar/photo
-			if (chat.conversation_id) {
+			if (chat.conversationId) {
 				return `${BASE_URL}/file?file=${chat.avatar.url}`
-			} else if (chat.group_id) {
+			} else if (chat.groupId) {
 				return `${BASE_URL}/file?file=${chat.photo.url}`
 			}
 			return ''
@@ -75,7 +75,7 @@ export default {
 		<div class="container-chats">
 			<div
 				v-for="chat in filteredchats"
-				:key="chat.conversation_id || chat.group_id"
+				:key="chat.conversationId || chat.groupId"
 				class="d-flex justify-content-start align-items-center mb-2"
 			>
 				<button class="btn w-100 text-start" @click="openChat(chat)">
@@ -88,7 +88,7 @@ export default {
 					/>
 					<span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
 					<br /> <!--mettere messaggio-->
-					<small class="text-muted">ID: {{ chat.conversation_id || chat.group_id }}</small>
+					<small class="text-muted">ID: {{ chat.conversationId || chat.groupId }}</small>
 				</button>
 			</div>
 		</div>

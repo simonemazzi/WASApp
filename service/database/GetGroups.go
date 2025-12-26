@@ -1,9 +1,11 @@
 package database
 
+import "database/sql"
+
 //TODO:METTERE I LOCATION AI POST
 
 type Group struct {
-	GroupId      int    `json:"group_id"`
+	GroupId      int    `json:"groupId"`
 	Name         string `json:"name"`
 	Photo        Avatar `json:"photo"`
 	Participants []User `json:"participants"`
@@ -22,7 +24,12 @@ func (db *appdbimpl) GetGroups(userId int) ([]Group, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}(rows)
 
 	for rows.Next() {
 		var g Group
@@ -73,12 +80,18 @@ func (db *appdbimpl) GetGroups(userId int) ([]Group, error) {
 			var u User
 			err := urows.Scan(&u.UserID, &u.Username)
 			if err != nil {
-				urows.Close()
+				err := urows.Close()
+				if err != nil {
+					return nil, err
+				}
 				return nil, err
 			}
 			users = append(users, u)
 		}
-		urows.Close()
+		err = urows.Close()
+		if err != nil {
+			return nil, err
+		}
 		if err := urows.Err(); err != nil {
 			return nil, err
 		}

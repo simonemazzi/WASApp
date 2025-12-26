@@ -10,12 +10,12 @@ import (
 )
 
 type User struct {
-	UserId   string `json:"user_id"`
+	UserId   string `json:"userId"`
 	Username string `json:"username"`
 }
 
 type Info struct {
-	UserId        int    `json:"user_id"`
+	UserId        int    `json:"userId"`
 	Username      string `json:"username"`
 	AvatarProfile Upload `json:"avatar"`
 }
@@ -77,7 +77,7 @@ func (rt *_router) searchUser(w http.ResponseWriter, r *http.Request, params htt
 				},
 			})
 		}
-		err = json.NewEncoder(w).Encode(users)
+		err = json.NewEncoder(w).Encode(UsersResponse{Users: users})
 		if err != nil {
 			context.Logger.WithError(err).Error("Error converting userId to int")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

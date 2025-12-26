@@ -1,6 +1,6 @@
 <script>
 import router from "../router";
-import {BASE_URL, createConversation, createGroup, getConversations, getGroups, getUsers} from "../services/axios";
+import {BASE_URL, createConversation, createGroup, getConversations, getUsers} from "../services/axios";
 
 
 export default {
@@ -94,7 +94,7 @@ export default {
 
 			await router.push({
 				name: 'conversation',
-				params: {conversation_id: conversation.conversation_id}
+				params: {conversationId: conversation.conversationId}
 			});
 		},
 		createGroupBegin(){
@@ -116,7 +116,7 @@ export default {
 					const group= await createGroup(Number(sessionStorage.getItem('userId')), members, name);
 					await router.push({
 						name: 'group',
-						params: {group_id: group.group_id}
+						params: {groupId: group.groupId}
 					});
 				}catch(e){
 					console.error(e);
@@ -152,14 +152,14 @@ export default {
 		filteredUsers() {
 			if (!this.searchUsers) {
 				return this.users.filter(
-					u => u.user_id !== Number(sessionStorage.getItem('userId'))
+					u => u.userId !== Number(sessionStorage.getItem('userId'))
 				);
 			}
 
 			const search = this.searchUsers.toLowerCase();
 
 			return this.users.filter(user =>
-				user.user_id !== Number(sessionStorage.getItem('userId')) &&
+				user.userId !== Number(sessionStorage.getItem('userId')) &&
 				user.username.toLowerCase().includes(search)
 			);
 		}
@@ -190,12 +190,12 @@ export default {
 				<input v-if="this.isGroup" type="text" placeholder="Name group" class="w-100 " v-model="groupName"/>
 			</div>
 			<div class="users-box">
-				<div v-for="user in filteredUsers" :key="user.user_id" class="user-row" @click="isGroup && toggleUser(user)">
+				<div v-for="user in filteredUsers" :key="user.userId" class="user-row" @click="isGroup && toggleUser(user)">
 					<div v-if="isGroup" class="user-left">
 						<input type="checkbox" class="selected" :checked="selectedUsers.has(user.username)">
 					</div>
 					<div class="user-name">
-						<img :src="`${BASE_URL()}/file?file=${user.avatar.Url}`"
+						<img :src="`${BASE_URL()}/file?file=${user.avatar.url}`"
 							 alt="User Photo"
 							 :class="['rounded-circle','avatar','mx-2']"
 							 width="25"

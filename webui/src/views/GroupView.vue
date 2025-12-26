@@ -1,5 +1,5 @@
 <script>
-import { BASE_URL, getConversation, getConversations, getGroups, getMessages,postMessage } from "../services/axios";
+import { BASE_URL, getConversation, getMessages,postMessage } from "../services/axios";
 import router from "../router";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import Comment from "../components/Comment.vue";
@@ -22,7 +22,7 @@ export default {
 			username: null,
 			userId: null,
 			token: null,
-			group_id: null,
+			groupId: null,
 
 			searchMessage: "",
 
@@ -54,7 +54,7 @@ export default {
 
 		async fetchMessages() {
 			try {
-				const msgs = await getMessages(this.userId, this.group_id,"group") || [];
+				const msgs = await getMessages(this.userId, this.groupId,"group") || [];
 
 				const container = this.$refs.messageContainer;
 				let isAtBottom = false;
@@ -91,7 +91,7 @@ export default {
 
 				this.userId = this.userId || sessionStorage.getItem("userId");
 				this.token = this.token || sessionStorage.getItem("token");
-				this.group_id = this.group_id || this.$route.params.group_id;
+				this.groupId = this.groupId || this.$route.params.groupId;
 
 				if (!this.userId || !this.token) {
 					this.errormsg = "Do login!";
@@ -100,7 +100,7 @@ export default {
 				}
 
 				try {
-					this.currentGroup = await getConversation(this.userId, this.group_id,"group");
+					this.currentGroup = await getConversation(this.userId, this.groupId,"group");
 
 					await this.fetchMessages(); // primo caricamento messaggi
 				} catch (err) {
@@ -140,7 +140,7 @@ export default {
 
 			if (text || photo) {
 				try {
-					this.messages = await postMessage(this.userId, this.group_id, text, photo,"group");
+					this.messages = await postMessage(this.userId, this.groupId, text, photo,"group");
 					textInput.value = "";
 					photoInput.value = "";
 					await this.fetchMessages();
@@ -187,7 +187,7 @@ export default {
 		this.username = sessionStorage.getItem("username");
 		this.token = sessionStorage.getItem("token");
 		this.userId = sessionStorage.getItem("userId");
-		this.group_id = this.$route.params.group_id;
+		this.groupId = this.$route.params.groupId;
 
 		if (this.token && this.userId) {
 			this.refresh();
@@ -198,9 +198,9 @@ export default {
 		this.stopPolling();
 	},
 	watch: {
-		'$route.params.group_id'(newId) {
+		'$route.params.groupId'(newId) {
 			this.stopPolling();
-			this.group_id = newId;
+			this.groupId = newId;
 			this.messages=[];
 			this.refresh();
 			this.startPolling();
@@ -226,7 +226,7 @@ export default {
 		:userId="userId"
 		:show="showComments"
 		:messageId="commentMessageId"
-		:chatId="group_id"
+		:chatId="groupId"
 		:type="`group`"
 		@close="showComments=false"
 	/>
@@ -234,7 +234,7 @@ export default {
 		:userId="userId"
 		:show="deleteMessage"
 		:messageId="deleteMessageId"
-		:chatId="group_id"
+		:chatId="groupId"
 		:type="`group`"
 		@close="deleteMessage=false"
 	/>
@@ -242,13 +242,13 @@ export default {
 		:userId="userId"
 		:show="showForward"
 		:messageId="forwardMessageId"
-		:chatId="group_id"
+		:chatId="groupId"
 		:type="`group`"
 		@close="showForward = false"
 	/>
 	<InfoGroup
-		:user_id="userId"
-		:group_id="group_id"
+		:userId="userId"
+		:groupId="groupId"
 		:show="infoGroup"
 		@close="infoGroup=false"
 	/>

@@ -18,10 +18,10 @@ import (
 )
 
 type Upload struct {
-	Url    string
-	Mime   string
-	Width  int
-	Height int
+	Url    string `json:"url"`
+	Mime   string `json:"mime"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
 }
 
 func (rt *_router) setMyPhoto(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {

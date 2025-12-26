@@ -1,7 +1,6 @@
 <script>
 
 import {
-	addToGroup,
 	BASE_URL,
 	deleteFromGroup,
 	getGroup,
@@ -28,8 +27,8 @@ export default {
 	},
 	props:{
 		show: Boolean,
-		group_id:Number,
-		user_id:Number,
+		groupId:Number,
+		userId:Number,
 	},
 	emits:['close'],
 	methods:{
@@ -40,9 +39,9 @@ export default {
 			return BASE_URL;
 		},
 		async refresh(){
-			if(this.group_id){
+			if(this.groupId){
 			try{
-				const group = await getGroup(this.user_id, this.group_id);
+				const group = await getGroup(this.userId, this.groupId);
 				// aggiorna solo se cambia qualcosa
 				if (JSON.stringify(group.participants) !== JSON.stringify(this.users)) {
 					this.group = group;
@@ -66,7 +65,7 @@ export default {
 		},
 		leaveGroup(){
 			try{
-				deleteFromGroup(this.user_id,this.group_id);
+				deleteFromGroup(this.userId,this.groupId);
 			}catch(error){
 				console.error(error);
 			}finally {
@@ -100,7 +99,7 @@ export default {
 		async saveChanges(){
 			if(this.newGroupName !== this.group.name && this.newGroupName !== ""){
 				try{
-					await setGroupName(this.user_id,this.group_id,this.newGroupName);
+					await setGroupName(this.userId,this.groupId,this.newGroupName);
 				}catch(error){
 					console.error(error);
 				}
@@ -108,7 +107,7 @@ export default {
 			}
 			if(this.selectedFile){
 				try{
-					await setGroupPhoto(this.user_id,this.group_id,this.selectedFile);
+					await setGroupPhoto(this.userId,this.groupId,this.selectedFile);
 				}catch(error){
 					console.error(error);
 				}
@@ -184,8 +183,8 @@ export default {
 
 			</div>
 			<AddUser :show="addUserMode && !editMode"
-					 :group_id="group_id"
-					 :user_id="user_id"
+					 :groupId="groupId"
+					 :userId="userId"
 					 @close="addUserMode=false"
 					 @members-updated="refresh"
 			/>
@@ -202,7 +201,7 @@ export default {
 
 				<div class="participants-list ">
 					<div v-for="user in users" :key="user.userId" class="pb-3 d-flex gap-2  align-items-center">
-						<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.Url}`" width="50" height="50" alt="Photo" />
+						<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.url}`" width="50" height="50" alt="Photo" />
 						<span class="text-muted">{{ user.username }}</span>
 					</div>
 				</div>

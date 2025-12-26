@@ -4,6 +4,22 @@ import (
 	"net/http"
 )
 
+type ConversationsResponse struct {
+	Conversations []Conversation `json:"conversations"`
+}
+type GroupsResponse struct {
+	Groups []Group `json:"groups"`
+}
+type UsersResponse struct {
+	Users []Info `json:"users"` // o []Info a seconda di cosa usi
+}
+type MessagesResponse struct {
+	Messages []Message `json:"messages"`
+}
+type CommentsResponse struct {
+	Comments []Comment `json:"comments"`
+}
+
 // Handler returns an instance of httprouter.Router that handle APIs registered here
 func (rt *_router) Handler() http.Handler {
 	// Register routes

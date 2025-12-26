@@ -1,5 +1,5 @@
 <script>
-import { BASE_URL, getConversation, getConversations, getGroups, getMessages,postMessage } from "../services/axios";
+import { BASE_URL, getConversation, getMessages,postMessage } from "../services/axios";
 import router from "../router";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import Comment from "../components/Comment.vue";
@@ -23,7 +23,7 @@ export default {
 			username: null,
 			userId: null,
 			token: null,
-			conversation_id: null,
+			conversationId: null,
 
 			searchMessage: "",
 
@@ -43,6 +43,7 @@ export default {
 			commentMessageId: null,
 
 			infoProfile:false,
+			photoSend:false,
 		};
 	},
 	methods: {
@@ -56,7 +57,7 @@ export default {
 		async fetchMessages() {
 			try {
 
-				const msgs = await getMessages(this.userId, this.conversation_id,"direct") || [];
+				const msgs = await getMessages(this.userId, this.conversationId,"direct") || [];
 
 				const container = this.$refs.messageContainer;
 				let isAtBottom = false;
@@ -92,7 +93,7 @@ export default {
 
 			this.userId = this.userId || sessionStorage.getItem("userId");
 			this.token = this.token || sessionStorage.getItem("token");
-			this.conversation_id = this.conversation_id || this.$route.params.conversation_id;
+			this.conversationId = this.conversationId || this.$route.params.conversationId;
 
 			if (!this.userId || !this.token) {
 				this.errormsg = "Do login!";
@@ -101,7 +102,7 @@ export default {
 			}
 
 			try {
-				this.currentConversation = await getConversation(this.userId, this.conversation_id,"direct");
+				this.currentConversation = await getConversation(this.userId, this.conversationId,"direct");
 
 				await this.fetchMessages(); // primo caricamento messaggi
 			} catch (err) {
@@ -138,7 +139,7 @@ export default {
 
 			if (text || photo) {
 				try {
-					this.messages = await postMessage(this.userId, this.conversation_id, text, photo,"direct");
+					this.messages = await postMessage(this.userId, this.conversationId, text, photo,"direct");
 					textInput.value = "";
 					photoInput.value = "";
 					await this.fetchMessages();
@@ -147,6 +148,7 @@ export default {
 					this.showError("Error sending message");
 				}
 			}
+			this.photoSend = false;
 		},
 
 		showError(msg) {
@@ -180,12 +182,24 @@ export default {
 			this.deleteMessage = true;
 			this.deleteMessageId = messageId;
 		},
+		onPhotoSelected(event) {
+			const file = event.target.files[0];
+			if (!file) return;
+
+			if (file.type !== "image/png" && file.type !== "image/jpeg") {
+				this.showError("Only PNG or JPEG!");
+				event.target.value = "";
+				return;
+			}
+
+			this.photoSend = true;
+		}
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
 		this.token = sessionStorage.getItem("token");
 		this.userId = sessionStorage.getItem("userId");
-		this.conversation_id = this.$route.params.conversation_id;
+		this.conversationId = this.$route.params.conversationId;
 
 		if (this.token && this.userId) {
 			this.refresh();
@@ -196,9 +210,9 @@ export default {
 		this.stopPolling();
 	},
 	watch: {
-		'$route.params.conversation_id'(newId) {
+		'$route.params.conversationId'(newId) {
 			this.stopPolling();
-			this.conversation_id = newId;
+			this.conversationId = newId;
 			this.messages=[];
 			this.openMessageOptions=null;
 			this.refresh();
@@ -225,7 +239,7 @@ export default {
 			:userId="userId"
 			:show="showComments"
 			:messageId="commentMessageId"
-			:chatId="conversation_id"
+			:chatId="conversationId"
 			:type="`direct`"
 			@close="showComments=false"
 	/>
@@ -233,7 +247,7 @@ export default {
 			:userId="userId"
 			:show="deleteMessage"
 			:messageId="deleteMessageId"
-			:chatId="conversation_id"
+			:chatId="conversationId"
 			:type="`direct`"
 			@close="deleteMessage=false"
 	/>
@@ -241,7 +255,7 @@ export default {
 		:userId="userId"
 		:show="showForward"
 		:messageId="forwardMessageId"
-		:chatId="conversation_id"
+		:chatId="conversationId"
 		:type="`direct`"
 		@close="showForward = false"
 	/>
@@ -315,11 +329,16 @@ export default {
 		</div>
 		<div class ="d-flex justify-content-between gap-2 mt-2">
 			<div class="d-flex icon">
-				<input type="file" ref="messagePhoto" id="fileInput" class="d-none">
+				<input type="file" ref="messagePhoto" id="fileInput" class="d-none" @change="onPhotoSelected">
 				<label
 					for="fileInput"
 					class="btn btn-primary btn-sm d-flex align-items-center justify-content-center">
-					<img src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon" />
+					<img v-if="!this.photoSend" src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon" />
+					<img
+						v-if="photoSend"
+						src="../icons/check.png"
+						width="25" height="25"
+					 	alt="Preview"/>
 				</label>
 			</div>
 

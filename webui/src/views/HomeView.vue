@@ -43,7 +43,7 @@ export default {
 			previewUrl:undefined,
 
 			showParticipants: false,
-			group_id_info: null,
+			groupId_info: null,
 		}
 	},
 	methods: {
@@ -85,9 +85,9 @@ export default {
 		},
 		openChat(id, type){
 			if (type === "direct"){
-				router.push({ name: 'conversation', params: { conversation_id: id } });
+				router.push({ name: 'conversation', params: { conversationId: id } });
 			} else if(type === "group"){
-				router.push({ name: 'group', params: { group_id: id } });
+				router.push({ name: 'group', params: { groupId: id } });
 			} else console.error("type must be direct or group");
 		},
 		toggleSidebar() {
@@ -97,7 +97,7 @@ export default {
 			router.push('/');
 		},
 		goToParticipants(groupId) {
-			this.group_id_info = groupId;
+			this.groupId_info = groupId;
 			this.showParticipants = true;
 		},
 		openNewChat() {
@@ -158,7 +158,7 @@ export default {
 		},
 
 		closePanel() {
-			this.group_id_info=null;
+			this.groupId_info=null;
 			this.showParticipants = false;
 		}
 
@@ -186,9 +186,9 @@ export default {
 
 			// filtro per tipo
 			if(this.activeFilter === "direct") {
-				result = result.filter(chat => chat.conversation_id);
+				result = result.filter(chat => chat.conversationId);
 			} else if(this.activeFilter === "group") {
-				result = result.filter(chat => chat.group_id);
+				result = result.filter(chat => chat.groupId);
 			}
 
 			// filtro per ricerca
@@ -237,7 +237,7 @@ export default {
 					<div class="sidebar" :class="{ open: sidebarOpen }">
 						<div class="d-flex justify-content-center flex-column align-items-center gap-2">
 							<img
-								:src="`${BASE_URL()}/file?file=${myActualPhoto.Url}`"
+								:src="`${BASE_URL()}/file?file=${myActualPhoto.url}`"
 								alt="Avatar"
 								class="rounded-circle avatar "
 								width="100"
@@ -328,21 +328,21 @@ export default {
 				No chats found.
 			</div>
 			<ShowParticipants :show="showParticipants"
-							  :group_id="group_id_info"
-							  :user_id="userId"
+							  :groupId="groupId_info"
+							  :userId="userId"
 							  @close="closePanel"/>
 			<ul class="list-group shadow-sm">
-				<li v-for="chat in filteredChats" :key="chat.conversation_id || chat.group_id" class="list-group-item d-flex justify-content-between align-items-center py-3">
+				<li v-for="chat in filteredChats" :key="chat.conversationId || chat.groupId" class="list-group-item d-flex justify-content-between align-items-center py-3">
 					<div>
 						<img
-							:src="chat.conversation_id ? `${BASE_URL()}/file?file=${chat.avatar.url}` : `${BASE_URL()}/file?file=${chat.photo.url}`"
+							:src="chat.conversationId ? `${BASE_URL()}/file?file=${chat.avatar.url}` : `${BASE_URL()}/file?file=${chat.photo.url}`"
 							alt="Avatar"
 							class="rounded-circle avatar"
 							width="40"
 							height="40"
 						/>
 						<span class="fw-bold ms-2">{{ chat.name }}</span>
-						<span v-if="chat.group_id" class="participant text-decoration-none" @click="goToParticipants(chat.group_id)" style="cursor: pointer;">
+						<span v-if="chat.groupId" class="participant text-decoration-none" @click="goToParticipants(chat.groupId)" style="cursor: pointer;">
 							(
 							<span v-for="(user, index) in chat.participants.slice(0, 10)" :key="user.userId">
 								{{ user.username }}<span v-if="index < Math.min(chat.participants.length, 10) - 1">, </span>
@@ -351,9 +351,9 @@ export default {
 							)
 						</span>
 						<br>
-						<small class="text-muted">ID: {{ chat.conversation_id || chat.group_id }}</small>
+						<small class="text-muted">ID: {{ chat.conversationId || chat.groupId }}</small>
 					</div>
-					<button class="btn btn-outline-primary btn-sm" @click="openChat(chat.conversation_id || chat.group_id, chat.conversation_id ? 'direct' : 'group')">
+					<button class="btn btn-outline-primary btn-sm" @click="openChat(chat.conversationId || chat.groupId, chat.conversationId ? 'direct' : 'group')">
 						Open
 					</button>
 				</li>

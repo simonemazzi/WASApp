@@ -6,8 +6,8 @@ import router from "../router";
 export default {
 	props: {
 		show: Boolean,
-		group_id: Number,
-		user_id: Number
+		groupId: Number,
+		userId: Number
 	},
 	data() {
 		return {
@@ -34,10 +34,10 @@ export default {
 			return BASE_URL;
 		},
 		async refresh() {
-			if (!this.group_id) return;
+			if (!this.groupId) return;
 
 			try {
-				const group = await getGroup(this.user_id, this.group_id);
+				const group = await getGroup(this.userId, this.groupId);
 				if (this.destroyed) return; // 🔥 BLOCCA UPDATE
 
 				this.group = group;
@@ -57,7 +57,7 @@ export default {
 			}
 		},
 		goTo(){
-			router.push({ name: 'group', params: { group_id: this.group_id } });
+			router.push({ name: 'group', params: { groupId: this.groupId } });
 		}
 	}
 };
@@ -76,7 +76,7 @@ export default {
 
 			<div class="d-flex flex-column gap-3 mb-3">
 				<div v-for="user in this.users" :key="user.userId" class="d-flex align-items-center gap-2">
-					<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.Url}`" width="50" height="50" alt="Photo"/>
+					<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.url}`" width="50" height="50" alt="Photo"/>
 					<span>{{user.username}}</span>
 				</div>
 			</div>
