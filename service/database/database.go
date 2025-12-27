@@ -56,7 +56,7 @@ type AppDatabase interface {
 	UserConversation(userId int, conversationId int) (bool, error)
 	GetMessages(conversationId int, userId int) ([]Message, error)
 	InsertPhoto(url string, width int, height int, mime string) (int, error)
-	InsertMessage(conversationId int, userId int, text string, photoId *int) error
+	InsertMessage(conversationId int, userId int, text string, photoId *int) (Message, error)
 	GetUsername(userId int, time string) (string, error)
 	IsRead(messageId int, userId int) (string, error)
 	UserMessage(userId int, messageId int) (bool, error)
@@ -81,7 +81,7 @@ type AppDatabase interface {
 	SetGroupName(groupId int, name string) error
 	AddToGroup(groupId int, userId int) error
 	LeaveGroup(groupId int, userId int) error
-	InsertGroupMessage(groupId int, userId int, text string, photoId *int) error
+	InsertGroupMessage(groupId int, userId int, text string, photoId *int) (Message, error)
 	GetGroupMessages(groupId int, viewerId int) ([]Message, error)
 	GroupExists(groupId int) bool
 	DeleteGroupMessage(messageId int) error

@@ -166,22 +166,16 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 	}
 
 	// SALVA MESSAGGIO
-	if err := rt.db.InsertMessage(conversationId, userId, text, photoId); err != nil {
-		http.Error(w, "Cannot save message", http.StatusInternalServerError)
-		return
-	}
+	mess, err := rt.db.InsertMessage(conversationId, userId, text, photoId)
 
-	// RISPONDE CON TUTTI I MESSAGGI
-	messages, err := rt.db.GetMessages(conversationId, userId)
 	if err != nil {
-		context.Logger.WithError(err).Error("Cannot get messages")
-		http.Error(w, "Error getting image", http.StatusInternalServerError)
+		http.Error(w, "Cannot save message", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(messages)
+	err = json.NewEncoder(w).Encode(mess)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		context.Logger.WithError(err).Error("Cannot save message")
@@ -328,22 +322,16 @@ func (rt *_router) postGroupMessage(w http.ResponseWriter, r *http.Request, para
 		http.Error(w, "Message must have text or photo", http.StatusBadRequest)
 		return
 	}
-	if err := rt.db.InsertGroupMessage(groupId, userId, text, photoId); err != nil {
+	mess, err := rt.db.InsertGroupMessage(groupId, userId, text, photoId)
+	if err != nil {
 		context.Logger.WithError(err).Error("Error inserting message")
 		http.Error(w, "Cannot save message", http.StatusInternalServerError)
 		return
 	}
 
-	messages, err := rt.db.GetGroupMessages(groupId, userId)
-	if err != nil {
-		context.Logger.WithError(err).Error("Cannot get messages")
-		http.Error(w, "Error getting image", http.StatusInternalServerError)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(messages)
+	err = json.NewEncoder(w).Encode(mess)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		context.Logger.WithError(err).Error("Cannot save message")
