@@ -10,10 +10,11 @@ import (
 )
 
 type Group struct {
-	GroupId      int    `json:"groupId"`
-	Name         string `json:"name"`
-	Photo        Upload `json:"photo"`
-	Participants []User `json:"participants"`
+	GroupId      int      `json:"groupId"`
+	Name         string   `json:"name"`
+	Photo        Upload   `json:"photo"`
+	Participants []User   `json:"participants"`
+	LastMessage  *Message `json:"lastMessage,omitempty"`
 }
 
 func (rt *_router) viewGroups(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
@@ -39,6 +40,31 @@ func (rt *_router) viewGroups(w http.ResponseWriter, r *http.Request, params htt
 				Username: dbUser.Username,
 			})
 		}
+		var lastMsg *Message
+		if dbGroup.LastMessage != nil {
+			var photo *Photo
+			if dbGroup.LastMessage.Body.Photo != nil {
+				photo = &Photo{
+					Url:    dbGroup.LastMessage.Body.Photo.Url,
+					Mime:   dbGroup.LastMessage.Body.Photo.Mime,
+					Width:  dbGroup.LastMessage.Body.Photo.Width,
+					Height: dbGroup.LastMessage.Body.Photo.Height,
+				}
+			}
+			lastMsg = &Message{
+				MessageId: dbGroup.LastMessage.MessageId,
+				Body: Body{
+					Text:  dbGroup.LastMessage.Body.Text,
+					Photo: photo,
+				},
+				Time: dbGroup.LastMessage.Time,
+				Sender: User{
+					UserId:   dbGroup.LastMessage.Sender.UserID,
+					Username: dbGroup.LastMessage.Sender.Username,
+				},
+				IsForwarded: dbGroup.LastMessage.IsForwarded,
+			}
+		}
 		apiGroups = append(apiGroups, Group{
 			GroupId: dbGroup.GroupId,
 			Name:    dbGroup.Name,
@@ -49,6 +75,7 @@ func (rt *_router) viewGroups(w http.ResponseWriter, r *http.Request, params htt
 				Height: dbGroup.Photo.Height,
 			},
 			Participants: apiParticipants,
+			LastMessage:  lastMsg,
 		})
 	}
 	w.Header().Set("Content-Type", "application/json")

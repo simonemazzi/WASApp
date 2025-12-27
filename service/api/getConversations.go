@@ -17,9 +17,10 @@ type Avatar struct {
 }
 
 type Conversation struct {
-	ConversationID string `json:"conversationId"`
-	Name           string `json:"name"`
-	Avatar         Avatar `json:"avatar"`
+	ConversationID string   `json:"conversationId"`
+	Name           string   `json:"name"`
+	Avatar         Avatar   `json:"avatar"`
+	LastMessage    *Message `json:"lastMessage,omitempty"`
 }
 
 func (rt *_router) getConversations(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
@@ -44,6 +45,32 @@ func (rt *_router) getConversations(w http.ResponseWriter, r *http.Request, para
 	}
 	response := make([]Conversation, 0, len(convs))
 	for _, dbConv := range convs {
+		var lastMsg *Message
+		var photo *Photo
+		if dbConv.LastMessage.Body.Photo != nil {
+			photo = &Photo{
+				Url:    dbConv.LastMessage.Body.Photo.Url,
+				Mime:   dbConv.LastMessage.Body.Photo.Mime,
+				Width:  dbConv.LastMessage.Body.Photo.Width,
+				Height: dbConv.LastMessage.Body.Photo.Height,
+			}
+		}
+		if dbConv.LastMessage != nil {
+			lastMsg = &Message{
+				MessageId: dbConv.LastMessage.MessageId,
+				Body: Body{
+					Text:  dbConv.LastMessage.Body.Text,
+					Photo: photo,
+				},
+				Read: dbConv.LastMessage.Read,
+				Time: dbConv.LastMessage.Time,
+				Sender: User{
+					UserId:   dbConv.LastMessage.Sender.UserID,
+					Username: dbConv.LastMessage.Sender.Username,
+				},
+				IsForwarded: dbConv.LastMessage.IsForwarded,
+			}
+		}
 		response = append(response, Conversation{
 			// Converti l'ID da int (DB) a string (API)
 			ConversationID: strconv.Itoa(dbConv.ConversationID),
@@ -55,6 +82,7 @@ func (rt *_router) getConversations(w http.ResponseWriter, r *http.Request, para
 				Width:  dbConv.Avatar.Width,
 				Height: dbConv.Avatar.Height,
 			},
+			LastMessage: lastMsg,
 		})
 	}
 	w.Header().Set("Content-Type", "application/json")

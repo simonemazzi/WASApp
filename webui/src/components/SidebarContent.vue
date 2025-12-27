@@ -1,7 +1,6 @@
 <script>
 import { getConversations, getGroups, BASE_URL } from '../services/axios'
 import router from '../router'
-//TODO:Fare polling
 export default {
 	name: 'Chats',
 
@@ -108,8 +107,14 @@ export default {
 						height="40"
 					/>
 					<span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
-					<br /> <!--mettere messaggio-->
-					<small class="text-muted">ID: {{ chat.conversationId || chat.groupId }}</small>
+					<br />
+					<small v-if="!chat.lastMessage.body.photo" class="text-muted">
+						{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{chat.lastMessage.body.text}}
+					</small>
+
+					<small v-if="chat.lastMessage.body.photo" class="text-muted">
+						{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
+					</small>
 				</button>
 			</div>
 		</div>

@@ -1,6 +1,9 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+	"strconv"
+)
 
 type Avatar struct {
 	Url    string `json:"url"`
@@ -10,9 +13,10 @@ type Avatar struct {
 }
 
 type Conversation struct {
-	ConversationID int    `json:"conversationId"`
-	Name           string `json:"name"`
-	Avatar         Avatar `json:"avatar"`
+	ConversationID int      `json:"conversationId"`
+	Name           string   `json:"name"`
+	Avatar         Avatar   `json:"avatar"`
+	LastMessage    *Message `json:"lastMessage,omitempty"`
 }
 
 func (db *appdbimpl) GetConversations(userId int) ([]Conversation, error) {
@@ -22,7 +26,18 @@ func (db *appdbimpl) GetConversations(userId int) ([]Conversation, error) {
     p.url,
     p.mime,
     p.width,
-    p.height
+    p.height,
+    m.messageId,
+    m.text,
+    m.time,
+    m.sender,
+    m.originalMessage,
+    m.photoId,
+    uuMsg.username,
+    pp.url,
+    pp.width,
+    pp.height,
+    pp.mime
 FROM Conversation c
 JOIN UserUsername uu ON uu.userId = CASE
     WHEN c.component_A = ? THEN c.component_B
@@ -42,14 +57,28 @@ AND up.updateId = (
     LIMIT 1
 )
 LEFT JOIN Photo p ON p.photoId = up.photoId
+LEFT JOIN Message m ON m.conversationId = c.conversationId
+  AND m.time = (
+      SELECT MAX(time)
+      FROM Message
+      WHERE conversationId = c.conversationId
+  )
+LEFT JOIN UserUsername uuMsg ON uuMsg.userId = m.sender
+  AND uuMsg.updateId = (
+      SELECT MAX(updateId)
+      FROM UserUsername
+      WHERE userId = m.sender
+  )
+LEFT JOIN Photo pp ON pp.photoId = m.photoId
 WHERE c.component_A = ? OR c.component_B = ?;`, userId, userId, userId)
+
 	if err != nil {
 		return nil, err
 	}
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
 		if err != nil {
-			panic(err)
+			return
 		}
 	}(rows)
 
@@ -58,6 +87,19 @@ WHERE c.component_A = ? OR c.component_B = ?;`, userId, userId, userId)
 	for rows.Next() {
 		var conv Conversation
 
+		// variabili ultimo messaggio
+		var lastMsgID sql.NullInt64
+		var lastMsgText sql.NullString
+		var lastMsgTime sql.NullString
+		var lastMsgSenderID sql.NullInt64
+		var lastMsgOriginal sql.NullInt64
+		var lastMsgPhotoID sql.NullInt64
+		var lastMsgSenderUsername sql.NullString
+		var msgPhotoURL sql.NullString
+		var msgPhotoWidth sql.NullInt64
+		var msgPhotoHeight sql.NullInt64
+		var msgPhotoMime sql.NullString
+
 		err := rows.Scan(
 			&conv.ConversationID,
 			&conv.Name,
@@ -65,9 +107,47 @@ WHERE c.component_A = ? OR c.component_B = ?;`, userId, userId, userId)
 			&conv.Avatar.Mime,
 			&conv.Avatar.Width,
 			&conv.Avatar.Height,
+			&lastMsgID,
+			&lastMsgText,
+			&lastMsgTime,
+			&lastMsgSenderID,
+			&lastMsgOriginal,
+			&lastMsgPhotoID,
+			&lastMsgSenderUsername,
+			&msgPhotoURL,
+			&msgPhotoWidth,
+			&msgPhotoHeight,
+			&msgPhotoMime,
 		)
 		if err != nil {
 			return nil, err
+		}
+
+		if lastMsgID.Valid {
+			var photo *Photo
+			if msgPhotoURL.Valid {
+				photo = &Photo{
+					Url:    msgPhotoURL.String,
+					Width:  int(msgPhotoWidth.Int64),
+					Height: int(msgPhotoHeight.Int64),
+					Mime:   msgPhotoMime.String,
+				}
+			}
+			conv.LastMessage = &Message{
+				MessageId: int(lastMsgID.Int64),
+				Body: Body{
+					Text:  lastMsgText.String,
+					Photo: photo,
+				},
+				Time: lastMsgTime.String,
+				Sender: User{
+					UserID:   strconv.Itoa(int(lastMsgSenderID.Int64)),
+					Username: lastMsgSenderUsername.String,
+				},
+				IsForwarded: lastMsgOriginal.Valid,
+			}
+		} else {
+			conv.LastMessage = nil
 		}
 
 		conversations = append(conversations, conv)

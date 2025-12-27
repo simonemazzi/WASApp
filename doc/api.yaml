@@ -216,7 +216,12 @@ paths:
                     minItems: 0
                     maxItems: 99999
                     items:
-                      $ref: "#/components/schemas/Conversation"
+                      allOf:
+                        - $ref: "#/components/schemas/Conversation"
+                        - properties:
+                            lastMessage:
+                              $ref: "#/components/schemas/Message"
+
 
               example:
                 conversations:
@@ -636,7 +641,11 @@ paths:
                     minItems: 0
                     maxItems: 2048
                     items:
-                      $ref: "#/components/schemas/Group"
+                      allOf:
+                        - $ref: "#/components/schemas/Group"
+                        - properties:
+                            lastMessage:
+                              $ref: "#/components/schemas/Message"
                 example:
                   groups:
                     - groupId: "288344"

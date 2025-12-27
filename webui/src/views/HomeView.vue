@@ -351,7 +351,13 @@ export default {
 							)
 						</span>
 						<br>
-						<small class="text-muted">ID: {{ chat.conversationId || chat.groupId }}</small>
+						<small v-if="!chat.lastMessage.body.photo" class="text-muted">
+							{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{chat.lastMessage.body.text}}
+						</small>
+
+						<small v-if="chat.lastMessage.body.photo" class="text-muted">
+							{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
+						</small>
 					</div>
 					<button class="btn btn-outline-primary btn-sm" @click="openChat(chat.conversationId || chat.groupId, chat.conversationId ? 'direct' : 'group')">
 						Open
