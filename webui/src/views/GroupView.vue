@@ -1,5 +1,5 @@
 <script>
-import { BASE_URL, getConversation, getMessages,postMessage } from "../services/axios";
+import {BASE_URL, getConversation, getMessages, getUserInfo, postMessage} from "../services/axios";
 import router from "../router";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import Comment from "../components/Comment.vue";
@@ -104,6 +104,10 @@ export default {
 					this.currentGroup = await getConversation(this.userId, this.groupId,"group");
 
 					await this.fetchMessages(); // primo caricamento messaggi
+					for (const msg of this.messages) {
+						const user = await getUserInfo(msg.sender.userId);
+						msg.sender.avatar = user.avatar;
+					}
 				} catch (err) {
 					this.errormsg = err.toString();
 				} finally {
@@ -195,9 +199,8 @@ export default {
 				event.target.value = "";
 				return;
 			}
-
 			this.photoSend = true;
-		}
+		},
 	},
 	created() {
 		this.username = sessionStorage.getItem("username");
@@ -272,7 +275,7 @@ export default {
 		<div class="d-flex justify-content-between align-items-center">
 			<div class="d-flex align-items-center gap-2 p-lg-2 info" @click="infoGroup=true">
 				<img
-					:src="`${BASE_URL()}/file?file=${this.currentGroup.photo.url}`"
+					:src="this.currentGroup.photo.url ? `${BASE_URL()}/file?file=${this.currentGroup.photo.url}` : '' "
 					alt="photo"
 					class="rounded-circle align-self-end avatar"
 					width="45"
@@ -298,7 +301,7 @@ export default {
 				:class="['message-row gap-3', msg.sender.userId === userId ? 'mine' : 'theirs']"
 			>
 				<img v-if="msg.sender.userId !== userId"
-					 :src="`${BASE_URL()}/file?file=${this.currentGroup.photo.url}`"
+					 :src="msg.sender.avatar?.url ? `${BASE_URL()}/file?file=${msg.sender.avatar.url}` : '' "
 					 alt="Avatar"
 					 class="rounded-circle align-self-end avatar"
 					 width="35"

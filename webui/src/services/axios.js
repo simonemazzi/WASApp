@@ -97,7 +97,7 @@ export const postMessage = async (userId,chatId,messageText,messagePhoto,type) =
 		let response;
 		if (messagePhoto) {
 			const formData = new FormData();
-			formData.append("body",messageText);
+			formData.append("bodyText",messageText);
 			formData.append("photo",messagePhoto);
 			if(type === "direct") {
 				response = await instance.post(`users/${userId}/conversations/${chatId}/messages`, formData,{headers:{"Content-Type": "multipart/form-data"}});
@@ -106,9 +106,9 @@ export const postMessage = async (userId,chatId,messageText,messagePhoto,type) =
 			}
 		}else{
 			if(type === "direct") {
-				response = await instance.post(`users/${userId}/conversations/${chatId}/messages`, {body: messageText});
+				response = await instance.post(`users/${userId}/conversations/${chatId}/messages`, {bodyText: messageText});
 			} else if(type === "group") {
-				response = await instance.post(`users/${userId}/groups/${chatId}/messages`,{body: messageText});
+				response = await instance.post(`users/${userId}/groups/${chatId}/messages`,{bodyText: messageText});
 			}
 		}
 		return response.data;

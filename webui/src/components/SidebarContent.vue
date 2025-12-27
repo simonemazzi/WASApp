@@ -12,6 +12,7 @@ export default {
 			inputMarginTop: '0px',
 			searchQuery: '',
 			editProfile: false,
+			pollingInterval:null,
 		}
 	},
 
@@ -29,7 +30,11 @@ export default {
 			try {
 				const conversations = await getConversations(this.userId) || []
 				const groups = await getGroups(this.userId) || []
-				this.chats = [...conversations, ...groups]
+				const newChats = [...conversations, ...groups];
+				if (JSON.stringify(newChats) !== JSON.stringify(this.chats)) {
+					this.chats = newChats;
+				}
+
 			} catch (err) {
 				console.error(err)
 			}
@@ -51,11 +56,27 @@ export default {
 				return `${BASE_URL}/file?file=${chat.photo.url}`
 			}
 			return ''
-		}
+		},
+		startPollingChats() {
+			this.loadChats();
+			this.pollingInterval = setInterval(() => {
+				this.loadChats();
+			}, 2000);
+		},
+		stopPollingChats() {
+			if (this.pollingInterval) {
+				clearInterval(this.pollingInterval);
+				this.pollingInterval = null;
+			}
+		},
 	},
 
 	mounted() {
-		this.loadChats()
+		this.loadChats();
+		this.startPollingChats();
+	},
+	beforeUnmount() {
+		this.stopPollingChats();
 	}
 }
 </script>

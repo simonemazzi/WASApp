@@ -66,7 +66,7 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 	// -------- CASE 1: JSON SENZA FOTO --------
 	if !isMultipart {
 		var payload struct {
-			Body string `json:"body"`
+			Body string `json:"bodyText"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -80,7 +80,7 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 			return
 		}
 
-		text = r.FormValue("body")
+		text = r.FormValue("bodyText")
 
 		file, header, err := r.FormFile("photo")
 
@@ -224,7 +224,7 @@ func (rt *_router) postGroupMessage(w http.ResponseWriter, r *http.Request, para
 	// -------- CASE 1: JSON SENZA FOTO --------
 	if !isMultipart {
 		var payload struct {
-			Body string `json:"body"`
+			Body string `json:"bodyText"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -238,7 +238,7 @@ func (rt *_router) postGroupMessage(w http.ResponseWriter, r *http.Request, para
 			return
 		}
 
-		text = r.FormValue("body")
+		text = r.FormValue("bodyText")
 
 		file, header, err := r.FormFile("photo")
 

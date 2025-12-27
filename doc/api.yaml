@@ -16,6 +16,8 @@ tags:
     description: Operations related to groups.
   - name : Comment
     description: Operations related to comments
+  - name: File
+    description: Operation related to File
 
 security:
   - WASATextAuth: []
@@ -331,16 +333,12 @@ paths:
                     minItems: 0
                     maxItems: 2048
                     items:
-                      allOf:
-                        - $ref: "#/components/schemas/Message"
-                        - properties:
-                            sender:
-                              allOf:
-                                - $ref: "#/components/schemas/User"
-                                - description: Sender of the message, you or other.
+                        $ref: "#/components/schemas/Message"
+
               example:
                 messages:
-                  - body: "Hello!"
+                  - body:
+                      text: "Hello!"
                     messageId: "1"
                     time: "2025-10-31T15:42:00Z"
                     read: "received"
@@ -366,7 +364,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Send"
+              type: object
+              description: Only text
+              properties:
+                bodyText:
+                  $ref: "#/components/schemas/Text"
+              required:
+                - bodyText
+
+
+          multipart/form-data:
+            schema:
+              type: object
+              description: text and/or photo
+              properties:
+                bodyText:
+                  $ref: "#/components/schemas/Text"
+                photo:
+                  $ref: "#/components/schemas/File"
         required: true
       responses:
         "201":
@@ -374,20 +389,11 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/Message"
-                  - type: object
-                    properties:
-                      read:
-                        description: Show the message status
-                        type: string
-                        minLength: 0
-                        maxLength: 255
-                        pattern: "^[a-zA-Z0-9_ -]+$"
-                        enum: [ received ]
-                        example: received
+                  $ref: "#/components/schemas/Message"
+
               example:
-                body: "Hi!"
+                body:
+                  text: "Hello!"
                 messageId: "4444"
                 time: "2025-10-31T15:42:00Z"
                 read: "received"
@@ -464,11 +470,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ForwardedMessage"
+                $ref: "#/components/schemas/Message"
               example:
-                body: "Hello, World!"
-                originalMessageId: "2635444"
-                forwardedMessageId: "255782"
+                body:
+                  text: "Hello!"
+                messageId: "4444"
                 time: "2025-10-31T15:42:00Z"
                 read: "received"
         "500":
@@ -721,12 +727,12 @@ paths:
               type: object
               description: Request schema
               properties:
-                username:
+                name:
                   $ref: "#/components/schemas/Username"
               required:
-                - username
+                - name
             example:
-              username: "Simone"
+              name: "Simone"
 
         required: true
       responses:
@@ -835,7 +841,7 @@ paths:
               description: Upload photo's schema
               properties:
                 photo:
-                  $ref: "#/components/schemas/Photo"
+                  $ref: "#/components/schemas/File"
               required:
                 - photo
       responses:
@@ -944,7 +950,7 @@ paths:
               description: Upload photo's schema
               properties:
                 photo:
-                  $ref: "#/components/schemas/Photo"
+                  $ref: "#/components/schemas/File"
               required:
                 - photo
       responses:
@@ -1035,16 +1041,11 @@ paths:
                     minItems: 0
                     maxItems: 2048
                     items:
-                      allOf:
-                        - $ref: "#/components/schemas/Message"
-                        - properties:
-                            sender:
-                              allOf:
-                                - $ref: "#/components/schemas/User"
-                                - description: Sender of the message, you or other.
+                        $ref: "#/components/schemas/Message"
               example:
                 messages:
-                  - body: "Benvenuti nel gruppo!"
+                  - body:
+                      text: "Benvenuti nel gruppo!"
                     messageId: "123456"
                     time: "2025-10-31T15:42:00Z"
                     read: "received"
@@ -1070,7 +1071,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Send"
+              type: object
+              description: Only text
+              properties:
+                bodyText:
+                  $ref: "#/components/schemas/Text"
+              required:
+                - bodyText
+
+
+          multipart/form-data:
+            schema:
+              type: object
+              description: text and/or photo
+              properties:
+                bodyText:
+                  $ref: "#/components/schemas/Text"
+                photo:
+                  $ref: "#/components/schemas/File"
 
         required: true
 
@@ -1083,17 +1101,10 @@ paths:
                 description: Response schema
                 allOf:
                   - $ref: "#/components/schemas/Message"
-                  - properties:
-                      read:
-                        description: represents the status of the message
-                        type: string
-                        minLength: 0
-                        maxLength: 255
-                        pattern: "^[a-zA-Z0-9_ -]+$"
-                        enum: [ received ]
-                        example: received
+
               example:
-                body: Hellooooo
+                body:
+                  text : "Hellooooo"
                 messageId: "4333744"
                 time : 2025-10-31T15:42:00Z
                 read: received
@@ -1170,11 +1181,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ForwardedMessage"
+                $ref: "#/components/schemas/Message"
               example:
-                body: "Hello, World!"
-                originalMessageId: "2635444"
-                forwardedMessageId: "266453"
+                body:
+                  text: "Hello!"
+                messageId: "4444"
                 time: "2025-10-31T15:42:00Z"
                 read: "received"
         "500":
@@ -1301,6 +1312,52 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "400":
           $ref: "#/components/responses/BadRequest"
+
+
+  /file:
+    get:
+      summary: Return the requested file
+      description: Serves a file (image/avatar) given its filename or path.
+      operationId: getFile
+      tags:
+        - File
+      parameters:
+        - in: query
+          name: file
+          required: true
+          description: Name or path of the file to fetch.
+          schema:
+            description: file schema
+            type: string
+            minLength: 1
+            maxLength: 999999
+            pattern: "^[a-zA-Z0-9._-]+$"
+            example: "avatar1.png"
+      responses:
+        "200":
+          description: File returned successfully
+          content:
+            image/png:
+              schema:
+                description: Response schema
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                description: Response schema
+                type: string
+                format: binary
+            application/octet-stream:
+              schema:
+                description: Response schema
+                type: string
+                format: binary
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
 components:
   schemas:
@@ -1445,7 +1502,7 @@ components:
           format: date-time
           example: 2025-10-31T15:42:00Z
 
-    Photo:
+    File:
       description: Binary image file
       type: string
       format: binary
@@ -1481,67 +1538,40 @@ components:
           type: integer
           example: 720
 
-    Send:
-      type: object
-      description: What to send, Image or text
-      properties:
-        body:
-          oneOf:
-            - $ref: "#/components/schemas/Text"
-            - $ref: "#/components/schemas/PhotoMessage"
+
 
     Message:
       type: object
-      allOf:
-        - $ref: "#/components/schemas/Send"
-        - properties:
-            messageId:
-              $ref: "#/components/schemas/MessageId"
-            time:
-              description: Timestamp
-              type: string
-              format: date-time
-              example: 2025-10-31T15:42:00Z
-              minLength: 20
-              maxLength: 20
-              pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+      description: message schema
+      properties:
+        messageId:
+          $ref: "#/components/schemas/MessageId"
+        body:
+          type: object
+          description: messageContent
+          properties:
+            text:
+              $ref: "#/components/schemas/Text"
+            upload:
+              $ref: "#/components/schemas/Upload"
+        time:
+          description: time
+          type: string
+          format: date-time
+          example: "2025-10-31T15:42:00Z"
+        sender:
+          $ref: "#/components/schemas/User"
+        read:
+          description: show if the message has been read
+          type: string
+          enum: [ received, read ]
+          example: received
+        isForwarded:
+          description: show if the message has been forwarded
+          type: boolean
+          example: false
 
-            read:
-              type: string
-              minLength: 0
-              maxLength: 255
-              description: Read state of the message
-              pattern: "^[a-zA-Z0-9_ -]+$"
-              enum: [ received, read ]
-              example: received
 
-
-    ForwardedMessage:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/Send"
-        - properties:
-            originalMessageId:
-              $ref: "#/components/schemas/MessageId"
-            forwardedMessageId:
-              $ref: "#/components/schemas/MessageId"
-            time:
-              description: Timestamp
-              type: string
-              format: date-time
-              example: 2025-10-31T15:42:00Z
-              minLength: 20
-              maxLength: 20
-              pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
-
-            read:
-              type: string
-              minLength: 0
-              maxLength: 255
-              description: Read state of the message
-              pattern: "^[a-zA-Z0-9_ -]+$"
-              enum: [ received, read ]
-              example: received
     Text:
       description: Text of the message
       type: string
@@ -1573,14 +1603,6 @@ components:
           $ref: "#/components/schemas/Username"
 
 
-    PhotoMessage:
-      type: object
-      description: The user can send an image with an optional description.
-      allOf:
-        - $ref: "#/components/schemas/Photo"
-        - properties:
-            caption:
-              $ref: "#/components/schemas/Text"
 
     Error:
       description: Info of an error

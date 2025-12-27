@@ -46,7 +46,7 @@ func (rt *_router) postSession(w http.ResponseWriter, r *http.Request, params ht
 
 	if err != nil {
 		context.Logger.WithError(err).Error("Error creating session")
-		http.Error(w, "Failed to create session1", http.StatusInternalServerError)
+		http.Error(w, "Failed to create session", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

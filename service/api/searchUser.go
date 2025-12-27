@@ -45,7 +45,7 @@ func (rt *_router) searchUser(w http.ResponseWriter, r *http.Request, params htt
 				},
 			})
 		}
-		err = json.NewEncoder(w).Encode(users)
+		err = json.NewEncoder(w).Encode(UsersResponse{Users: users})
 		if err != nil {
 			context.Logger.WithError(err).Error("Error converting userId to int")
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
