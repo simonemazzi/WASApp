@@ -30,7 +30,7 @@ func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, 
 		return Message{}, err
 	}
 
-	//ritorno il mess appena creato
+	// ritorno il mess appena creato
 	var msg Message
 
 	var photoUrl sql.NullString
@@ -92,7 +92,7 @@ func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, 
 		return Message{}, err
 	}
 
-	//se c'è la foto la metto
+	// se c'è la foto la metto
 	if photoUrl.Valid {
 		msg.Body.Photo = &Photo{
 			Url:    photoUrl.String,
