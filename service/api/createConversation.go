@@ -45,7 +45,7 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, pa
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(conversation); err != nil {
 		context.Logger.WithError(err).Error("error encoding conversation")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

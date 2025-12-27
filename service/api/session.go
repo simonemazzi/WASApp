@@ -50,11 +50,12 @@ func (rt *_router) postSession(w http.ResponseWriter, r *http.Request, params ht
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	jsonResp, err := json.Marshal(resp)
+
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		context.Logger.WithError(err).Error("Error marshalling response")
+		context.Logger.WithError(err).Error("Error encoding response")
 		http.Error(w, "Failed to create session", http.StatusInternalServerError)
 		return
 	}
-	_, _ = w.Write(jsonResp)
 }
