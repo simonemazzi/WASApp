@@ -1,5 +1,5 @@
 <script>
-import { deleteMessage } from "../services/axios";
+import { deleteMessage } from "@/services/axios";
 
 export default {
 	name: 'DeleteMessage',
@@ -27,17 +27,17 @@ export default {
 </script>
 
 <template>
-	<div v-if="show" class="overlay">
-		<div class="action-box">
-			<h2 class="text-center">Are you sure?</h2>
-			<p class="text-center">This action will be irreversible.</p>
+  <div v-if="show" class="overlay">
+    <div class="action-box">
+      <h2 class="text-center">Are you sure?</h2>
+      <p class="text-center">This action will be irreversible.</p>
 
-			<div class="actions">
-				<button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
-				<button class="btn btn-danger" @click="doDelete">Delete</button>
-			</div>
-		</div>
-	</div>
+      <div class="actions">
+        <button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+        <button class="btn btn-danger" @click="doDelete">Delete</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

@@ -17,6 +17,16 @@ export default {
 			isSubmitting: false
 		}
 	},
+	watch: {
+		show(newVal) {
+			if (newVal) {
+				this.refresh();
+			}
+		}
+	},
+	mounted(){
+		this.refresh();
+	},
 	methods: {
 		BASE_URL(){
 			return BASE_URL;
@@ -57,52 +67,45 @@ export default {
 		isAlreadyMember(username) {
 			return this.participants.some(p => p.username === username);
 		}
-	},
-	mounted(){
-		this.refresh();
-	},
-	watch: {
-		show(newVal) {
-			if (newVal) {
-				this.refresh();
-			}
-		}
 	}
 }
 </script>
 
 <template>
-		<div v-if="show" class="d-flex flex-column gap-3 mx-2 mb-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<h2 class="h2">Add Members</h2>
-				<button class="btn d-flex align-items-center justify-content-center btn-clean"
-						@click="closePanel"
-						style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
-					<img src="../icons/minus-sign.png" alt="Add" width="20" height="20"/>
-				</button>
-			</div>
-			<div class="box">
-				<div v-for="user in users" :key="user.userId" class="user-row " :class="{ 'already-member': isAlreadyMember(user.username) }">
-					<input
-						type="checkbox"
-						:id="user.userId"
-						:value="user.username"
-						v-model="selectedUsers"
-						class="selected"
-						:disabled="isAlreadyMember(user.username)"
-						:style="isAlreadyMember(user.username) ? `cursor : not-allowed` : `cursor: pointer;`"
- 					/> <!--se è già membro non lo posso riselezionale-deselezionare -->
-					<img :src="`${BASE_URL()}/file?file=${user.avatar.url}`"
-						 alt="User Photo"
-						 :class="['rounded-circle','avatar','mx-2']"
-						 width="50"
-						 height="50" />
-					{{ user.username }}
-				</div>
-
-			</div>
-			<button :disabled="isSubmitting" class=" btn btn-success mt-2" @click="addSelectedUsers">Add Members</button>
-		</div>
+  <div v-if="show" class="d-flex flex-column gap-3 mx-2 mb-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="h2">Add Members</h2>
+      <button
+        class="btn d-flex align-items-center justify-content-center btn-clean"
+        style="border-radius: 50px; padding: 0; height: 45px; width: 45px;"
+        @click="closePanel"
+      >
+        <img src="../icons/minus-sign.png" alt="Add" width="20" height="20">
+      </button>
+    </div>
+    <div class="box">
+      <div v-for="user in users" :key="user.userId" class="user-row " :class="{ 'already-member': isAlreadyMember(user.username) }">
+        <input
+          :id="user.userId"
+          v-model="selectedUsers"
+          type="checkbox"
+          :value="user.username"
+          class="selected"
+          :disabled="isAlreadyMember(user.username)"
+          :style="isAlreadyMember(user.username) ? `cursor : not-allowed` : `cursor: pointer;`"
+        > <!--se è già membro non lo posso riselezionale-deselezionare -->
+        <img
+          :src="`${BASE_URL()}/file?file=${user.avatar.url}`"
+          alt="User Photo"
+          :class="['rounded-circle','avatar','mx-2']"
+          width="50"
+          height="50"
+        >
+        {{ user.username }}
+      </div>
+    </div>
+    <button :disabled="isSubmitting" class=" btn btn-success mt-2" @click="addSelectedUsers">Add Members</button>
+  </div>
 </template>
 
 

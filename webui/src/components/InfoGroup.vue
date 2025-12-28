@@ -13,6 +13,12 @@ import AddUser from "./AddUser.vue";
 
 export default {
 	components: {AddUser},
+	props:{
+		show: Boolean,
+		groupId:Number,
+		userId:Number,
+	},
+	emits:['close'],
 	data(){
 		return {
 			group:null,
@@ -25,12 +31,19 @@ export default {
 			previewUrl:undefined,
 		}
 	},
-	props:{
-		show: Boolean,
-		groupId:Number,
-		userId:Number,
+	mounted(){
+		this.refresh();
+		this.pollInterval = setInterval(() => {
+			if (!this.addUserMode && this.show) {   //non serve menre aggiungo utenti
+				this.refresh();
+			}
+		}, 3000);
 	},
-	emits:['close'],
+	beforeUnmount(){
+		if (this.pollInterval) {
+			clearInterval(this.pollInterval);
+		}
+	},
 	methods:{
 		router(){
 			return router;
@@ -117,102 +130,88 @@ export default {
 			this.editMode = false;
 			await this.refresh();
 		}
-	},
-	mounted(){
-		this.refresh();
-		this.pollInterval = setInterval(() => {
-			if (!this.addUserMode && this.show) {   //non serve menre aggiungo utenti
-				this.refresh();
-			}
-		}, 3000);
-	},
-	beforeUnmount(){
-		if (this.pollInterval) {
-			clearInterval(this.pollInterval);
-		}
 	}
 }
 //TODO: FARE ADD USER LAYOUT CON BOTTONI E FUNZIONI
 </script>
 
 <template>
-	<div v-if="show" class="overlay">
-		<div class="action-box">
+  <div v-if="show" class="overlay">
+    <div class="action-box">
+      <div class="header d-flex align-items-center justify-content-between">
+        <button class="btn btn-close" @click="closePanel" />
+        <h4 class="h4">Info Group</h4>
+        <button v-if="!editMode" class="btn btn-clean" :disabled="addUserMode" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;" @click="EditGroup">
+          <img src="../icons/edit.png" alt="Edit" width="20" height="20" class="mb-1">
+        </button>
+        <div v-if="editMode" class="btn-group">
+          <button class="btn btn-clean" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;" @click="EditGroupRevert">
+            <img src="../icons/back-arrow.png" alt="Edit" width="25" height="25" class="mb-1">
+          </button>
+          <button v-if="editMode" class="btn btn-clean" type="submit" @click="saveChanges">
+            <img src="../icons/check.png" alt="Edit" width="25" height="25" class="mb-1">
+          </button>
+        </div>
+      </div>
+      <div class="d-flex align-items-center justify-content-center flex-column gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${group.photo.url}`" :width="previewUrl && editMode? 100:200" :height="previewUrl && editMode? 100:200" alt="Photo">
+          <img v-if="previewUrl && editMode" src="../icons/right-arrow.png" alt="Arrow to ..." width="50" height="50">
+          <img
+            v-if="previewUrl && editMode"
+            :src="previewUrl"
+            alt="Avatar"
+            class="rounded-circle avatar"
+            width="100"
+            height="100"
+          >
+        </div>
 
-			<div class="header d-flex align-items-center justify-content-between">
-				<button class="btn btn-close" @click="closePanel"></button>
-				<h4 class="h4">Info Group</h4>
-				<button v-if="!editMode" class="btn btn-clean" @click="EditGroup" :disabled="addUserMode" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
-					<img src="../icons/edit.png" alt="Edit" width="20" height="20" class="mb-1"/>
-				</button>
-				<div v-if="editMode" class="btn-group">
-					<button class="btn btn-clean" @click="EditGroupRevert" style="border-radius: 50px; padding: 0; height: 45px; width: 45px;">
-						<img src="../icons/back-arrow.png" alt="Edit" width="25" height="25" class="mb-1"/>
-					</button>
-					<button v-if="editMode" class="btn btn-clean" type="submit" @click="saveChanges">
-						<img src="../icons/check.png" alt="Edit" width="25" height="25" class="mb-1"/>
-					</button>
-				</div>
+        <div v-if="editMode">
+          <label for="fileInput" class="btn btn-outline-primary">Select Group Photo</label>
+          <input id="fileInput" type="file" class="d-none" @change="onFileChange">
+        </div>
 
-			</div>
-			<div class="d-flex align-items-center justify-content-center flex-column gap-3">
-				<div class="d-flex align-items-center gap-3">
-					<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${group.photo.url}`" :width="previewUrl && editMode? 100:200" :height="previewUrl && editMode? 100:200" alt="Photo"/>
-					<img v-if="previewUrl && editMode" src="../icons/right-arrow.png" alt="Arrow to ..." width="50" height="50"/>
-					<img v-if="previewUrl && editMode"
-						 :src="previewUrl"
-						 alt="Avatar"
-						 class="rounded-circle avatar"
-						 width="100"
-						 height="100"
-					/>
-				</div>
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 v-if="!editMode" class="fw-bold text-center name-display">{{ group.name }}</h4>
+            <input v-if="editMode" v-model="newGroupName" type="text" class="name-input mb-0 text-center name-input" :placeholder="group.name">
+          </div>
+        </div>
+      </div>
+      <AddUser
+        :show="addUserMode && !editMode"
+        :group-id="groupId"
+        :user-id="userId"
+        @close="addUserMode=false"
+        @members-updated="refresh"
+      />
+      <div v-if="!addUserMode" class="d-flex flex-column gap-3 mx-2 participants-wrapper">
+        <div class="d-flex justify-content-between align-items-center">
+          <h2 class="h2">Participants</h2>
+          <button
+            class="btn d-flex align-items-center justify-content-center btn-clean"
+            style="border-radius: 50px; padding: 0; height: 45px; width: 45px;"
+            :disabled="editMode"
+            @click="addUserLayout"
+          >
+            <img src="../icons/plus.png" alt="Add" width="20" height="20">
+          </button>
+        </div>
 
-				<div v-if="editMode">
-					<label for="fileInput" class="btn btn-outline-primary">Select Group Photo</label>
-					<input type="file" id="fileInput" class="d-none" @change="onFileChange"/>
-				</div>
+        <div class="participants-list ">
+          <div v-for="user in users" :key="user.userId" class="pb-3 d-flex gap-2  align-items-center">
+            <img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.url}`" width="50" height="50" alt="Photo">
+            <span class="text-muted">{{ user.username }}</span>
+          </div>
+        </div>
+      </div>
 
-				<div class="d-flex justify-content-between">
-					<div>
-						<h4 v-if="!editMode" class="fw-bold text-center name-display">{{group.name}}</h4>
-						<input v-if="editMode" type="text" class="name-input mb-0 text-center name-input" :placeholder="group.name" v-model="newGroupName"/>
-					</div>
-				</div>
-
-
-			</div>
-			<AddUser :show="addUserMode && !editMode"
-					 :groupId="groupId"
-					 :userId="userId"
-					 @close="addUserMode=false"
-					 @members-updated="refresh"
-			/>
-			<div v-if="!addUserMode" class="d-flex flex-column gap-3 mx-2 participants-wrapper">
-				<div class="d-flex justify-content-between align-items-center">
-					<h2 class="h2">Participants</h2>
-					<button class="btn d-flex align-items-center justify-content-center btn-clean"
-							@click="addUserLayout"
-							style="border-radius: 50px; padding: 0; height: 45px; width: 45px;"
-							:disabled="editMode">
-						<img src="../icons/plus.png" alt="Add" width="20" height="20"/>
-					</button>
-				</div>
-
-				<div class="participants-list ">
-					<div v-for="user in users" :key="user.userId" class="pb-3 d-flex gap-2  align-items-center">
-						<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.url}`" width="50" height="50" alt="Photo" />
-						<span class="text-muted">{{ user.username }}</span>
-					</div>
-				</div>
-			</div>
-
-			<div class="d-flex justify-content-between">
-				<button v-if="!addUserMode" class="btn btn-danger" @click="leaveGroup">Leave Group</button>
-			</div>
-		</div>
-
-	</div>
+      <div class="d-flex justify-content-between">
+        <button v-if="!addUserMode" class="btn btn-danger" @click="leaveGroup">Leave Group</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

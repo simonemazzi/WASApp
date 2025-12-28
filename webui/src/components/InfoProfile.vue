@@ -20,23 +20,18 @@ export default {
 </script>
 
 <template>
-	<div v-if="show" class="overlay">
-		<div class="action-box">
-			<div class="header d-flex align-items-center position-relative mb-2">
-				<button class="btn btn-close" @click="$emit('close')"></button>
-				<h4 class="header-title">Info Profile</h4>
-			</div>
-			<div class="d-flex align-items-center justify-content-center flex-column gap-3">
-				<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${photo}`" width="200" height="200" alt="Photo" />
-				<h4 class="fw-bold text-center">{{ this.username }}</h4>
-			</div>
-		</div>
-
-
-
-
-	</div>
-
+  <div v-if="show" class="overlay">
+    <div class="action-box">
+      <div class="header d-flex align-items-center position-relative mb-2">
+        <button class="btn btn-close" @click="$emit('close')" />
+        <h4 class="header-title">Info Profile</h4>
+      </div>
+      <div class="d-flex align-items-center justify-content-center flex-column gap-3">
+        <img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${photo}`" width="200" height="200" alt="Photo">
+        <h4 class="fw-bold text-center">{{ username }}</h4>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

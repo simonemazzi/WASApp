@@ -64,29 +64,27 @@ export default {
 </script>
 
 <template>
-	<div v-if="show" class="overlay">
-		<div class="action-box">
-			<div class="d-flex align-items-center justify-content-between mb-2">
-				<button @click="$emit('close')" class="btn-close"></button>
-				<h4 v-if="group" class="text-center">
-					{{ group.name }} - Participants
-				</h4>
-				<br/>
-			</div>
+  <div v-if="show" class="overlay">
+    <div class="action-box">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <button class="btn-close" @click="$emit('close')" />
+        <h4 v-if="group" class="text-center">
+          {{ group.name }} - Participants
+        </h4>
+        <br>
+      </div>
 
-			<div class="d-flex flex-column gap-3 mb-3">
-				<div v-for="user in this.users" :key="user.userId" class="d-flex align-items-center gap-2">
-					<img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.url}`" width="50" height="50" alt="Photo"/>
-					<span>{{user.username}}</span>
-				</div>
-			</div>
-			<div class="d-flex justify-content-end">
-				<button class="btn btn-outline-primary justify-content-end" @click="goTo">Open</button>
-			</div>
-
-		</div>
-	</div>
-
+      <div class="d-flex flex-column gap-3 mb-3">
+        <div v-for="user in users" :key="user.userId" class="d-flex align-items-center gap-2">
+          <img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${user.avatar.url}`" width="50" height="50" alt="Photo">
+          <span>{{ user.username }}</span>
+        </div>
+      </div>
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-outline-primary justify-content-end" @click="goTo">Open</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

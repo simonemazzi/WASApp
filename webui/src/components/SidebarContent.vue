@@ -24,6 +24,14 @@ export default {
 		}
 	},
 
+	mounted() {
+		this.loadChats();
+		this.startPollingChats();
+	},
+	beforeUnmount() {
+		this.stopPollingChats();
+	},
+
 	methods: {
 		async loadChats() {
 			try {
@@ -68,56 +76,48 @@ export default {
 				this.pollingInterval = null;
 			}
 		},
-	},
-
-	mounted() {
-		this.loadChats();
-		this.startPollingChats();
-	},
-	beforeUnmount() {
-		this.stopPollingChats();
 	}
 }
 </script>
 
 <template>
-		<div class="sticky-top">
-			<h2 class="p-2">Chats</h2>
-			<div class="search-bar">
-				<input
-					type="text"
-					placeholder="Search..."
-					class="input-group"
-					v-model="searchQuery"
-				/>
-			</div>
-		</div>
-		<div class="container-chats">
-			<div
-				v-for="chat in filteredchats"
-				:key="chat.conversationId || chat.groupId"
-				class="d-flex justify-content-start align-items-center mb-2"
-			>
-				<button class="btn w-100 text-start" @click="openChat(chat)">
-					<img
-						:src="getAvatarUrl(chat)"
-						alt="Avatar"
-						class="rounded-circle avatar"
-						width="40"
-						height="40"
-					/>
-					<span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
-					<br />
-					<small v-if="!chat.lastMessage.body.photo" class="text-muted">
-						{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{(!chat.lastMessage.body.text && !chat.lastMessage.body.photo) && chat.lastMessage.isForwarded ? "Message forwarded more times..." : chat.lastMessage.body.text }}
-					</small>
+  <div class="sticky-top">
+    <h2 class="p-2">Chats</h2>
+    <div class="search-bar">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search..."
+        class="input-group"
+      >
+    </div>
+  </div>
+  <div class="container-chats">
+    <div
+      v-for="chat in filteredchats"
+      :key="chat.conversationId || chat.groupId"
+      class="d-flex justify-content-start align-items-center mb-2"
+    >
+      <button class="btn w-100 text-start" @click="openChat(chat)">
+        <img
+          :src="getAvatarUrl(chat)"
+          alt="Avatar"
+          class="rounded-circle avatar"
+          width="40"
+          height="40"
+        >
+        <span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
+        <br>
+        <small v-if="!chat.lastMessage.body.photo" class="text-muted">
+          {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{ (!chat.lastMessage.body.text && !chat.lastMessage.body.photo) && chat.lastMessage.isForwarded ? "Message forwarded more times..." : chat.lastMessage.body.text }}
+        </small>
 
-					<small v-if="chat.lastMessage.body.photo" class="text-muted">
-						{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
-					</small>
-				</button>
-			</div>
-		</div>
+        <small v-if="chat.lastMessage.body.photo" class="text-muted">
+          {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
+        </small>
+      </button>
+    </div>
+  </div>
 </template>
 
 <style scoped>

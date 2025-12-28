@@ -24,6 +24,21 @@ export default {
 		// nessun computed extra nel tuo setup, ma puoi aggiungere se vuoi
 	},
 
+	watch: {
+		messageId(newId) {
+			if (newId) this.loadComments()
+		}
+	},
+
+	mounted() {
+		if (this.messageId) this.loadComments()
+		this.startPolling()
+	},
+
+	beforeUnmount() {
+		this.stopPolling()
+	},
+
 	methods: {
 		filterEmoji() {
 			this.emojiInput = Array.from(this.emojiInput)
@@ -68,61 +83,46 @@ export default {
 				this.pollingInterval = null
 			}
 		}
-	},
-
-	mounted() {
-		if (this.messageId) this.loadComments()
-		this.startPolling()
-	},
-
-	beforeUnmount() {
-		this.stopPolling()
-	},
-
-	watch: {
-		messageId(newId) {
-			if (newId) this.loadComments()
-		}
 	}
 }
 </script>
 
 <template>
-	<div v-if="show" class="overlay">
-		<div class="action-box">
-			<h2 class="text-center">Comments</h2>
-			<div v-if="comments.length > 0 " class="comment-box">
-				<div v-for="comment in comments" :key="comment.id" class="d-flex justify-content-between align-items-center">
-					<div class="pb-0 m-0">
-						<span v-if="comment.sender.userId !== userId" class="emoji">{{ comment.sender.username }}</span>
-						<span v-else class="emoji">You</span>
-					</div>
-					<div class="d-flex align-items-center gap-2">
-						<button v-if="comment.sender.userId === userId" class="btn btn-danger" @click="deleteEmoji(comment.commentId)">
-							<img src="../icons/trash3-fill.svg" alt="Delete" width="16" height="16" class="d-flex align-items-center">
-						</button>
-						<span class="emoji">{{ comment.emoji }}</span>
-					</div>
-				</div>
-			</div>
-			<input
-				type="text"
-				v-model="emojiInput"
-				@input="filterEmoji"
-				placeholder="Comment with an emoji..."
-			/>
-			<div class="d-flex justify-content-center">
-				<button class="btn" @click="insertEmoji(`🕶`)">🕶</button>
-				<button class="btn" @click="insertEmoji(`✨`)">✨</button>
-				<button class="btn" @click="insertEmoji(`😍`)">😍</button>
-				<button class="btn" @click="insertEmoji(`💕`)">💕</button>
-			</div>
-			<div class="actions">
-				<button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
-				<button class="btn btn-primary" @click="confirmComment">Comment</button>
-			</div>
-		</div>
-	</div>
+  <div v-if="show" class="overlay">
+    <div class="action-box">
+      <h2 class="text-center">Comments</h2>
+      <div v-if="comments.length > 0 " class="comment-box">
+        <div v-for="comment in comments" :key="comment.id" class="d-flex justify-content-between align-items-center">
+          <div class="pb-0 m-0">
+            <span v-if="comment.sender.userId !== userId" class="emoji">{{ comment.sender.username }}</span>
+            <span v-else class="emoji">You</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button v-if="comment.sender.userId === userId" class="btn btn-danger" @click="deleteEmoji(comment.commentId)">
+              <img src="../icons/trash3-fill.svg" alt="Delete" width="16" height="16" class="d-flex align-items-center">
+            </button>
+            <span class="emoji">{{ comment.emoji }}</span>
+          </div>
+        </div>
+      </div>
+      <input
+        v-model="emojiInput"
+        type="text"
+        placeholder="Comment with an emoji..."
+        @input="filterEmoji"
+      >
+      <div class="d-flex justify-content-center">
+        <button class="btn" @click="insertEmoji(`🕶`)">🕶</button>
+        <button class="btn" @click="insertEmoji(`✨`)">✨</button>
+        <button class="btn" @click="insertEmoji(`😍`)">😍</button>
+        <button class="btn" @click="insertEmoji(`💕`)">💕</button>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+        <button class="btn btn-primary" @click="confirmComment">Comment</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

@@ -46,6 +46,41 @@ export default {
 			photoSend:false,
 		};
 	},
+	computed: {
+		filteredMessages() {
+			let result = this.messages
+
+			if(this.searchMessage.trim().length !== ""){
+				const q = this.searchMessage.toLowerCase();
+				result=result.filter(chat => chat.body.text.toLowerCase().includes(q));
+			}
+			return result;
+		}
+	},
+	watch: {
+		'$route.params.conversationId'(newId) {
+			this.stopPolling();
+			this.conversationId = newId;
+			this.messages=[];
+			this.openMessageOptions=null;
+			this.refresh();
+			this.startPolling();
+		},
+	},
+	created() {
+		this.username = sessionStorage.getItem("username");
+		this.token = sessionStorage.getItem("token");
+		this.userId = sessionStorage.getItem("userId");
+		this.conversationId = this.$route.params.conversationId;
+
+		if (this.token && this.userId) {
+			this.refresh();
+			this.startPolling();
+		}
+	},
+	beforeUnmount() {
+		this.stopPolling();
+	},
 	methods: {
 		router() {
 			return router;
@@ -196,162 +231,130 @@ export default {
 
 			this.photoSend = true;
 		}
-	},
-	created() {
-		this.username = sessionStorage.getItem("username");
-		this.token = sessionStorage.getItem("token");
-		this.userId = sessionStorage.getItem("userId");
-		this.conversationId = this.$route.params.conversationId;
-
-		if (this.token && this.userId) {
-			this.refresh();
-			this.startPolling();
-		}
-	},
-	beforeUnmount() {
-		this.stopPolling();
-	},
-	watch: {
-		'$route.params.conversationId'(newId) {
-			this.stopPolling();
-			this.conversationId = newId;
-			this.messages=[];
-			this.openMessageOptions=null;
-			this.refresh();
-			this.startPolling();
-		},
-	},
-	computed: {
-		filteredMessages() {
-			let result = this.messages
-
-			if(this.searchMessage.trim().length !== ""){
-				const q = this.searchMessage.toLowerCase();
-				result=result.filter(chat => chat.body.text.toLowerCase().includes(q));
-			}
-			return result;
-		}
 	}
 };
 </script>
 
 <template>
-	<LoadingSpinner v-if="loading ===true"></LoadingSpinner>
-	<Comment
-			:userId="userId"
-			:show="showComments"
-			:messageId="commentMessageId"
-			:chatId="conversationId"
-			:type="`direct`"
-			@close="showComments=false"
-	/>
-	<Delete
-			:userId="userId"
-			:show="deleteMessage"
-			:messageId="deleteMessageId"
-			:chatId="conversationId"
-			:type="`direct`"
-			@close="deleteMessage=false"
-	/>
-	<Forward
-		:userId="userId"
-		:show="showForward"
-		:messageId="forwardMessageId"
-		:chatId="conversationId"
-		:type="`direct`"
-		@close="showForward = false"
-	/>
-	<InfoProfile
-		:show="infoProfile"
-		:username="currentConversation.name"
-		:photo="currentConversation.avatar.url"
-		@close="infoProfile=false"
-	/>
+  <LoadingSpinner v-if="loading ===true" />
+  <Comment
+    :user-id="userId"
+    :show="showComments"
+    :message-id="commentMessageId"
+    :chat-id="conversationId"
+    :type="`direct`"
+    @close="showComments=false"
+  />
+  <Delete
+    :user-id="userId"
+    :show="deleteMessage"
+    :message-id="deleteMessageId"
+    :chat-id="conversationId"
+    :type="`direct`"
+    @close="deleteMessage=false"
+  />
+  <Forward
+    :user-id="userId"
+    :show="showForward"
+    :message-id="forwardMessageId"
+    :chat-id="conversationId"
+    :type="`direct`"
+    @close="showForward = false"
+  />
+  <InfoProfile
+    :show="infoProfile"
+    :username="currentConversation.name"
+    :photo="currentConversation.avatar.url"
+    @close="infoProfile=false"
+  />
 
-	<div class="chat-header-wrapper mb-2">
-		<div class="d-flex justify-content-between align-items-center">
-			<div class="d-flex align-items-center gap-2 p-lg-2 info" @click="infoProfile = true;">
-				<img
-					:src="`${BASE_URL()}/file?file=${this.currentConversation.avatar.url}`"
-					alt="Avatar"
-					class="rounded-circle align-self-center avatar"
-					width="45"
-					height="45"
-				/>
-				<h1 class="mb-0 align-bottom">{{ this.currentConversation.name }}</h1>
-			</div>
-			<div>
-				<input type="text" placeholder="Search message..." v-model="searchMessage">
-			</div>
-		</div>
-	</div>
+  <div class="chat-header-wrapper mb-2">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2 p-lg-2 info" @click="infoProfile = true;">
+        <img
+          :src="`${BASE_URL()}/file?file=${currentConversation.avatar.url}`"
+          alt="Avatar"
+          class="rounded-circle align-self-center avatar"
+          width="45"
+          height="45"
+        >
+        <h1 class="mb-0 align-bottom">{{ currentConversation.name }}</h1>
+      </div>
+      <div>
+        <input v-model="searchMessage" type="text" placeholder="Search message...">
+      </div>
+    </div>
+  </div>
 
-	<div class="chat-body">
-		<div class="messages-container" ref="messageContainer">
-			<ErrorMsg v-if="errormsg" :msg="errormsg" />
-			<div v-if="filteredMessages.length === 0 && !loading" class="no-messages">
-				<h1>No Messages...</h1>
-			</div>
-			<div
-				v-for="msg in filteredMessages"
-				:key="msg.messageId"
-				:class="['message-row gap-3', msg.sender.userId === userId ? 'mine' : 'theirs']"
-			>
-				<img v-if="msg.sender.userId !== userId"
-					:src="`${BASE_URL()}/file?file=${this.currentConversation.avatar.url}`"
-					alt="Avatar"
-					class="rounded-circle align-self-end avatar"
-					width="35"
-					height="35"
-				/>
-				<div class="message-bubble">
-					<div class="d-flex justify-content-end"
-						 v-if="openMessageOptions === msg.messageId">
-						<button class="btn btn-outline-secondary" @click="forward(msg.messageId)"><img src="../icons/share-icon_4662621.png" alt="Forward" width="25" height="25"></button>
-						<button class="btn btn-outline-primary" @click="comment(msg.messageId)"><img src="../icons/chat-dots-fill.svg" alt="comment" width="23" height="23"></button>
-						<button v-if="msg.sender.userId === userId" class="btn btn-outline-danger" @click="deleteM(msg.messageId)"><img src="../icons/trash3-fill.svg" alt="Delete" width="23" height="23"></button>
-					</div>
-					<div class="d-flex justify-content-between">
-						<small v-if="msg.sender.userId !== userId" class="sender">{{ msg.sender.username }}</small>
-						<small v-if="msg.sender.userId === userId" class="sender"></small>
-						<div class="d-flex">
-						<small v-if="msg.isForwarded" class="text-end">(forwarded)</small>
-						<button class="icon-btn" @click="showOptions(msg.messageId)"><img src="../icons/dots_16164512.png" width="15" height="15" alt="Options"></button>
-						</div>
-					</div>
-					<img v-if="msg.body.photo && msg.body.photo.url" :src="`${BASE_URL()}/file?file=${msg.body.photo.url}`" alt="PhotoMessage" class="message-photo">
-					<p class="text">{{ msg.body.text }}</p>
-					<div class="justify-content-between">
-						<span>{{msg.time}}</span>
-						<img v-if="msg.read==='received'" src="../icons/icons8-double-tick-100.png" width="15" height="15" alt="received">
-						<img v-if="msg.read==='read'" src="../icons/icons8-double-tick-100-2.png" width="15" height="15" alt="read">
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class ="d-flex justify-content-between gap-2 mt-2">
-			<div class="d-flex icon">
-				<input type="file" ref="messagePhoto" id="fileInput" class="d-none" @change="onPhotoSelected">
-				<label
-					for="fileInput"
-					class="btn btn-primary btn-sm d-flex align-items-center justify-content-center">
-					<img v-if="!this.photoSend" src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon" />
-					<img
-						v-if="photoSend"
-						src="../icons/check.png"
-						width="25" height="25"
-					 	alt="Preview"/>
-				</label>
-			</div>
+  <div class="chat-body">
+    <div ref="messageContainer" class="messages-container">
+      <ErrorMsg v-if="errormsg" :msg="errormsg" />
+      <div v-if="filteredMessages.length === 0 && !loading" class="no-messages">
+        <h1>No Messages...</h1>
+      </div>
+      <div
+        v-for="msg in filteredMessages"
+        :key="msg.messageId"
+        :class="['message-row gap-3', msg.sender.userId === userId ? 'mine' : 'theirs']"
+      >
+        <img
+          v-if="msg.sender.userId !== userId"
+          :src="`${BASE_URL()}/file?file=${currentConversation.avatar.url}`"
+          alt="Avatar"
+          class="rounded-circle align-self-end avatar"
+          width="35"
+          height="35"
+        >
+        <div class="message-bubble">
+          <div
+            v-if="openMessageOptions === msg.messageId"
+            class="d-flex justify-content-end"
+          >
+            <button class="btn btn-outline-secondary" @click="forward(msg.messageId)"><img src="../icons/share-icon_4662621.png" alt="Forward" width="25" height="25"></button>
+            <button class="btn btn-outline-primary" @click="comment(msg.messageId)"><img src="../icons/chat-dots-fill.svg" alt="comment" width="23" height="23"></button>
+            <button v-if="msg.sender.userId === userId" class="btn btn-outline-danger" @click="deleteM(msg.messageId)"><img src="../icons/trash3-fill.svg" alt="Delete" width="23" height="23"></button>
+          </div>
+          <div class="d-flex justify-content-between">
+            <small v-if="msg.sender.userId !== userId" class="sender">{{ msg.sender.username }}</small>
+            <small v-if="msg.sender.userId === userId" class="sender" />
+            <div class="d-flex">
+              <small v-if="msg.isForwarded" class="text-end">(forwarded)</small>
+              <button class="icon-btn" @click="showOptions(msg.messageId)"><img src="../icons/dots_16164512.png" width="15" height="15" alt="Options"></button>
+            </div>
+          </div>
+          <img v-if="msg.body.photo && msg.body.photo.url" :src="`${BASE_URL()}/file?file=${msg.body.photo.url}`" alt="PhotoMessage" class="message-photo">
+          <p class="text">{{ msg.body.text }}</p>
+          <div class="justify-content-between">
+            <span>{{ msg.time }}</span>
+            <img v-if="msg.read==='received'" src="../icons/icons8-double-tick-100.png" width="15" height="15" alt="received">
+            <img v-if="msg.read==='read'" src="../icons/icons8-double-tick-100-2.png" width="15" height="15" alt="read">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex justify-content-between gap-2 mt-2">
+      <div class="d-flex icon">
+        <input id="fileInput" ref="messagePhoto" type="file" class="d-none" @change="onPhotoSelected">
+        <label
+          for="fileInput"
+          class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+        >
+          <img v-if="!photoSend" src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon">
+          <img
+            v-if="photoSend"
+            src="../icons/check.png"
+            width="25" height="25"
+            alt="Preview"
+          >
+        </label>
+      </div>
 
-			<input class="input-group" type="text" placeholder="Write message..." ref="messageText">
-			<button class="btn btn-dark" @click="sendMessageButton">
-				<img src="../icons/send-message-svgrepo-com.svg" alt="Send Message" width="25" height="25" class="icon" />
-			</button>
-		</div>
-	</div>
-
-
+      <input ref="messageText" class="input-group" type="text" placeholder="Write message...">
+      <button class="btn btn-dark" @click="sendMessageButton">
+        <img src="../icons/send-message-svgrepo-com.svg" alt="Send Message" width="25" height="25" class="icon">
+      </button>
+    </div>
+  </div>
 </template>
 
 <style scoped>

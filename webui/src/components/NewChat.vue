@@ -27,6 +27,34 @@ export default {
 
 		}
 	},
+	computed: {
+		filteredUsers() {
+			if (!this.searchUsers) {
+				return this.users.filter(
+					u => u.userId !== Number(sessionStorage.getItem('userId'))
+				);
+			}
+
+			const search = this.searchUsers.toLowerCase();
+
+			return this.users.filter(user =>
+				user.userId !== Number(sessionStorage.getItem('userId')) &&
+				user.username.toLowerCase().includes(search)
+			);
+		}
+	},
+	watch: {
+		show(newVal) {
+			if (newVal) {
+				this.startPolling();
+			} else {
+				this.stopPolling();
+			}
+		}
+	},
+	beforeUnmount() {
+		this.stopPolling();
+	},
 	methods:{
 		router(){
 			return router;
@@ -136,86 +164,57 @@ export default {
 		}
 
 	},
-	beforeUnmount() {
-		this.stopPolling();
-	},
-	watch: {
-		show(newVal) {
-			if (newVal) {
-				this.startPolling();
-			} else {
-				this.stopPolling();
-			}
-		}
-	},
-	computed: {
-		filteredUsers() {
-			if (!this.searchUsers) {
-				return this.users.filter(
-					u => u.userId !== Number(sessionStorage.getItem('userId'))
-				);
-			}
-
-			const search = this.searchUsers.toLowerCase();
-
-			return this.users.filter(user =>
-				user.userId !== Number(sessionStorage.getItem('userId')) &&
-				user.username.toLowerCase().includes(search)
-			);
-		}
-	},
 }
 
 </script>
 
 <template>
+  <div v-if="$props.show" class="overlay">
+    <div class="action-box">
+      <ErrorMsg v-if="errormsg" :msg="errormsg" />
+      <div class="header d-flex align-items-center position-relative mb-2">
+        <button class="btn btn-close header-close" @click="ClosePanel" />
+        <h4 class="header-title">New Chat</h4>
+      </div>
 
-	<div v-if="this.$props.show" class="overlay">
-		<div class="action-box">
-			<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
-			<div class="header d-flex align-items-center position-relative mb-2">
-				<button class="btn btn-close header-close" @click="ClosePanel"></button>
-				<h4 class="header-title">New Chat</h4>
-			</div>
+      <input v-model="searchUsers" type="text" placeholder="Search user..." class="input-group">
+      <div class="top-controls pt-2">
+        <button
+          :class="['btn', 'h-25', isGroup ? 'btn-danger' : 'btn-outline-primary']"
+          :style="{ width: !isGroup ? '100%' : '15%' }"
+          @click="createGroupBegin"
+        >
+          <span v-if="!isGroup">Create Group</span>
+          <img v-else src="../icons/reject.png" alt="Cancel" width="25" height="25">
+        </button>
+        <input v-if="isGroup" v-model="groupName" type="text" placeholder="Name group" class="w-100 ">
+      </div>
+      <div class="users-box">
+        <div v-for="user in filteredUsers" :key="user.userId" class="user-row" @click="isGroup && toggleUser(user)">
+          <div v-if="isGroup" class="user-left">
+            <input type="checkbox" class="selected" :checked="selectedUsers.has(user.username)">
+          </div>
+          <div class="user-name">
+            <img
+              :src="`${BASE_URL()}/file?file=${user.avatar.url}`"
+              alt="User Photo"
+              :class="['rounded-circle','avatar','mx-2']"
+              width="25"
+              height="25"
+            >
+            {{ user.username }}
+          </div>
+          <div class="user-right">
+            <button v-if="!isGroup" class="btn btn-success btn-sm" @click.stop="goToConversation(user.username)">{{ getConversationWith(user.username) ? 'Open' : 'Create' }}</button>
+          </div>
+        </div>
+      </div>
 
-			<input type="text" v-model="this.searchUsers" placeholder="Search user..." class="input-group">
-			<div class="top-controls pt-2">
-				<button
-					:class="['btn', 'h-25', isGroup ? 'btn-danger' : 'btn-outline-primary']"
-					:style="{ width: !isGroup ? '100%' : '15%' }"
-					@click="createGroupBegin">
-					<span v-if="!isGroup">Create Group</span>
-					<img v-else src="../icons/reject.png" alt="Cancel" width="25" height="25" />
-				</button>
-				<input v-if="this.isGroup" type="text" placeholder="Name group" class="w-100 " v-model="groupName"/>
-			</div>
-			<div class="users-box">
-				<div v-for="user in filteredUsers" :key="user.userId" class="user-row" @click="isGroup && toggleUser(user)">
-					<div v-if="isGroup" class="user-left">
-						<input type="checkbox" class="selected" :checked="selectedUsers.has(user.username)">
-					</div>
-					<div class="user-name">
-						<img :src="`${BASE_URL()}/file?file=${user.avatar.url}`"
-							 alt="User Photo"
-							 :class="['rounded-circle','avatar','mx-2']"
-							 width="25"
-							 height="25" />
-						{{ user.username }}
-
-					</div>
-					<div class="user-right">
-						<button v-if="!isGroup" class="btn btn-success btn-sm" @click.stop="goToConversation(user.username)">{{ getConversationWith(user.username) ? 'Open' : 'Create' }}</button>
-					</div>
-
-				</div>
-			</div>
-
-			<div class="actions">
-				<button v-if="isGroup" class="btn btn-success" @click="newGroup">Create</button>
-			</div>
-		</div>
-	</div>
-
+      <div class="actions">
+        <button v-if="isGroup" class="btn btn-success" @click="newGroup">Create</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>

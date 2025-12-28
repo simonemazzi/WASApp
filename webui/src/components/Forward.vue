@@ -20,6 +20,18 @@ export default {
 		}
 	},
 
+	watch: {
+		show(newVal) {
+			if (newVal) {
+				this.selected.clear()
+			}
+		}
+	},
+
+	mounted() {
+		this.loadChats()
+	},
+
 	methods: {
 		async loadChats() {
 			const conversations = await getConversations(this.userId) || []
@@ -58,46 +70,34 @@ export default {
 
 			this.$emit('close')
 		}
-	},
-
-	mounted() {
-		this.loadChats()
-	},
-
-	watch: {
-		show(newVal) {
-			if (newVal) {
-				this.selected.clear()
-			}
-		}
 	}
 }
 </script>
 
 <template>
-	<div v-if="show" class="overlay">
-		<div class="action-box">
-			<h4 class="text-center">Forward message</h4>
-			<div
-				v-for="chat in chats"
-				:key="chat.conversationId || chat.groupId"
-				class="chat-item"
-				@click="toggle(chat)"
-			>
-				<input
-					type="checkbox"
-					:checked="selected.has(chat.conversationId || `g-${chat.groupId}`)"
-					class="selected"
-				>
-				<span class="ms-2">{{ chat.name }}</span>
-			</div>
+  <div v-if="show" class="overlay">
+    <div class="action-box">
+      <h4 class="text-center">Forward message</h4>
+      <div
+        v-for="chat in chats"
+        :key="chat.conversationId || chat.groupId"
+        class="chat-item"
+        @click="toggle(chat)"
+      >
+        <input
+          type="checkbox"
+          :checked="selected.has(chat.conversationId || `g-${chat.groupId}`)"
+          class="selected"
+        >
+        <span class="ms-2">{{ chat.name }}</span>
+      </div>
 
-			<div class="actions">
-				<button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
-				<button class="btn btn-primary" @click="confirmForward">Forward</button>
-			</div>
-		</div>
-	</div>
+      <div class="actions">
+        <button class="btn btn-secondary" @click="$emit('close')">Cancel</button>
+        <button class="btn btn-primary" @click="confirmForward">Forward</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
