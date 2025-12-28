@@ -228,22 +228,24 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 		if senderId != viewerId {
 			// messaggi ricevuti → segna come letti
 			_, err = db.c.Exec(`
-				INSERT OR IGNORE INTO ReadMessage(userId, messageId)
-				VALUES (?, ?)
-			`, viewerId, messages[i].MessageId)
+            INSERT OR IGNORE INTO ReadMessage(userId, messageId)
+            VALUES (?, ?)
+        `, viewerId, messages[i].MessageId)
 			if err != nil {
 				return nil, err
 			}
+			continue
 		}
 
 		// Conta componenti attivi del gruppo
 		var totalMembers int
 		err = db.c.QueryRow(`
-			SELECT COUNT(*)
-			FROM Components
-			WHERE groupId = ?
-			  AND timeLeft IS NULL
-		`, groupId).Scan(&totalMembers)
+    SELECT COUNT(*)
+    FROM Components
+    WHERE groupId = ?
+      AND timeLeft IS NULL
+      AND userId != ?
+`, groupId, senderId).Scan(&totalMembers)
 		if err != nil {
 			return nil, err
 		}

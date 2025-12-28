@@ -94,6 +94,9 @@ export default {
 			this.sidebarOpen = !this.sidebarOpen;
 		},
 		Logout(){
+			sessionStorage.removeItem('userId');
+			sessionStorage.removeItem('token');
+			sessionStorage.removeItem('username');
 			router.push('/');
 		},
 		goToParticipants(groupId) {
@@ -352,7 +355,7 @@ export default {
 						</span>
 						<br>
 						<small v-if="!chat.lastMessage.body.photo" class="text-muted">
-							{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{chat.lastMessage.body.text}}
+							{{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{(!chat.lastMessage.body.text && !chat.lastMessage.body.photo) && chat.lastMessage.isForwarded ? "Message forwarded more times..." : chat.lastMessage.body.text }}
 						</small>
 
 						<small v-if="chat.lastMessage.body.photo" class="text-muted">

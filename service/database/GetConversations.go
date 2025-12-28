@@ -28,11 +28,11 @@ func (db *appdbimpl) GetConversations(userId int) ([]Conversation, error) {
     p.width,
     p.height,
     m.messageId,
-    m.text,
+    COALESCE(om.text, m.text)              AS text, -- se om.text è NULL inserisci m.text
     m.time,
-    m.sender,
+    COALESCE(om.sender, m.sender)          AS sender, -- se om.sender è NULL inserisci m.sender
     m.originalMessage,
-    m.photoId,
+    COALESCE(om.photoId, m.photoId)        AS photoId, -- se om.photoId è NULL inserisci m.photoId
     uuMsg.username,
     pp.url,
     pp.width,
@@ -63,6 +63,9 @@ LEFT JOIN Message m ON m.conversationId = c.conversationId
       FROM Message
       WHERE conversationId = c.conversationId
   )
+
+-- self join sul messaggio originale
+LEFT JOIN Message om ON om.messageId = m.originalMessage
 LEFT JOIN UserUsername uuMsg ON uuMsg.userId = m.sender
   AND uuMsg.updateId = (
       SELECT MAX(updateId)

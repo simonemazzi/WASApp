@@ -86,10 +86,10 @@ export const getConversation = async (userId,chatId,originType) => {
 		const response = await instance.get(url);
 		return response.data;
 	}catch(error){
-		console.error("Get conversations error:", error);
+		console.error("Get conversation error:", error);
 		throw error;
 	}
-}
+};
 
 
 export const postMessage = async (userId,chatId,messageText,messagePhoto,type) => {

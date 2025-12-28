@@ -113,20 +113,30 @@ func (db *appdbimpl) GetGroups(userId int) ([]Group, error) {
 		var msgPhotoMime sql.NullString
 
 		err = db.c.QueryRow(`
-			SELECT m.messageId, m.text, m.time, m.sender, m.originalMessage,
-			       uu.username, p.url, p.width, p.height, p.mime
-			FROM Message m
-			LEFT JOIN UserUsername uu ON uu.userId = m.sender
-				AND uu.updateId = (
-					SELECT MAX(updateId)
-					FROM UserUsername
-					WHERE userId = m.sender
-				)
-			LEFT JOIN Photo p ON p.photoId = m.photoId
-			WHERE m.groupId = ?
-			ORDER BY m.time DESC
-			LIMIT 1
-		`, g.GroupId).Scan(
+    SELECT
+        m.messageId,
+        COALESCE(om.text, m.text)        AS text,
+        m.time,
+        COALESCE(om.sender, m.sender)   AS sender,
+        m.originalMessage,
+        uu.username,
+        p.url,
+        p.width,
+        p.height,
+        p.mime
+    FROM Message m
+    LEFT JOIN Message om ON om.messageId = m.originalMessage
+    LEFT JOIN UserUsername uu ON uu.userId = COALESCE(om.sender, m.sender)
+        AND uu.updateId = (
+            SELECT MAX(updateId)
+            FROM UserUsername
+            WHERE userId = COALESCE(om.sender, m.sender)
+        )
+    LEFT JOIN Photo p ON p.photoId = COALESCE(om.photoId, m.photoId)
+    WHERE m.groupId = ?
+    ORDER BY m.time DESC
+    LIMIT 1
+`, g.GroupId).Scan(
 			&lastMsgID, &lastMsgText, &lastMsgTime, &lastMsgSenderID,
 			&lastMsgOriginal, &lastMsgSenderUsername,
 			&msgPhotoURL, &msgPhotoWidth, &msgPhotoHeight, &msgPhotoMime,
