@@ -2,7 +2,7 @@ import {createRouter, createWebHashHistory} from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import ChatView from '../views/ChatView.vue'
-import ParticipantsGroupView from "../views/ParticipantsGroupView.vue";
+
 import GroupView from "../views/GroupView.vue";
 
 const router = createRouter({
@@ -13,9 +13,6 @@ const router = createRouter({
 		{	path: '/conversation/:conversationId',
 			name: 'conversation',
 			component: ChatView},
-		{	path: '/group/:groupId/participants',
-			name: 'participants',
-			component: ParticipantsGroupView},
 		{	path: '/group/:groupId',
 			name: 'group',
 			component: GroupView},

@@ -48,7 +48,9 @@ const login = async () => {
         class="btn btn-primary w-100"
         :disabled="!username"
         @click="login"
-      /> Entra
+      >
+        Entra
+      </button>
     </div>
   </div>
 </template>
