@@ -38,6 +38,11 @@ export default {
 				const conversations = await getConversations(this.userId) || []
 				const groups = await getGroups(this.userId) || []
 				const newChats = [...conversations, ...groups];
+				newChats.sort((a, b) => {
+					const timeA = Date.parse(a.lastMessage?.time ?? 0);
+					const timeB = Date.parse(b.lastMessage?.time ?? 0);
+					return timeB - timeA;
+				});
 				if (JSON.stringify(newChats) !== JSON.stringify(this.chats)) {
 					this.chats = newChats;
 				}

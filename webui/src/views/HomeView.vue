@@ -49,7 +49,11 @@ export default {
 		filteredChats() {
 			// unisce conversations e groups
 			let result = [...this.conversations, ...this.groups];
-
+			result.sort((a, b) => {
+				const timeA = Date.parse(a.lastMessage?.time ?? 0);
+				const timeB = Date.parse(b.lastMessage?.time ?? 0);
+				return timeB - timeA;
+			});
 			// filtro per tipo
 			if(this.activeFilter === "direct") {
 				result = result.filter(chat => chat.conversationId);
