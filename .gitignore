@@ -25,7 +25,7 @@ node_modules/
 .yarn/build-state.yml
 .yarn/install-state.gz
 
-# Se vuoi ignorare tutta la cartella .yarn tranne releases e .yarnrc.yml:
+
 .yarn/*
 !.yarn/releases/
 !.yarnrc.yml
