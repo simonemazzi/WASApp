@@ -25,22 +25,16 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, params 
 	userIdStr := params.ByName("userId")
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
-		w.WriteHeader(400)
-		_, err := w.Write([]byte("user id must be int"))
-		if err != nil {
-			return
-		}
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		context.Logger.WithError(err).Error("Invalid user id")
 		return
 	}
 	var req setUsernameRequest
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_, err := w.Write([]byte("invalid JSON body"))
-		if err != nil {
-			return
-		}
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		context.Logger.WithError(err).Error("Invalid request")
 		return
 	}
 
