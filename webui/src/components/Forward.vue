@@ -4,7 +4,6 @@ import { getConversations, getGroups, forwardMessage } from '../services/axios'
 
 export default {
 	name: 'ForwardMessage',
-
 	props: {
 		userId: Number,
 		show: Boolean,
@@ -12,6 +11,7 @@ export default {
 		chatId: Number,
 		type: String
 	},
+	emits: ['close'],
 
 	data() {
 		return {

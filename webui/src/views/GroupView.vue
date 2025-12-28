@@ -100,11 +100,10 @@ export default {
 				}
 
 				this.messages = msgs;
-				await this.$nextTick(() => { //await
-					if (container && isAtBottom) {
-						container.scrollTop = container.scrollHeight;
-					}
-				});
+				await this.$nextTick();
+				if (container && isAtBottom) {
+					container.scrollTop = container.scrollHeight;
+				}
 
 			} catch (err) {
 				if(err.response?.data?.includes("database is locked")) {

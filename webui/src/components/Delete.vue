@@ -3,13 +3,13 @@ import { deleteMessage } from "@/services/axios";
 
 export default {
 	name: 'DeleteMessage',
-
 	props: {
 		show: Boolean,
 		messageId: Number,
 		chatId: Number,
 		type: String
 	},
+	emits: ['close'],
 
 	data() {
 		return {

@@ -9,6 +9,7 @@ export default {
 		groupId: Number,
 		userId: Number
 	},
+	emits: ['close'],
 	data() {
 		return {
 			group: null,

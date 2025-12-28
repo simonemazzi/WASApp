@@ -3,7 +3,6 @@ import { commentMessage, getComments, unComment } from "../services/axios";
 
 export default {
 	name: 'Comment',
-
 	props: {
 		userId: Number,
 		show: Boolean,
@@ -11,6 +10,7 @@ export default {
 		chatId: Number,
 		type: String
 	},
+	emits: ['close'],
 
 	data() {
 		return {

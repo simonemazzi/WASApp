@@ -4,11 +4,10 @@ import router from "../router";
 import {nextTick} from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import NewChat from "../components/NewChat.vue";
-import InfoGroup from "../components/InfoGroup.vue";
 import ShowParticipants from "../components/ShowParticipants.vue";
 //TODO: FARE CHANGE FOTO E SALVARE TUTTO SU DB
 export default {
-	components: {ShowParticipants, InfoGroup, LoadingSpinner,NewChat},
+	components: {ShowParticipants, LoadingSpinner,NewChat},
 	data() {
 		return {
 			errormsg: null,

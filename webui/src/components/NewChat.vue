@@ -8,6 +8,7 @@ export default {
 	props: {
 		show: Boolean
 	},
+	emits: ['close'],
 	data(){
 		return {
 			errormsg: null,
