@@ -6,7 +6,7 @@ const instance = axios.create({
 });
 
 
-export const BASE_URL = "http://localhost:3000";
+export const BASE_URL = __API_URL__
 
 instance.interceptors.request.use(config => {
 	const token = sessionStorage.getItem("token");
