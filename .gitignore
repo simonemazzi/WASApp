@@ -15,3 +15,17 @@ docker-compose.log
 .golangci.yml
 .vscode/*
 !.vscode/extensions.json
+
+# Node modules
+node_modules/
+
+# Yarn PnP cache e cartelle temporanee
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Se vuoi ignorare tutta la cartella .yarn tranne releases e .yarnrc.yml:
+.yarn/*
+!.yarn/releases/
+!.yarnrc.yml
