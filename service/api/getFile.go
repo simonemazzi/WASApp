@@ -18,7 +18,7 @@ func (rt *_router) getFile(w http.ResponseWriter, r *http.Request, params httpro
 	}
 
 	filePath := filepath.Clean(fileName)
-	if !strings.HasPrefix(filePath, "uploads") {
+	if !(strings.HasPrefix(filePath, "uploads") || strings.HasPrefix(filePath, "assets")) {
 		http.Error(w, "invalid file path", http.StatusForbidden)
 		return
 	}

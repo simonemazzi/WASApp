@@ -43,7 +43,7 @@ func (db *appdbimpl) CreateSession(username string) (string, string, time.Time, 
 
 		userId = int(newUserId)
 
-		err = db.SetMyPhoto("uploads/default/default-avatar-profile-icon-social-600nw-1906669723.png", 600, 600, "image/png", userId)
+		err = db.SetMyPhoto("assets/default/default-avatar-profile-icon-social-600nw-1906669723.png", 600, 600, "image/png", userId)
 		if err != nil {
 			return "", "", time.Time{}, err
 		}

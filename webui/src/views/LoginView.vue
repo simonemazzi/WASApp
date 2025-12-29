@@ -9,6 +9,7 @@ const errorMessage = ref(null);
 
 const login = async () => {
     errorMessage.value = null;
+	if(username.value === '') return;
     try{
         const userData = await doLogin(username.value);
 
