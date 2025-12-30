@@ -357,22 +357,22 @@ export default {
               height="40"
             >
             <span class="fw-bold ms-2">{{ chat.name }}</span>
-            <span v-if="chat.groupId" class="participant text-decoration-none" style="cursor: pointer;" @click="goToParticipants(chat.groupId)">
-              (
-              <span v-for="(user, index) in chat.participants.slice(0, 10)" :key="user.userId">
-                {{ user.username }}<span v-if="index < Math.min(chat.participants.length, 10) - 1">, </span>
-              </span>
-              <span v-if="chat.participants.length > 10">, ...</span>
-              )
-            </span>
             <br>
-            <small v-if="!chat.lastMessage.body.photo" class="text-muted">
-              {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{ (!chat.lastMessage.body.text && !chat.lastMessage.body.photo) && chat.lastMessage.isForwarded ? "Message forwarded more times..." : chat.lastMessage.body.text }}
-            </small>
 
-            <small v-if="chat.lastMessage.body.photo" class="text-muted">
-              {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
-            </small>
+            <div v-if="chat.lastMessage">
+              <small v-if="!chat.lastMessage.body.photo" class="text-muted">
+                {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} :
+                {{ (!chat.lastMessage.body.text && !chat.lastMessage.body.photo) && chat.lastMessage.isForwarded ? "Message forwarded more times..." : chat.lastMessage.body.text }}
+              </small>
+
+              <small v-else class="text-muted">
+                {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
+              </small>
+            </div>
+
+            <div v-else>
+              <small class="text-muted fst-italic">No messages yet</small>
+            </div>
           </div>
           <button class="btn btn-outline-primary btn-sm" @click="openChat(chat.conversationId || chat.groupId, chat.conversationId ? 'direct' : 'group')">
             Open

@@ -113,13 +113,16 @@ export default {
         >
         <span class="fw-bold ms-2 truncate-text">{{ chat.name }}</span>
         <br>
-        <small v-if="!chat.lastMessage.body.photo" class="text-muted">
-          {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : {{ (!chat.lastMessage.body.text && !chat.lastMessage.body.photo) && chat.lastMessage.isForwarded ? "Message forwarded more times..." : chat.lastMessage.body.text }}
-        </small>
+        <div v-if="chat.lastMessage">
+          <small v-if="!chat.lastMessage.body.photo" class="text-muted">
+            {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} :
+            {{ (!chat.lastMessage.body.text && !chat.lastMessage.body.photo) && chat.lastMessage.isForwarded ? "Message forwarded more times..." : chat.lastMessage.body.text }}
+          </small>
 
-        <small v-if="chat.lastMessage.body.photo" class="text-muted">
-          {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
-        </small>
+          <small v-else class="text-muted">
+            {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
+          </small>
+        </div>
       </button>
     </div>
   </div>

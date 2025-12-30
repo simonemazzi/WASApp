@@ -47,28 +47,30 @@ func (rt *_router) getConversations(w http.ResponseWriter, r *http.Request, para
 	for _, dbConv := range convs {
 		var lastMsg *Message
 		var photo *Photo
-		if dbConv.LastMessage.Body.Photo != nil {
-			photo = &Photo{
-				Url:    dbConv.LastMessage.Body.Photo.Url,
-				Mime:   dbConv.LastMessage.Body.Photo.Mime,
-				Width:  dbConv.LastMessage.Body.Photo.Width,
-				Height: dbConv.LastMessage.Body.Photo.Height,
-			}
-		}
 		if dbConv.LastMessage != nil {
-			lastMsg = &Message{
-				MessageId: dbConv.LastMessage.MessageId,
-				Body: Body{
-					Text:  dbConv.LastMessage.Body.Text,
-					Photo: photo,
-				},
-				Read: dbConv.LastMessage.Read,
-				Time: dbConv.LastMessage.Time,
-				Sender: User{
-					UserId:   dbConv.LastMessage.Sender.UserID,
-					Username: dbConv.LastMessage.Sender.Username,
-				},
-				IsForwarded: dbConv.LastMessage.IsForwarded,
+			if dbConv.LastMessage.Body.Photo != nil {
+				photo = &Photo{
+					Url:    dbConv.LastMessage.Body.Photo.Url,
+					Mime:   dbConv.LastMessage.Body.Photo.Mime,
+					Width:  dbConv.LastMessage.Body.Photo.Width,
+					Height: dbConv.LastMessage.Body.Photo.Height,
+				}
+			}
+			if dbConv.LastMessage != nil {
+				lastMsg = &Message{
+					MessageId: dbConv.LastMessage.MessageId,
+					Body: Body{
+						Text:  dbConv.LastMessage.Body.Text,
+						Photo: photo,
+					},
+					Read: dbConv.LastMessage.Read,
+					Time: dbConv.LastMessage.Time,
+					Sender: User{
+						UserId:   dbConv.LastMessage.Sender.UserID,
+						Username: dbConv.LastMessage.Sender.Username,
+					},
+					IsForwarded: dbConv.LastMessage.IsForwarded,
+				}
 			}
 		}
 		response = append(response, Conversation{
