@@ -15,7 +15,7 @@ func (db *appdbimpl) CreateGroup(userId int, name string, partecipants []string,
 
 	group.Name = name
 	group.GroupId = int(groupId)
-	group.Photo.Url = "/assets/default/default-avatar-profile-icon-social-600nw-1906669723.png"
+	group.Photo.Url = "assets/default/default-avatar-profile-icon-social-600nw-1906669723.png"
 	group.Photo.Width = 600
 	group.Photo.Height = 600
 	group.Photo.Mime = "image/png"

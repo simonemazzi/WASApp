@@ -272,7 +272,6 @@ export const setUsername= async (userId,username) =>{
 		const response = await instance.put(`users/${userId}/info/username`, {newusername: username});
 		return response.data;
 	}catch(error){
-		console.error("SetUsername error:", error);
 		throw error;
 	}
 }

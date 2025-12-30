@@ -52,8 +52,21 @@ func (rt *_router) setMyUserName(w http.ResponseWriter, r *http.Request, params 
 
 	err = rt.db.SetMyUserName(userId, usernamePropost)
 	if err != nil {
+		if err.Error() == "username already in use" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			err = json.NewEncoder(w).Encode(map[string]string{
+				"error": "username already in use",
+			})
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				context.Logger.WithError(err).Warn("failed to encode user response")
+				return
+			}
+			return
+		}
+		context.Logger.WithError(err).Error("db error while setting username")
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		context.Logger.WithError(err).Warn("failed to set user name")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

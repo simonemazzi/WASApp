@@ -1,9 +1,11 @@
 <script>
 
-import { getConversations, getGroups, forwardMessage } from '../services/axios'
+import { getConversations, getGroups, forwardMessage,getUsers ,createConversation} from '@/services/axios'
+import ErrorMsg from "@/components/ErrorMsg.vue";
 
 export default {
 	name: 'ForwardMessage',
+	components: {ErrorMsg},
 	props: {
 		userId: Number,
 		show: Boolean,
@@ -16,7 +18,9 @@ export default {
 	data() {
 		return {
 			chats: [],
-			selected: new Set()
+			selected: new Set(),
+			errormsg: null,
+			errorTimeout: null,
 		}
 	},
 
@@ -33,10 +37,27 @@ export default {
 	},
 
 	methods: {
+		showError(msg) {
+			this.errormsg = msg;
+
+			// cancella eventuale timeout precedente
+			if (this.errorTimeout) clearTimeout(this.errorTimeout);
+
+			// setta il nuovo timeout
+			this.errorTimeout = setTimeout(() => {
+				this.errormsg = null;
+				this.errorTimeout = null;
+			}, 5000);
+		},
 		async loadChats() {
 			const conversations = await getConversations(this.userId) || []
 			const groups = await getGroups(this.userId) || []
-			this.chats = [...conversations, ...groups]
+			const usersList = await getUsers() || [];
+			const conversationNames = new Set(conversations.map(c => c.name));
+			const users = usersList
+				.filter(u => !conversationNames.has(u.username) && u.username !== sessionStorage.getItem('username'))
+				.map(u => ({ username: u.username , name: u.username})) || [];
+			this.chats = [...conversations, ...groups, ...users];
 		},
 
 		toggle(chat) {
@@ -46,37 +67,55 @@ export default {
 				: this.selected.add(id)
 		},
 
-		confirmForward() {
-			const conversations = []
-			const groups = []
+		async confirmForward() {
+			const conversations = [];
+			const groups = [];
 
-			this.chats.forEach(chat => {
-				const id = chat.conversationId || `g-${chat.groupId}`
+			for (const chat of this.chats) {
+				const id = chat.conversationId || `g-${chat.groupId}`;
 				if (this.selected.has(id)) {
-					chat.conversationId
-						? conversations.push(Number(chat.conversationId))
-						: groups.push(Number(chat.groupId))
+
+					if (chat.conversationId) {
+						conversations.push(Number(chat.conversationId));
+					} else if (chat.username) {
+						try {
+							// crea conversazione diretta con quell'utente
+							const newConv = await createConversation(this.userId, chat.username);
+							conversations.push(Number(newConv.conversationId));
+						} catch (err) {
+							console.error("Errore creando conversazione:", err);
+							this.showError(`Non posso creare conversazione con ${chat.username}`);
+						}
+					} else if (chat.groupId) {
+						groups.push(Number(chat.groupId));
+					}
 				}
-			})
+			}
 
-			forwardMessage(
-				this.userId,
-				this.chatId,
-				this.messageId,
-				this.type,
-				conversations,
-				groups
-			)
+			try {
+				await forwardMessage(
+					this.userId,
+					this.chatId,
+					this.messageId,
+					this.type,
+					conversations,
+					groups
+				);
+			} catch (err) {
+				console.error("Errore forward:", err);
+				this.showError("Non è stato possibile inoltrare il messaggio");
+				return;
+			}
 
-			this.$emit('close')
-		}
-	}
-}
+			this.$emit('close');
+		},
+	}}
 </script>
 
 <template>
   <div v-if="show" class="overlay">
     <div class="action-box">
+		<ErrorMsg v-if="errormsg" :msg="errormsg" />
       <h4 class="text-center">Forward message</h4>
       <div
         v-for="chat in chats"

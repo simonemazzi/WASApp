@@ -5,12 +5,14 @@ import {nextTick} from "vue";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 import NewChat from "../components/NewChat.vue";
 import ShowParticipants from "../components/ShowParticipants.vue";
+import ErrorMsg from "@/components/ErrorMsg.vue";
 //TODO: FARE CHANGE FOTO E SALVARE TUTTO SU DB
 export default {
-	components: {ShowParticipants, LoadingSpinner,NewChat},
+	components: {ErrorMsg, ShowParticipants, LoadingSpinner,NewChat},
 	data() {
 		return {
 			errormsg: null,
+			errorTimeout: null,
 			loading: false,
 
 			conversations: [],
@@ -185,6 +187,18 @@ export default {
 			this.selectedFile = null;
 			this.previewUrl = undefined;
 		},
+		showError(msg) {
+			this.errormsg = msg;
+
+			// cancella eventuale timeout precedente
+			if (this.errorTimeout) clearTimeout(this.errorTimeout);
+
+			// setta il nuovo timeout
+			this.errorTimeout = setTimeout(() => {
+				this.errormsg = null;
+				this.errorTimeout = null;
+			}, 5000);
+		},
 
 		async CommitChanges() {
 			if (this.newUsername !== this.username) {
@@ -192,8 +206,18 @@ export default {
 					const result = await setUsername(this.userId, this.newUsername);
 					sessionStorage.setItem('username', result.username);
 				} catch (err) {
-					console.error("error while saving changes", err);
+					sessionStorage.setItem('username',this.username);
+					this.newUsername = '';
+					if (err.response.status === 409) {
+						this.showError("Username già in uso");
+						return
+					} else {
+						console.error("error while saving changes", err);
+						this.showError("Error while saving changes", err);
+						return;
+					}
 				}
+
 			}
 			if (this.selectedFile) {
 				try {
@@ -219,7 +243,8 @@ export default {
 		closePanel() {
 			this.groupId_info=null;
 			this.showParticipants = false;
-		}
+		},
+
 
 	}
 }
@@ -272,6 +297,7 @@ export default {
                 <h1 v-if="!editMode" class="name-display mb-0">{{ username }}</h1>
                 <input v-if="editMode" v-model="newUsername" type="text" class="name-input mb-0 text-center" :placeholder="username">
               </div>
+				<ErrorMsg v-if="errormsg" :msg="errormsg"/>
               <div v-if="editMode" class="d-flex justify-content-center flex-column align-items-center mt-2">
                 <label for="fileInput" class="btn btn-outline-primary">
                   Choose New Photo
@@ -285,7 +311,6 @@ export default {
                 >
               </div>
             </div>
-
             <button v-if="!editMode" class="btn btn-outline-primary w-100" @click="EditMode">Edit Profile</button>
             <button v-if="editMode" class="btn btn-outline-success w-100" @click="CommitChanges">Save</button>
             <button v-if="editMode" class="btn btn-outline-danger w-100" @click="Cancel">Cancel</button>
@@ -301,7 +326,7 @@ export default {
       </div>
     </div>
 
-    <ErrorMsg v-if="errormsg" :msg="errormsg" />
+
     <LoadingSpinner v-if="loading" />
 
     <div v-if="!loading" class="row">

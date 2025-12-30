@@ -25,6 +25,7 @@ export default {
 
 			selectedUsers: new Set(), //per i selezionati del gruppo
 			groupName:"",
+			errorTimeout: null,
 
 		}
 	},
