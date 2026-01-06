@@ -65,7 +65,7 @@ export default {
 			if (chat.conversationId) {
 				return `${BASE_URL}/file?file=${chat.avatar.url}`
 			} else if (chat.groupId) {
-				return `${BASE_URL}/file?file=${chat.photo.url}`
+				return `${BASE_URL}/file?file=${chat.upload.url}`
 			}
 			return ''
 		},

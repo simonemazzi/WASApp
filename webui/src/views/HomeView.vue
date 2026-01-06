@@ -383,7 +383,7 @@ export default {
         <li v-for="chat in filteredChats" :key="chat.conversationId || chat.groupId" class="list-group-item d-flex justify-content-between align-items-center py-3">
           <div>
             <img
-              :src="chat.conversationId ? `${BASE_URL()}/file?file=${chat.avatar.url}` : `${BASE_URL()}/file?file=${chat.photo.url}`"
+              :src="chat.conversationId ? `${BASE_URL()}/file?file=${chat.avatar.url}` : `${BASE_URL()}/file?file=${chat.upload.url}`"
               alt="Avatar"
               class="rounded-circle avatar"
               width="40"

@@ -12,7 +12,7 @@ import (
 type Group struct {
 	GroupId      int      `json:"groupId"`
 	Name         string   `json:"name"`
-	Photo        Upload   `json:"photo"`
+	Photo        Upload   `json:"upload"`
 	Participants []User   `json:"participants"`
 	LastMessage  *Message `json:"lastMessage,omitempty"`
 }

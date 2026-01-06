@@ -123,7 +123,7 @@ export default {
 			if(this.refreshDebounced)   clearTimeout(this.refreshDebounced);
 
 			this.refreshDebounced = setTimeout(async() => {
-				this.loading = true;
+
 				this.errormsg = null;
 
 
@@ -139,22 +139,22 @@ export default {
 
 				try {
 					this.currentGroup = await getConversation(this.userId, this.groupId,"group");
-
+					this.loading = true;
 					await this.fetchMessages(); // primo caricamento messaggi
+					this.loading = false;
 					for (const msg of this.messages) {
 						const user = await getUserInfo(msg.sender.userId);
 						msg.sender.avatar = user.avatar;
 					}
 				} catch (err) {
 					this.errormsg = err.toString();
-				} finally {
-					this.loading = false;
-				}},300); //300ms tra una richiesta e l'altra
+				} },300); //300ms tra una richiesta e l'altra
 		},
 
 		startPolling() {
 			this.fetchMessages(); // fetch iniziale
 			this.pollingInterval = setInterval(() => {
+				this.refresh();
 				this.fetchMessages();
 			}, 2000); // ogni 2 secondi
 		},
@@ -285,7 +285,7 @@ export default {
     <div class="d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center gap-2 p-lg-2 info" @click="infoGroup=true">
         <img
-          :src="currentGroup.photo.url ? `${BASE_URL()}/file?file=${currentGroup.photo.url}` : '' "
+          :src="currentGroup.upload.url ? `${BASE_URL()}/file?file=${currentGroup.upload.url}` : '' "
           alt="photo"
           class="rounded-circle align-self-end avatar"
           width="45"
@@ -302,7 +302,7 @@ export default {
   <div class="chat-body">
     <div ref="messageContainer" class="messages-container">
       <ErrorMsg v-if="errormsg" :msg="errormsg" />
-      <div v-if="filteredMessages.length === 0 && !loading" class="no-messages">
+      <div v-if="filteredMessages.length === 0" class="no-messages">
         <h1>No Messages...</h1>
       </div>
       <div

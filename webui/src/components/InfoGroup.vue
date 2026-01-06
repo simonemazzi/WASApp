@@ -155,7 +155,7 @@ export default {
       </div>
       <div class="d-flex align-items-center justify-content-center flex-column gap-3">
         <div class="d-flex align-items-center gap-3">
-          <img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${group.photo.url}`" :width="previewUrl && editMode? 100:200" :height="previewUrl && editMode? 100:200" alt="Photo">
+          <img class="avatar rounded-circle" :src="`${BASE_URL()}/file?file=${group.upload.url}`" :width="previewUrl && editMode? 100:200" :height="previewUrl && editMode? 100:200" alt="Photo">
           <img v-if="previewUrl && editMode" src="../icons/right-arrow.png" alt="Arrow to ..." width="50" height="50">
           <img
             v-if="previewUrl && editMode"
