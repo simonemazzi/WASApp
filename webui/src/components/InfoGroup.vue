@@ -132,7 +132,7 @@ export default {
 		}
 	}
 }
-//TODO: FARE ADD USER LAYOUT CON BOTTONI E FUNZIONI
+
 </script>
 
 <template>

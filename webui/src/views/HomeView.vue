@@ -6,7 +6,7 @@ import LoadingSpinner from "../components/LoadingSpinner.vue";
 import NewChat from "../components/NewChat.vue";
 import ShowParticipants from "../components/ShowParticipants.vue";
 import ErrorMsg from "@/components/ErrorMsg.vue";
-//TODO: FARE CHANGE FOTO E SALVARE TUTTO SU DB
+
 export default {
 	components: {ErrorMsg, ShowParticipants, LoadingSpinner,NewChat},
 	data() {
@@ -51,10 +51,18 @@ export default {
 		filteredChats() {
 			// unisce conversations e groups
 			let result = [...this.conversations, ...this.groups];
-			result.sort((a, b) => {
-				const timeA = Date.parse(a.lastMessage?.time ?? 0);
-				const timeB = Date.parse(b.lastMessage?.time ?? 0);
-				return timeB - timeA;
+			result.sort((a, b) => { // sorto per novità
+				// a senza messaggi, b con messaggi → a prima
+				if (!a.lastMessage && b.lastMessage) return -1;
+
+				// b senza messaggi, a con messaggi → b prima
+				if (!b.lastMessage && a.lastMessage) return 1;
+
+				// entrambe senza messaggi → ordine stabile
+				if (!a.lastMessage && !b.lastMessage) return 0;
+
+				// entrambe con messaggi → ordina per data
+				return Date.parse(b.lastMessage.time) - Date.parse(a.lastMessage.time);
 			});
 			// filtro per tipo
 			if(this.activeFilter === "direct") {

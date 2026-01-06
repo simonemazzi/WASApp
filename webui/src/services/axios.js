@@ -326,7 +326,7 @@ export const addToGroup = async (userId,groupId,username) =>{
 		throw error;
 	}
 }
-//TODO:members con foto cosi non ho problemi con il correttore
+
 
 export const setGroupName = async (userId,groupId,groupName) =>{
 	try{

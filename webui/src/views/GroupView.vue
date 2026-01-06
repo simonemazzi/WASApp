@@ -156,7 +156,6 @@ export default {
 			this.fetchMessages(); // fetch iniziale
 			this.pollingInterval = setInterval(() => {
 				this.fetchMessages();
-				this.refresh();
 			}, 2000); // ogni 2 secondi
 		},
 

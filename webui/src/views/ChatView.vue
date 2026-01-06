@@ -8,7 +8,7 @@ import Forward from "../components/Forward.vue";
 import InfoProfile from "../components/InfoProfile.vue";
 
 
-//TODO:Fare bottone per azioni
+
 export default {
 	components: {InfoProfile, Forward, Delete, Comment, LoadingSpinner},
 	data() {
@@ -177,10 +177,10 @@ export default {
 
 			if (text || photo) {
 				try {
-					await postMessage(this.userId, this.conversationId, text, photo,"direct",this.replyToMsg.messageId);
+					await postMessage(this.userId, this.conversationId, text, photo,"direct",this.replyToMsg ? this.replyToMsg.messageId : null);
 					textInput.value = "";
 					photoInput.value = "";
-					this.replyTo = null;
+					this.replyToMsg = null;
 					await this.fetchMessages();
 				} catch (e) {
 					console.error("Error send message:", e);

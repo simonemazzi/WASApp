@@ -115,7 +115,7 @@ export default {
 						Number(sessionStorage.getItem('userId')),
 						username
 					);
-					this.fetchData()
+					await this.fetchData()
 				} catch (e) {
 					console.error(e);
 					return;
@@ -207,7 +207,7 @@ export default {
             {{ user.username }}
           </div>
           <div class="user-right">
-            <button v-if="!isGroup" class="btn btn-success btn-sm" @click.stop="goToConversation(user.username)">{{ getConversationWith(user.username) ? 'Open' : 'Create' }}</button>
+            <button v-if="!isGroup" class="btn btn-success btn-sm" @click.stop=" goToConversation(user.username)">{{ getConversationWith(user.username) ? 'Open' : 'Create' }}</button>
           </div>
         </div>
       </div>

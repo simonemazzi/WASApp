@@ -5,8 +5,6 @@ import (
 	"errors"
 )
 
-//TODO:Gestione GetMessage anche per i forwardMessage
-
 func (db *appdbimpl) UserMessage(userId int, messageId int) (bool, error) {
 	var exists int
 	err := db.c.QueryRow(`

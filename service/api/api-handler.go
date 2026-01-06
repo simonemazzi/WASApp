@@ -58,8 +58,6 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/users/:userId/groups/:groupId/messages/:messageId/comments/:commentId", rt.wrap(rt.authHandler(rt.unGroupComment)))
 	rt.router.GET("/file", rt.wrap(rt.getFile))
 
-	//TODO: TEST SU IMMAGINI GRUPPO E READ GRUPPO (Messaggi)
-
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)
 

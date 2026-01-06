@@ -60,8 +60,14 @@ export default {
 			this.chats = [...conversations, ...groups, ...users];
 		},
 
+		getChatId(chat) {
+			if (chat.conversationId) return `c-${chat.conversationId}`
+			if (chat.groupId) return `g-${chat.groupId}`
+			if (chat.username) return `u-${chat.username}`
+		},
+
 		toggle(chat) {
-			const id = chat.conversationId || `g-${chat.groupId}`
+			const id = this.getChatId(chat)
 			this.selected.has(id)
 				? this.selected.delete(id)
 				: this.selected.add(id)
@@ -72,7 +78,7 @@ export default {
 			const groups = [];
 
 			for (const chat of this.chats) {
-				const id = chat.conversationId || `g-${chat.groupId}`;
+				const id = this.getChatId(chat);
 				if (this.selected.has(id)) {
 
 					if (chat.conversationId) { // se c'è già una conversazione, la metto direttamente
@@ -117,17 +123,17 @@ export default {
     <div class="action-box">
       <ErrorMsg v-if="errormsg" :msg="errormsg" />
       <h4 class="text-center">Forward message</h4>
-      <div
-        v-for="chat in chats"
-        :key="chat.conversationId || chat.groupId"
-        class="chat-item"
-        @click="toggle(chat)"
-      >
-        <input
-          type="checkbox"
-          :checked="selected.has(chat.conversationId || `g-${chat.groupId}`)"
-          class="selected"
-        >
+		<div
+			v-for="chat in chats"
+			:key="getChatId(chat)"
+			class="chat-item"
+			@click="toggle(chat)"
+		>
+		  <input
+			  type="checkbox"
+			  :checked="selected.has(getChatId(chat))"
+			  class="selected"
+		  />
         <span class="ms-2">{{ chat.name }}</span>
       </div>
 

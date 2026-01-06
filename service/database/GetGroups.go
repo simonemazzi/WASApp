@@ -5,8 +5,6 @@ import (
 	"strconv"
 )
 
-//TODO:METTERE I LOCATION AI POST
-
 type Group struct {
 	GroupId      int      `json:"groupId"`
 	Name         string   `json:"name"`
