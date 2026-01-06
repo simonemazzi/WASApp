@@ -56,7 +56,7 @@ export default {
 			const conversationNames = new Set(conversations.map(c => c.name));
 			const users = usersList
 				.filter(u => !conversationNames.has(u.username) && u.username !== sessionStorage.getItem('username'))
-				.map(u => ({ username: u.username , name: u.username})) || [];
+				.map(u => ({ username: u.username , name: u.username})) || []; //prendo gli utenti di cui non ho già una conversazione
 			this.chats = [...conversations, ...groups, ...users];
 		},
 
@@ -75,9 +75,9 @@ export default {
 				const id = chat.conversationId || `g-${chat.groupId}`;
 				if (this.selected.has(id)) {
 
-					if (chat.conversationId) {
+					if (chat.conversationId) { // se c'è già una conversazione, la metto direttamente
 						conversations.push(Number(chat.conversationId));
-					} else if (chat.username) {
+					} else if (chat.username) { // altrimenti creo la conversazione e poi la metto
 						try {
 							// crea conversazione diretta con quell'utente
 							const newConv = await createConversation(this.userId, chat.username);
@@ -86,7 +86,7 @@ export default {
 							console.error("Errore creando conversazione:", err);
 							this.showError(`Non posso creare conversazione con ${chat.username}`);
 						}
-					} else if (chat.groupId) {
+					} else if (chat.groupId) { // i gruppi li metto direttamente
 						groups.push(Number(chat.groupId));
 					}
 				}
@@ -115,7 +115,7 @@ export default {
 <template>
   <div v-if="show" class="overlay">
     <div class="action-box">
-		<ErrorMsg v-if="errormsg" :msg="errormsg" />
+      <ErrorMsg v-if="errormsg" :msg="errormsg" />
       <h4 class="text-center">Forward message</h4>
       <div
         v-for="chat in chats"

@@ -324,21 +324,21 @@ export default {
             v-if="openMessageOptions === msg.messageId"
             class="d-flex justify-content-end"
           >
-			  <button class="btn btn-outline-info" @click="replyMessage(msg)"><img src="../icons/reply.png" alt="Reply" width="25" height="25"></button>
+            <button class="btn btn-outline-info" @click="replyMessage(msg)"><img src="../icons/reply.png" alt="Reply" width="25" height="25"></button>
             <button class="btn btn-outline-secondary" @click="forward(msg.messageId)"><img src="../icons/share-icon_4662621.png" alt="Forward" width="25" height="25"></button>
             <button class="btn btn-outline-primary" @click="comment(msg.messageId)"><img src="../icons/chat-dots-fill.svg" alt="comment" width="23" height="23"></button>
             <button v-if="msg.sender.userId === userId" class="btn btn-outline-danger" @click="deleteM(msg.messageId)"><img src="../icons/trash3-fill.svg" alt="Delete" width="23" height="23"></button>
           </div>
-			<div v-if="msg.replyTo" class="reply d-flex flex-column">
-				<template v-if="(repliedMsg = getMessage(msg.replyTo))">
-					<span class = "text-muted">{{repliedMsg.sender.username}}</span>
-					<img v-if="repliedMsg.body.photo && repliedMsg.body.photo.url" :src="`${BASE_URL()}/file?file=${repliedMsg.body.photo.url}`" alt="PhotoMessage" class="message-photo-reply">
-					<span class="text-muted">{{ repliedMsg.body.text }}</span>
-				</template>
-				<template v-else>
-					<span class="text-muted text-center">(message unavailable)</span>
-				</template>
-			</div>
+          <div v-if="msg.replyTo" class="reply d-flex flex-column">
+            <template v-if="(repliedMsg = getMessage(msg.replyTo))">
+              <span class="text-muted">{{ repliedMsg.sender.username }}</span>
+              <img v-if="repliedMsg.body.photo && repliedMsg.body.photo.url" :src="`${BASE_URL()}/file?file=${repliedMsg.body.photo.url}`" alt="PhotoMessage" class="message-photo-reply">
+              <span class="text-muted">{{ repliedMsg.body.text }}</span>
+            </template>
+            <template v-else>
+              <span class="text-muted text-center">(message unavailable)</span>
+            </template>
+          </div>
           <div class="d-flex justify-content-between">
             <small v-if="msg.sender.userId !== userId" class="sender">{{ msg.sender.username }}</small>
             <small v-if="msg.sender.userId === userId" class="sender" />
@@ -357,35 +357,35 @@ export default {
         </div>
       </div>
     </div>
-	  <div class="d-flex flex-column gap-2 mt-2">
-		  <div v-if="this.replyToMsg" class="d-flex flex-column align-items-start">
-			  <span>Reply To {{this.replyToMsg.sender.username}}</span>
+    <div class="d-flex flex-column gap-2 mt-2">
+      <div v-if="replyToMsg" class="d-flex flex-column align-items-start">
+        <span>Reply To {{ replyToMsg.sender.username }}</span>
 
-			  <span class="text-truncate">Message: {{this.replyToMsg.body.photo ? "Photo" : this.replyToMsg.body.text}} </span>
-		  </div>
-		  <div class="d-flex justify-content-between gap-2">
-			  <div class="d-flex icon">
-				  <input id="fileInput" ref="messagePhoto" type="file" class="d-none" @change="onPhotoSelected">
-				  <label
-					  for="fileInput"
-					  class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
-				  >
-					  <img v-if="!photoSend" src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon">
-					  <img
-						  v-if="photoSend"
-						  src="../icons/check.png"
-						  width="25" height="25"
-						  alt="Preview"
-					  >
-				  </label>
-			  </div>
+        <span class="text-truncate">Message: {{ replyToMsg.body.photo ? "Photo" : replyToMsg.body.text }} </span>
+      </div>
+      <div class="d-flex justify-content-between gap-2">
+        <div class="d-flex icon">
+          <input id="fileInput" ref="messagePhoto" type="file" class="d-none" @change="onPhotoSelected">
+          <label
+            for="fileInput"
+            class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+          >
+            <img v-if="!photoSend" src="../icons/photo-svgrepo-com.svg" alt="Send Photo" width="25" height="25" class="icon">
+            <img
+              v-if="photoSend"
+              src="../icons/check.png"
+              width="25" height="25"
+              alt="Preview"
+            >
+          </label>
+        </div>
 
-			  <input ref="messageText" class="input-group" type="text" placeholder="Write message...">
-			  <button class="btn btn-dark" @click="sendMessageButton">
-				  <img src="../icons/send-message-svgrepo-com.svg" alt="Send Message" width="25" height="25" class="icon">
-			  </button>
-		  </div>
-	  </div>
+        <input ref="messageText" class="input-group" type="text" placeholder="Write message...">
+        <button class="btn btn-dark" @click="sendMessageButton">
+          <img src="../icons/send-message-svgrepo-com.svg" alt="Send Message" width="25" height="25" class="icon">
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 

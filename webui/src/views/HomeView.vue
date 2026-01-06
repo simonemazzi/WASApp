@@ -297,7 +297,7 @@ export default {
                 <h1 v-if="!editMode" class="name-display mb-0">{{ username }}</h1>
                 <input v-if="editMode" v-model="newUsername" type="text" class="name-input mb-0 text-center" :placeholder="username">
               </div>
-				<ErrorMsg v-if="errormsg" :msg="errormsg"/>
+              <ErrorMsg v-if="errormsg" :msg="errormsg" />
               <div v-if="editMode" class="d-flex justify-content-center flex-column align-items-center mt-2">
                 <label for="fileInput" class="btn btn-outline-primary">
                   Choose New Photo
