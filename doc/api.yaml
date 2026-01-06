@@ -624,17 +624,6 @@ paths:
       operationId: viewGroups
       tags:
         - "Group"
-      parameters:
-        - in : query
-          name : nameGroup
-          schema:
-            type: string
-            minLength: 0
-            maxLength: 255
-            pattern: "^[a-zA-Z0-9_ -]+$"
-            example: capodanno2026
-          description: Search group by name. If this field is empty, returns all groups.
-          required: false
       responses:
         "200":
           description: OK. Return The list
