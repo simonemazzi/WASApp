@@ -123,17 +123,17 @@ export default {
     <div class="action-box">
       <ErrorMsg v-if="errormsg" :msg="errormsg" />
       <h4 class="text-center">Forward message</h4>
-		<div
-			v-for="chat in chats"
-			:key="getChatId(chat)"
-			class="chat-item"
-			@click="toggle(chat)"
-		>
-		  <input
-			  type="checkbox"
-			  :checked="selected.has(getChatId(chat))"
-			  class="selected"
-		  />
+      <div
+        v-for="chat in chats"
+        :key="getChatId(chat)"
+        class="chat-item"
+        @click="toggle(chat)"
+      >
+        <input
+          type="checkbox"
+          :checked="selected.has(getChatId(chat))"
+          class="selected"
+        >
         <span class="ms-2">{{ chat.name }}</span>
       </div>
 
