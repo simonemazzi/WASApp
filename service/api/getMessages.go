@@ -29,6 +29,7 @@ type Message struct {
 	Time        string  `json:"time"`
 	Sender      User    `json:"sender"`
 	IsForwarded bool    `json:"isForwarded"`
+	ReplyTo     *int    `json:"replyTo,omitempty"`
 }
 
 func (rt *_router) getMessages(w http.ResponseWriter, r *http.Request, params httprouter.Params, context reqcontext.RequestContext) {
@@ -92,6 +93,7 @@ func (rt *_router) getMessages(w http.ResponseWriter, r *http.Request, params ht
 			Time:        dbMsg.Time, // O converti in stringa come preferisci
 			Sender:      User{UserId: dbMsg.Sender.UserID, Username: dbMsg.Sender.Username},
 			IsForwarded: dbMsg.IsForwarded,
+			ReplyTo:     dbMsg.ReplyTo,
 		})
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -166,6 +168,7 @@ func (rt *_router) getGroupMessages(w http.ResponseWriter, r *http.Request, para
 			Time:        dbMsg.Time, // O converti in stringa come preferisci
 			Sender:      User{UserId: dbMsg.Sender.UserID, Username: dbMsg.Sender.Username},
 			IsForwarded: dbMsg.IsForwarded,
+			ReplyTo:     dbMsg.ReplyTo,
 		})
 	}
 	w.Header().Set("Content-Type", "application/json")

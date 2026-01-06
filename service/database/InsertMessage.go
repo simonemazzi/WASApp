@@ -2,22 +2,32 @@ package database
 
 import "database/sql"
 
-func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, photoId *int) (Message, error) {
+func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, photoId *int, replyTo *int) (Message, error) {
 
 	var res sql.Result
 	var err error
 
+	var replyToVal sql.NullInt64
+	if replyTo != nil {
+		replyToVal = sql.NullInt64{
+			Int64: int64(*replyTo),
+			Valid: true,
+		}
+	} else {
+		replyToVal = sql.NullInt64{Valid: false}
+	}
+
 	if photoId != nil {
 		res, err = db.c.Exec(
-			`INSERT INTO Message (conversationId, sender, text, photoId)
+			`INSERT INTO Message (conversationId, sender, text, photoId, replyTo)
 			 VALUES (?, ?, ?, ?)`,
-			conversationId, userId, text, *photoId,
+			conversationId, userId, text, *photoId, replyToVal,
 		)
 	} else {
 		res, err = db.c.Exec(
-			`INSERT INTO Message (conversationId, sender, text)
-			 VALUES (?, ?, ?)`,
-			conversationId, userId, text,
+			`INSERT INTO Message (conversationId, sender, text, replyTo)
+			 VALUES (?, ?, ?, ?)`,
+			conversationId, userId, text, replyToVal,
 		)
 	}
 
@@ -41,6 +51,7 @@ func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, 
 		SELECT
 			m.messageId,
 			m.text,
+			m.replyTo,
 
 			p.URL,
 			p.width,
@@ -74,6 +85,7 @@ func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, 
 	`, messageId).Scan(
 		&msg.MessageId,
 		&msg.Body.Text,
+		&msg.ReplyTo,
 
 		&photoUrl,
 		&photoWidth,
@@ -104,27 +116,32 @@ func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, 
 
 	return msg, nil
 }
-func (db *appdbimpl) InsertGroupMessage(
-	groupId int,
-	userId int,
-	text string,
-	photoId *int,
-) (Message, error) {
+func (db *appdbimpl) InsertGroupMessage(groupId int, userId int, text string, photoId *int, replyTo *int) (Message, error) {
 
 	var res sql.Result
 	var err error
 
+	var replyToVal sql.NullInt64
+	if replyTo != nil {
+		replyToVal = sql.NullInt64{
+			Int64: int64(*replyTo),
+			Valid: true,
+		}
+	} else {
+		replyToVal = sql.NullInt64{Valid: false}
+	}
+
 	if photoId != nil {
 		res, err = db.c.Exec(
-			`INSERT INTO Message (groupId, sender, text, photoId)
-			 VALUES (?, ?, ?, ?)`,
-			groupId, userId, text, *photoId,
+			`INSERT INTO Message (groupId, sender, text, photoId, replyTo)
+			 VALUES (?, ?, ?, ?,?)`,
+			groupId, userId, text, *photoId, replyToVal,
 		)
 	} else {
 		res, err = db.c.Exec(
-			`INSERT INTO Message (groupId, sender, text)
-			 VALUES (?, ?, ?)`,
-			groupId, userId, text,
+			`INSERT INTO Message (groupId, sender, text, replyTo)
+			 VALUES (?, ?, ?,?)`,
+			groupId, userId, text, replyToVal,
 		)
 	}
 
@@ -147,6 +164,7 @@ func (db *appdbimpl) InsertGroupMessage(
 		SELECT
 			m.messageId,
 			m.text,
+			m.replyTo,
 
 			p.URL,
 			p.width,
@@ -180,6 +198,7 @@ func (db *appdbimpl) InsertGroupMessage(
 	`, messageId).Scan(
 		&msg.MessageId,
 		&msg.Body.Text,
+		&msg.ReplyTo,
 
 		&photoUrl,
 		&photoWidth,

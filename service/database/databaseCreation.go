@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS Message(
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     sender INTEGER   REFERENCES User(userId),
 	originalMessage INTEGER   REFERENCES Message(messageId),
+	replyTo INTEGER   REFERENCES Message(messageId),
     CHECK ( (originalMessage IS NULL AND (text IS NOT NULL OR photoId IS NOT NULL)) OR
 (originalMessage IS NOT NULL AND (text IS NULL AND photoId IS NULL) ) ),
     CHECK (

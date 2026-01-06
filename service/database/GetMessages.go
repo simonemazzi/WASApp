@@ -32,6 +32,7 @@ type Message struct {
 	Time        string  `json:"time"`
 	Sender      User    `json:"sender"`
 	IsForwarded bool    `json:"isForwarded"`
+	ReplyTo     *int    `json:"replyTo,omitempty"`
 }
 
 const READ = "read"
@@ -43,6 +44,7 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 			m.messageId,
 			m.time,
 			m.sender,
+			m.replyTo,
 			uu.username,
 			CASE WHEN m.originalMessage IS NOT NULL THEN 1 ELSE 0 END AS isForwarded
 		FROM Message m
@@ -79,8 +81,9 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 		var senderId int
 		var senderUsername string
 		var isForwarded int
+		var replyTo *int
 
-		if err := rows.Scan(&messageId, &time, &senderId, &senderUsername, &isForwarded); err != nil {
+		if err := rows.Scan(&messageId, &time, &senderId, &replyTo, &senderUsername, &isForwarded); err != nil {
 			return nil, err
 		}
 
@@ -97,6 +100,7 @@ func (db *appdbimpl) GetMessages(conversationId int, viewerId int) ([]Message, e
 			Sender:      User{UserID: fmt.Sprint(senderId), Username: senderUsername},
 			Body:        originalMsg.Body, // include testo/foto dall'originale se inoltro
 			IsForwarded: isForwarded == 1,
+			ReplyTo:     replyTo,
 		}
 
 		messages = append(messages, msg)
@@ -154,6 +158,7 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 			m.messageId,
 			m.time,
 			m.sender,
+			m.replyTo,
 			uu.username,
 			CASE WHEN m.originalMessage IS NOT NULL THEN 1 ELSE 0 END AS isForwarded
 		FROM Message m
@@ -191,8 +196,9 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 		var senderId int
 		var senderUsername string
 		var isForwarded int
+		var replyTo *int
 
-		if err := rows.Scan(&messageId, &time, &senderId, &senderUsername, &isForwarded); err != nil {
+		if err := rows.Scan(&messageId, &time, &senderId, &replyTo, &senderUsername, &isForwarded); err != nil {
 			return nil, err
 		}
 
@@ -209,6 +215,7 @@ func (db *appdbimpl) GetGroupMessages(groupId int, viewerId int) ([]Message, err
 			Sender:      User{UserID: fmt.Sprint(senderId), Username: senderUsername},
 			Body:        originalMsg.Body, // testo/foto originale se inoltro
 			IsForwarded: isForwarded == 1,
+			ReplyTo:     replyTo,
 		}
 
 		messages = append(messages, msg)

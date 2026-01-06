@@ -37,7 +37,18 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
+	replyToStr := r.URL.Query().Get("replyTo")
 
+	var replyTo *int
+
+	if replyToStr != "" {
+		v, err := strconv.Atoi(replyToStr)
+		if err != nil {
+			http.Error(w, "Invalid replyTo", http.StatusBadRequest)
+			return
+		}
+		replyTo = &v
+	}
 	conversationId, err := strconv.Atoi(params.ByName("conversationId"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -51,6 +62,7 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 	}
 	if !isThere {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+
 		return
 	}
 
@@ -166,7 +178,7 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 	}
 
 	// SALVA MESSAGGIO
-	mess, err := rt.db.InsertMessage(conversationId, userId, text, photoId)
+	mess, err := rt.db.InsertMessage(conversationId, userId, text, photoId, replyTo)
 
 	if err != nil {
 		http.Error(w, "Cannot save message", http.StatusInternalServerError)
@@ -194,7 +206,18 @@ func (rt *_router) postGroupMessage(w http.ResponseWriter, r *http.Request, para
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
+	replyToStr := r.URL.Query().Get("replyTo")
 
+	var replyTo *int
+
+	if replyToStr != "" {
+		v, err := strconv.Atoi(replyToStr)
+		if err != nil {
+			http.Error(w, "Invalid replyTo", http.StatusBadRequest)
+			return
+		}
+		replyTo = &v
+	}
 	groupId, err := strconv.Atoi(params.ByName("groupId"))
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -322,7 +345,7 @@ func (rt *_router) postGroupMessage(w http.ResponseWriter, r *http.Request, para
 		http.Error(w, "Message must have text or photo", http.StatusBadRequest)
 		return
 	}
-	mess, err := rt.db.InsertGroupMessage(groupId, userId, text, photoId)
+	mess, err := rt.db.InsertGroupMessage(groupId, userId, text, photoId, replyTo)
 	if err != nil {
 		context.Logger.WithError(err).Error("Error inserting message")
 		http.Error(w, "Cannot save message", http.StatusInternalServerError)

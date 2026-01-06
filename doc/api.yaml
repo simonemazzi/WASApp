@@ -365,6 +365,14 @@ paths:
       tags:
         - "Message"
 
+      parameters:
+        - in: query
+          name: replyTo
+          schema:
+            $ref: "#/components/schemas/MessageId"
+          description: MessageId of the message we want to reply
+          required: false
+
       requestBody:
         content:
           application/json:
@@ -1074,7 +1082,13 @@ paths:
       operationId: sendGroupMessage
       tags:
         - "Message"
-
+      parameters:
+        - in : query
+          name: replyTo
+          schema:
+            $ref: "#/components/schemas/MessageId"
+          description: MessageId of the message we want to reply
+          required: false
 
       requestBody:
         content:
@@ -1579,6 +1593,8 @@ components:
           description: show if the message has been forwarded
           type: boolean
           example: false
+        replyTo:
+          $ref: "#/components/schemas/MessageId"
 
 
     Text:

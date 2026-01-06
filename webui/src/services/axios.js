@@ -92,23 +92,24 @@ export const getConversation = async (userId,chatId,originType) => {
 };
 
 
-export const postMessage = async (userId,chatId,messageText,messagePhoto,type) => {
+export const postMessage = async (userId,chatId,messageText,messagePhoto,type,replyTo) => {
 	try{
+		const query = replyTo ? `?replyTo=${replyTo}` : "";
 		let response;
 		if (messagePhoto) {
 			const formData = new FormData();
 			formData.append("bodyText",messageText);
 			formData.append("photo",messagePhoto);
 			if(type === "direct") {
-				response = await instance.post(`users/${userId}/conversations/${chatId}/messages`, formData,{headers:{"Content-Type": "multipart/form-data"}});
+				response = await instance.post(`users/${userId}/conversations/${chatId}/messages${query}`, formData,{headers:{"Content-Type": "multipart/form-data"}});
 			} else if(type === "group") {
-				response = await instance.post(`users/${userId}/groups/${chatId}/messages`, formData,{headers:{"Content-Type": "multipart/form-data"}});
+				response = await instance.post(`users/${userId}/groups/${chatId}/messages${query}`, formData,{headers:{"Content-Type": "multipart/form-data"}});
 			}
 		}else{
 			if(type === "direct") {
-				response = await instance.post(`users/${userId}/conversations/${chatId}/messages`, {bodyText: messageText});
+				response = await instance.post(`users/${userId}/conversations/${chatId}/messages${query}`, {bodyText: messageText});
 			} else if(type === "group") {
-				response = await instance.post(`users/${userId}/groups/${chatId}/messages`,{bodyText: messageText});
+				response = await instance.post(`users/${userId}/groups/${chatId}/messages${query}`,{bodyText: messageText});
 			}
 		}
 		return response.data;
@@ -238,9 +239,6 @@ export const createConversation = async (userId,username) =>{
 
 
 
-
-
-
 export const createGroup = async (userId,participants,name) =>{
 	try{
 		const response = await instance.post(`users/${userId}/groups`, {name: name,participants:participants});
@@ -360,7 +358,6 @@ export const setGroupPhoto = async (userId,groupId,file) =>{
 		throw error;
 	}
 }
-
 
 
 
