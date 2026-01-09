@@ -7,10 +7,10 @@ WORKDIR /app
 RUN corepack enable
 # utilizzato per lo yarn
 
-COPY package.json yarn.lock ./
+COPY webui/package.json webui/yarn.lock ./
 # copiamo i file delle dipendenze
 
-COPY . .
+COPY webui/ .
 # copiamo tutto il codice sorgente
 
 RUN yarn install

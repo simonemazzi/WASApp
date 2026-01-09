@@ -131,6 +131,7 @@ func (rt *_router) postMessage(w http.ResponseWriter, r *http.Request, params ht
 			out, err := os.Create(path)
 			if err != nil {
 				http.Error(w, "Cannot save image", http.StatusInternalServerError)
+				context.Logger.WithError(err).Error("Cannot save image")
 				return
 			}
 			defer func(out *os.File) {
@@ -300,6 +301,7 @@ func (rt *_router) postGroupMessage(w http.ResponseWriter, r *http.Request, para
 			out, err := os.Create(path)
 			if err != nil {
 				http.Error(w, "Cannot save image", http.StatusInternalServerError)
+				context.Logger.WithError(err).Error("Cannot save image")
 				return
 			}
 			defer func(out *os.File) {

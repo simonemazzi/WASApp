@@ -20,7 +20,7 @@ func (db *appdbimpl) InsertMessage(conversationId int, userId int, text string, 
 	if photoId != nil {
 		res, err = db.c.Exec(
 			`INSERT INTO Message (conversationId, sender, text, photoId, replyTo)
-			 VALUES (?, ?, ?, ?)`,
+			 VALUES (?, ?, ?, ?,?)`,
 			conversationId, userId, text, *photoId, replyToVal,
 		)
 	} else {
