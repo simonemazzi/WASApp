@@ -399,7 +399,7 @@ export default {
               </small>
 
               <small v-else class="text-muted">
-                {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo
+				  {{ chat.lastMessage.sender.userId === String(userId) ? 'You' : chat.lastMessage.sender.username }} : Photo {{chat.lastMessage.body.text ? ": " + chat.lastMessage.body.text : ""}}
               </small>
             </div>
 

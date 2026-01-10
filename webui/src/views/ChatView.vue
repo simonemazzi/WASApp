@@ -105,7 +105,7 @@ export default {
 					// verifica se siamo già in fondo (tolleranza 20px)
 					isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 20;
 				}
-
+				this.currentConversation = await getConversation(this.userId, this.conversationId,"direct");
 				this.messages = msgs;
 				await this.$nextTick();
 				if (container && isAtBottom) {
