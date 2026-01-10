@@ -357,10 +357,13 @@ export default {
       </div>
     </div>
     <div class="d-flex flex-column gap-2 mt-2">
-      <div v-if="replyToMsg" class="d-flex flex-column align-items-start">
-        <span>Reply To {{ replyToMsg.sender.username }}</span>
+      <div v-if="replyToMsg" class="d-flex justify-content-between">
+        <div class="d-flex flex-column align-items-start">
+          <span>Reply To {{ replyToMsg.sender.username }}</span>
+          <span class="text-truncate">Message: {{ replyToMsg.body.photo ? "📷 " : "" }} {{ replyToMsg.body.photo && replyToMsg.body.text ? "|" : "" }} {{ replyToMsg.body.text }}  </span>
+        </div>
 
-        <span class="text-truncate">Message: {{ replyToMsg.body.photo ? "Photo" : replyToMsg.body.text }} </span>
+        <button class="btn-close align-self-center " @click="replyToMsg=null" />
       </div>
       <div class="d-flex justify-content-between gap-2">
         <div class="d-flex icon">
