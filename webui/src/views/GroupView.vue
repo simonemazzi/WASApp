@@ -185,7 +185,6 @@ export default {
 					textInput.value = "";
 					photoInput.value = "";
 					this.replyToMsg = null;
-					await this.fetchMessages();
 				} catch (e) {
 					console.error("Error send message:", e);
 					this.showError("Error sending message");

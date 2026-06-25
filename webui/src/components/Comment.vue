@@ -21,7 +21,6 @@ export default {
 	},
 
 	computed: {
-		// nessun computed extra nel tuo setup, ma puoi aggiungere se vuoi
 	},
 
 	watch: {
@@ -47,7 +46,7 @@ export default {
 		},
 
 		confirmComment() {
-			if (this.emojiInput.trim()) {
+			if (this.emojiInput.trim() && !this.comments.some(u => u.sender.userId === this.userId)) {
 				commentMessage(this.userId, this.chatId, this.messageId, this.type, this.emojiInput)
 				this.emojiInput = ''
 			}

@@ -14,7 +14,7 @@ func (db *appdbimpl) CreateConversation(userId int, username string, time string
 
 	res, err := db.c.Exec(`INSERT INTO Conversation (component_A, component_B) VALUES (?, ?)`, userId, componentB)
 	if err != nil {
-		// intercetta correttamente l'errore del trigger SQLite
+		// intercetta l'errore del trigger SQLite
 		var sqliteErr interface{ Error() string }
 		if errors.As(err, &sqliteErr) && sqliteErr.Error() == "Conversation already created" {
 			// la conversazione esiste già, recupera i dati

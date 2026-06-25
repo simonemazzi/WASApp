@@ -12,7 +12,8 @@ import (
 
 // SessionRequest : Request's schema
 type SessionRequest struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 type SessionResponse struct {
@@ -39,15 +40,24 @@ func (rt *_router) postSession(w http.ResponseWriter, r *http.Request, params ht
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	isLoginstr := r.URL.Query().Get("isLogin")
+	isLogin := false
+	if isLoginstr == "true" {
+		isLogin = true
+	}
 	var resp SessionResponse
 	// Execute query and return response
-	resp.UserId, resp.Token, resp.Time, err = rt.db.CreateSession(req.Name)
+	resp.UserId, resp.Token, resp.Time, err = rt.db.CreateSession(req.Name, req.Password, isLogin) //mettere anche pw dopo il name
 
 	if err != nil {
-		context.Logger.WithError(err).Error("Error creating session")
-		http.Error(w, "Failed to create session", http.StatusInternalServerError)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		err = json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
 		return
+
 	}
 	w.Header().Set("Content-Type", "application/json")
 

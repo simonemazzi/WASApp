@@ -39,7 +39,7 @@ export default {
 
 			try {
 				const group = await getGroup(this.userId, this.groupId);
-				if (this.destroyed) return; // 🔥 BLOCCA UPDATE
+				if (this.destroyed) return; // se il componente è chiuso smette di aggiornare
 
 				this.group = group;
 

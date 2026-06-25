@@ -17,10 +17,11 @@ instance.interceptors.request.use(config => {
 	return config;
 });
 
-export const doLogin = async (username) => {
+export const doLogin = async (username, password,isLogin) => {
 	try {
-		const response = await instance.post("/session", {
-			name: username
+		const response = await instance.post(`/session?isLogin=${isLogin}`, {
+			name: username,
+			password: password
 		});
 
 		return {
@@ -29,8 +30,12 @@ export const doLogin = async (username) => {
 			time: response.data.time
 		};
 	} catch (error) {
-		console.error("Login error:", error);
-		throw error;
+
+		if (error.response?.data?.error) {
+			throw new Error(error.response.data.error);
+		}
+		throw new Error("Errore durante il login");
+
 	}
 };
 
